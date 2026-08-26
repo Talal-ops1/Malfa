@@ -55,9 +55,42 @@ product only — no scope expansion, no redesign of anything not listed here.
 
 ### Progress
 
-- [ ] 1. Opening flow (Welcome → Login/Sign-up → Home)
-- [ ] 2. Home reorder + remove كيف يقرأ from Home
-- [ ] 3. كيف يقرأ moved to مَلفى tab
-- [ ] 4. Flatten `.sh-c` rotate
-- [ ] 5. Tone pass
-- [ ] 6. QA pass
+- [x] 1. Opening flow (Welcome → Login/Sign-up → Home). Added `welcomeHTML()`
+      and `authHTML()`/`authBodyHTML()` screens, `welcome`/`auth` in `VIEWS`
+      and `PUSHED`. Boot is `mount('welcome')` → auto-advance via
+      `setTimeout(enterAuth, REDUCE?700:2600)` (or tap-to-skip via
+      `data-skip`) → login/sign-up toggle via `data-authtoggle` → `data-enter`
+      (submit or "متابعة كضيف") calls `enterApp()`, which sets `STATE.tab`,
+      calls `renderTabs()`, and `mount('home','fade')`. The 'fade' mode has no
+      dedicated CSS (deliberately) — with no `.screen.ent-fade` transform
+      rule, the existing `.screen`/`.screen.on` opacity transition alone
+      produces a plain cross-fade, which reads calmer than the tab-style
+      translateX push/pop used elsewhere. No backend, no persistence — the
+      submit buttons are frictionless (any input, or none, advances).
+- [x] 2. Home reorder + remove كيف يقرأ from Home. New order in `homeHTML()`:
+      header → hero/greeting → "وش تقرأ اليوم؟" + "وين وصلت في كتابك؟" →
+      current reading (كمل من وين وقفت) + reflection clip → بعدها rail →
+      اختيار مَلفى → من مَلفى → مَلفى الشهر. كيف يقرأ block removed entirely
+      (and the now-unused `who=PEOPLE[0]` local dropped).
+- [x] 3. كيف يقرأ moved to `communityHTML()` (مَلفى tab), placed after "قرّاء
+      تكتشفهم". Added a "مجموعاتي" section right after it, rendering the full
+      `COLLECTIONS` array via `collHTML` — since `COLLECTIONS` already
+      contains a "توصيات الأصدقاء" entry and a "تاريخ مهم" entry, this single
+      section naturally covers all three requested topics without
+      fabricating new data or duplicating headers.
+- [x] 4. Flattened `.plate.shelf .sh-c` — removed the
+      `rotate()/translateY()` transform, kept the overlap margin. Affects
+      every `edPlate()` usage (Home "من مَلفى", مَلفى tab, account's "مَلفى
+      2026" archive button) uniformly.
+- [x] 5. Tone pass. All new copy (welcome, login/sign-up, "وين وصلت في
+      كتابك؟") written in the same warm/modern/colloquial-leaning MSA voice
+      already used throughout the file. Scanned existing copy for
+      broken/placeholder text — none found; the established voice already
+      matches the brief, so no rewrite of pre-existing strings was needed.
+- [x] 6. QA pass. `bash v4/build.sh` → `JS OK` after every edit. Verified in
+      a real browser (local static server, since `file://` in this tool
+      renders as a non-interactive snapshot): opening flow end-to-end
+      (welcome → auth → toggle signup/login → enter app), Home section order,
+      كيف يقرأ + مجموعاتي on the مَلفى tab, flattened shelf, and a full
+      tab-navigation sweep (library/discover/account/community/home) with a
+      clean console (no errors).

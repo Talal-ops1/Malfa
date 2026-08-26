@@ -162,7 +162,6 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .plate.r16{aspect-ratio:16/9}
 .plate.shelf{display:flex;align-items:center;justify-content:center;padding:0 10px}
 .plate.shelf .sh-c{margin-inline:-13px;flex:none;position:relative;z-index:calc(9 - var(--i));
-  transform:rotate(calc((var(--i) - 1.5) * 3.4deg)) translateY(calc((var(--i) - 1.5) * 3px));
   filter:drop-shadow(0 10px 16px rgba(0,0,0,.42))}
 .plate.r43{aspect-ratio:4/3}
 .plate.sq{aspect-ratio:1;border-radius:50%}
@@ -421,6 +420,29 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   transition:opacity var(--t2) ease,transform var(--t2) var(--ease-out)}
 .toast.on div{opacity:1;transform:none}
 
+/* ============================================================
+   OPENING — welcome → login/sign-up. One quiet reveal, then done.
+   ============================================================ */
+.welcome{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:0 44px}
+.w-mark{font-family:var(--f-d);font-size:42px;font-weight:700;color:var(--ink);margin:0;
+  opacity:0;transform:translateY(5px) scale(.98);animation:wIn 1000ms var(--ease-out) 160ms forwards}
+.w-tag{font-family:var(--f-u);font-size:15px;font-weight:500;color:var(--ink-2);margin:16px 0 0;
+  opacity:0;transform:translateY(5px);animation:wIn 900ms var(--ease-out) 820ms forwards}
+.w-love{position:absolute;bottom:56px;inset-inline:0;text-align:center;
+  font-family:var(--f-u);font-size:11.5px;color:var(--ink-3);opacity:0;animation:wFade 1000ms ease 1650ms forwards}
+@keyframes wIn{to{opacity:1;transform:none}}
+@keyframes wFade{to{opacity:.7}}
+
+.auth-h{font-family:var(--f-d);font-size:27px;font-weight:700;line-height:1.44;margin:14px 0 0}
+.field{margin-top:16px}
+.field label{display:block;font-family:var(--f-u);font-size:12.5px;font-weight:500;color:var(--ink-3);margin-bottom:8px}
+.field input{width:100%;height:50px;border-radius:var(--r2);background:rgba(255,255,255,.06);
+  box-shadow:inset 0 0 0 1px var(--rule-2);padding:0 16px;font-family:var(--f-u);font-size:15px;color:var(--ink);
+  border:0;outline:none;transition:box-shadow var(--t1) ease}
+.field input::placeholder{color:var(--ink-3)}
+.field input:focus{box-shadow:inset 0 0 0 1.5px var(--khz-txt)}
+
 @media (prefers-reduced-motion:reduce){
   :root{--t1:90ms;--t2:110ms;--t3:150ms;--press-out:120ms}
   .screen.ent-push,.screen.ent-pop,.screen.exit-push,.screen.exit-pop{transform:none!important}
@@ -428,6 +450,7 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   .grid3>*,.tl-i.fresh{animation:none!important}
   .v-wave.live i{animation:none!important;height:10px!important}
   .seg-ind{transition-duration:90ms!important}
+  .w-mark,.w-tag,.w-love{animation:none!important;opacity:1!important;transform:none!important}
 }
 </style>
 
@@ -716,11 +739,57 @@ function sec(title,link,toast){
 }
 
 /* ============================================================
+   SCREEN — الترحيب
+   Logo, then the line, then the credit — one at a time, quietly.
+   ============================================================ */
+function welcomeHTML(){
+  return '<div class="welcome" data-skip="1">'
+    +'<h1 class="w-mark">مَلفى</h1>'
+    +'<p class="w-tag">مكان كل القراء</p>'
+    +'<p class="w-love">صُنع بحب</p>'
+    +'</div>';
+}
+
+/* ============================================================
+   SCREEN — الدخول والتسجيل
+   ============================================================ */
+var authMode='login';
+function authHTML(){
+  return ''
+    +'<div class="s48"></div><div class="s24"></div>'
+    +'<div class="pad"><div class="wordmark" style="text-align:start">مَلفى</div></div>'
+    +'<div class="s28"></div>'
+    +'<div class="pad" id="authBody">'+authBodyHTML()+'</div>'
+    +'<div class="s24"></div><div class="hr"></div><div class="s24"></div>'
+    +'<div class="pad" style="text-align:center">'
+      +'<button class="lnk plain" data-enter="1" style="justify-content:center;width:100%">متابعة كضيف'+ic('arrow',15)+'</button></div>'
+    +'<div class="s24"></div>';
+}
+function authBodyHTML(){
+  var login=authMode==='login';
+  return ''
+    +'<h1 class="auth-h">'+(login?'أهلاً فيك من جديد':'ابدأ رحلتك مع مَلفى')+'</h1>'
+    +'<p class="body" style="margin-top:8px;max-width:34ch">'
+      +(login?'سجّل دخولك عشان تكمل من وين وقفت.':'أنشئ حسابك، واجمع قراءاتك وخواطرك في مكان واحد.')+'</p>'
+    +'<div class="s28"></div>'
+    +(login?'':'<div class="field"><label>الاسم</label><input type="text" placeholder="اسمك" autocomplete="name"></div>')
+    +'<div class="field"><label>البريد الإلكتروني أو الجوال</label>'
+      +'<input type="text" placeholder="بريدك الإلكتروني" autocomplete="username"></div>'
+    +'<div class="field"><label>كلمة المرور</label>'
+      +'<input type="password" placeholder="كلمة المرور" autocomplete="'+(login?'current-password':'new-password')+'"></div>'
+    +'<div class="s28"></div>'
+    +'<button class="btn btn-fill btn-full" data-enter="1">'+(login?'تسجيل الدخول':'إنشاء الحساب')+'</button>'
+    +'<div class="s16"></div>'
+    +'<div style="text-align:center"><button class="lnk plain" data-authtoggle="1" style="justify-content:center;width:100%">'
+      +(login?'ما عندك حساب؟ سجّل الآن':'عندك حساب؟ سجّل دخولك')+'</button></div>';
+}
+
+/* ============================================================
    SCREEN — الرئيسية
    Type opens the screen. Books supply the colour. Nothing is boxed.
    ============================================================ */
 function homeHTML(){
-  var b=B[STATE.book],r=JOURNEY[0],who=PEOPLE[0];
+  var b=B[STATE.book],r=JOURNEY[0];
   return ''
   +'<header class="hdr">'
     +'<div class="hdr-wrap"><button class="hdr-btn" data-toast="ما فيه تنبيهات جديدة">'+ic('bell',22)+'</button><span class="badge"></span></div>'
@@ -730,10 +799,11 @@ function homeHTML(){
 
   +'<div class="s24"></div>'
   +'<div class="pad"><div class="kick">صباح الخير، طلال</div>'
-    +'<h1 class="open-q">وش تقرأ اليوم؟</h1></div>'
+    +'<h1 class="open-q">وش تقرأ اليوم؟</h1>'
+    +'<p class="body" style="margin-top:8px">وين وصلت في كتابك؟</p></div>'
   +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
 
-  /* كمل من وين وقفت — the cover is the object, not a card */
+  /* current reading / continue journey — the cover is the object, not a card */
   +'<div class="pad"><div class="kick">كمل من وين وقفت</div></div>'
   +'<div class="s16"></div>'
   +'<div class="now" data-book="'+b.id+'">'+cover(b.id,112)
@@ -757,41 +827,26 @@ function homeHTML(){
       +'<span class="meta tnum">'+esc(r.dur)+'</span></div>'
     +'<p class="meta" style="margin-top:10px">من ص 152 · 22 أغسطس</p></div>'
 
-  /* كيف يقرأ — one reader, given room, instead of four identical panels */
   +'<div class="s32"></div><div class="hr"></div><div class="s24"></div>'
-  +'<div class="pad"><div class="kick">كيف يقرأ...</div></div>'
-  +'<div class="s14"></div>'
-  +'<div class="who">'
-    +'<div style="display:flex;align-items:center;gap:11px">'
-      +'<span class="plate sq" style="width:44px;height:44px;--p:'+stock(who.st).p+'">'+mono(who.n,stock(who.st))+'</span>'
-      +'<span><span class="meta2" style="display:block">'+esc(who.n)+'</span>'
-      +'<span class="meta" style="display:block;margin-top:2px">'+esc(who.role)+'</span></span></div>'
-    +'<h3>كيف تقرأ '+esc(who.n.split(' ')[0])+'؟</h3>'
-    +'<p>'+esc(who.line)+'</p>'
-    +'<div class="who-books">'+who.books.map(function(x){return cover(x,74);}).join('')+'</div>'
-    +'<div style="display:flex;gap:20px;align-items:center;margin-top:6px">'
-    +'<button class="lnk" data-person="'+who.id+'">شوف ملفها'+ic('arrow',15)+'</button>'
-    +'<button class="lnk plain" data-toast="كل الملفات — قريبًا">كل من قرأنا معهم'+ic('arrow',15)+'</button></div></div>'
-
-  +'<div class="s28"></div>'
   +sec('بعدها','مكتبتي','')
   +'<div class="s14"></div>'
   +'<div class="rail">'+['saq','feel','aswad','qawaid','azazil','hubb'].map(function(i){return bk(i,102);}).join('')+'</div>'
 
-  /* من مَلفى — image first, headline under it, then a plain numbered list */
+  /* اختيار مَلفى — before من مَلفى: the human curation comes first */
   +'<div class="s36"></div>'
+  +sec('اختيار مَلفى','','')
+  +'<div class="pad"><p class="body" style="margin-top:6px;max-width:32ch">مختارة بيد محرري مَلفى، مو بخوارزمية.</p></div>'
+  +'<div class="s10"></div>'
+  +PICKS.slice(0,3).map(collHTML).join('<div class="hr"></div>')
+
+  /* من مَلفى — image first, headline under it, then a plain numbered list */
+  +'<div class="s32"></div><div class="hr"></div><div class="s24"></div>'
   +sec('من مَلفى','الكل','كل المواد — قريبًا')
   +'<div class="s16"></div>'
   +edHTML(TOPICS[0],true)
   +'<div class="s24"></div><div class="hr"></div>'
   +TOPICS.slice(1,4).map(function(t,i){return erowHTML(t,i+2);}).join('<div class="hr"></div>')
   +'<div class="hr"></div>'
-
-  +'<div class="s32"></div>'
-  +sec('اختيار مَلفى','','')
-  +'<div class="pad"><p class="body" style="margin-top:6px;max-width:32ch">مختارة بيد محرري مَلفى، مو بخوارزمية.</p></div>'
-  +'<div class="s10"></div>'
-  +PICKS.slice(0,3).map(collHTML).join('<div class="hr"></div>')
 
   +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
   +'<div class="pad"><div class="kick">مَلفى الشهر</div>'
@@ -860,6 +915,7 @@ function libBody(){
    SCREEN — مَلفى (community)
    ============================================================ */
 function communityHTML(){
+  var who=PEOPLE[0];
   return ''
   +'<div class="thead"><h1>مَلفى</h1>'
     +'<button class="hdr-btn" data-toast="بحث عن قرّاء — قريبًا">'+ic('search',22)+'</button></div>'
@@ -876,6 +932,28 @@ function communityHTML(){
       +'<span><h4>'+esc(p.n)+'</h4>'
       +'<span class="meta" style="display:block;margin-top:3px">'+esc(p.role)+'</span></span></button>';
   }).join('')+'</div>'
+
+  /* كيف يقرأ — one reader, given room, instead of four identical panels */
+  +'<div class="s32"></div><div class="hr"></div><div class="s24"></div>'
+  +'<div class="pad"><div class="kick">كيف يقرأ...</div></div>'
+  +'<div class="s14"></div>'
+  +'<div class="who">'
+    +'<div style="display:flex;align-items:center;gap:11px">'
+      +'<span class="plate sq" style="width:44px;height:44px;--p:'+stock(who.st).p+'">'+mono(who.n,stock(who.st))+'</span>'
+      +'<span><span class="meta2" style="display:block">'+esc(who.n)+'</span>'
+      +'<span class="meta" style="display:block;margin-top:2px">'+esc(who.role)+'</span></span></div>'
+    +'<h3>كيف تقرأ '+esc(who.n.split(' ')[0])+'؟</h3>'
+    +'<p>'+esc(who.line)+'</p>'
+    +'<div class="who-books">'+who.books.map(function(x){return cover(x,74);}).join('')+'</div>'
+    +'<div style="display:flex;gap:20px;align-items:center;margin-top:6px">'
+    +'<button class="lnk" data-person="'+who.id+'">شوف ملفها'+ic('arrow',15)+'</button>'
+    +'<button class="lnk plain" data-toast="كل الملفات — قريبًا">كل من قرأنا معهم'+ic('arrow',15)+'</button></div></div>'
+
+  /* مجموعاتي — collections built while reading, including الأصدقاء وتواريخ مهمة */
+  +'<div class="s32"></div>'
+  +sec('مجموعاتي','مكتبتي','')
+  +'<div class="s10"></div>'
+  +COLLECTIONS.map(collHTML).join('<div class="hr"></div>')
 
   +'<div class="s32"></div>'
   +sec('قوائم من الناس','','')
@@ -1219,8 +1297,9 @@ var TABS=[
  {k:'account',i:'person',l:'حسابي'}
 ];
 var VIEWS={home:homeHTML,library:libraryHTML,community:communityHTML,discover:discoverHTML,
-  account:accountHTML,book:bookHTML,profile:profileHTML,done:doneHTML,friend:friendHTML};
-var PUSHED={book:1,profile:1,done:1,friend:1};
+  account:accountHTML,book:bookHTML,profile:profileHTML,done:doneHTML,friend:friendHTML,
+  welcome:welcomeHTML,auth:authHTML};
+var PUSHED={book:1,profile:1,done:1,friend:1,welcome:1,auth:1};
 
 var app=document.getElementById('app'),tabbar=document.getElementById('tabbar'),
     sheet=document.getElementById('sheet'),backdrop=document.getElementById('backdrop'),
@@ -1455,6 +1534,13 @@ document.getElementById('phone').addEventListener('click',function(e){
     },110);
     return;
   }
+  if((t=e.target.closest('[data-skip]'))){enterAuth();return;}
+  if((t=e.target.closest('[data-authtoggle]'))){
+    authMode=authMode==='login'?'signup':'login';
+    document.getElementById('authBody').innerHTML=authBodyHTML();
+    return;
+  }
+  if((t=e.target.closest('[data-enter]'))){enterApp();return;}
   if((t=e.target.closest('[data-toast]'))){toast(t.dataset.toast);return;}
 });
 
@@ -1482,7 +1568,16 @@ if(document.fonts&&document.fonts.ready){
   });
 }
 
-renderTabs();
-mount('home');
+/* ---------- opening: welcome auto-advances to login/sign-up, then app ---------- */
+var bootTimer=null;
+function enterAuth(){
+  if(bootTimer){clearTimeout(bootTimer);bootTimer=null;}
+  if(current&&current.dataset.name==='welcome')mount('auth','fade');
+}
+function enterApp(){
+  STATE.tab='home';renderTabs();mount('home','fade');
+}
+mount('welcome');
+bootTimer=setTimeout(enterAuth,REDUCE?700:2600);
 })();
 </script>
