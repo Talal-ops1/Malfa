@@ -1,0 +1,14 @@
+{
+ "wordmark": {
+  "w": 8486,
+  "h": 3988,
+  "ratio": 2.128
+ },
+ "mark": {
+  "w": 4508,
+  "h": 1768,
+  "ratio": 2.55
+ },
+ "clearspace_unit_units": 1393.0,
+ "clearspace_as_pct_of_wordmark_height": 35
+}
