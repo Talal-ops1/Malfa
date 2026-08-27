@@ -904,6 +904,33 @@ function arErrorMessage(error){
   if(/network|fetch/i.test(msg))return 'ما قدرنا نتصل. تأكد من الإنترنت وحاول.';
   return 'صار خطأ. حاول مرة ثانية.';
 }
+/* ---------- admin dashboard hooks: minimal, real event logging ----------
+   Successful sign_in/sign_out/register go straight into auth_events via the
+   normal self-row RLS insert policy. A failed login has no session, so it
+   can't use RLS — it goes through the narrow public log-failed-signin
+   function instead (see admin/index.html + CLAUDE_CODE_HANDOFF.md §16). */
+function deviceInfo(){
+  var ua=navigator.userAgent||'';
+  var platform=/iPhone|iPad|iPod/.test(ua)?'iOS':/Android/.test(ua)?'Android':/Mac/.test(ua)?'Mac':/Win/.test(ua)?'Windows':'ويب';
+  return {device:ua.slice(0,120),platform:platform};
+}
+function logAuthEvent(userId,type){
+  var d=deviceInfo();
+  return sb.from('auth_events').insert({user_id:userId,event_type:type,status:'success',device:d.device,platform:d.platform})
+    .then(function(){},function(){});
+}
+function logFailedSignin(email){
+  var d=deviceInfo();
+  fetch('https://ntpwnrsckacwqzvgoysb.supabase.co/functions/v1/log-failed-signin',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email,device:d.device,platform:d.platform})
+  }).catch(function(){});
+}
+function touchLastSeen(){
+  if(!ME)return;
+  sb.from('profiles').update({last_seen_at:new Date().toISOString()}).eq('id',ME.id).then(function(){},function(){});
+}
+
 function handleAuthSubmit(btn){
   var emailEl=document.getElementById('authEmail'),passEl=document.getElementById('authPass'),
       nameEl=document.getElementById('authName'),errEl=document.getElementById('authErr');
@@ -921,6 +948,7 @@ function handleAuthSubmit(btn){
     if(res.error){
       btn.disabled=false;btn.textContent=origLabel;
       errEl.textContent=arErrorMessage(res.error);
+      if(authMode==='login')logFailedSignin(email);
       return;
     }
     if(authMode==='signup'&&(!res.data||!res.data.session)){
@@ -930,6 +958,8 @@ function handleAuthSubmit(btn){
     }
     ME={id:res.data.user.id,email:res.data.user.email};
     IS_NEW_SIGNUP=(authMode==='signup');
+    logAuthEvent(ME.id,IS_NEW_SIGNUP?'register':'sign_in');
+    touchLastSeen();
     loadAll().then(function(){
       if(IS_NEW_SIGNUP)startOnboarding();
       else{STATE.tab='home';renderTabs();mount('home','fade');}
@@ -1914,23 +1944,30 @@ function enterAuth(){
   if(current&&current.dataset.name==='welcome')mount('auth','fade');
 }
 function handleLogout(){
-  sb.auth.signOut().then(function(){
-    ME=null;MY_NAME='';MY_CREATED_AT=null;
-    MY_LIB={reading:[],next:[],finished:[],dropped:[]};MY_PROGRESS={};MY_JOURNEY={};MY_COLLECTIONS=[];
-    STATE={tab:'home',book:null,person:'noura',stack:[],page:1,genreFilter:''};
-    authMode='login';
-    mount('auth','fade');
-  });
+  var uid=ME&&ME.id;
+  function finish(){
+    sb.auth.signOut().then(function(){
+      ME=null;MY_NAME='';MY_CREATED_AT=null;
+      MY_LIB={reading:[],next:[],finished:[],dropped:[]};MY_PROGRESS={};MY_JOURNEY={};MY_COLLECTIONS=[];
+      STATE={tab:'home',book:null,topic:null,stack:[],page:1,genreFilter:''};
+      authMode='login';
+      mount('auth','fade');
+    });
+  }
+  if(uid)logAuthEvent(uid,'sign_out').then(finish,finish);else finish();
 }
 sb.auth.getSession().then(function(res){
   var session=res.data&&res.data.session;
   if(session){
     ME={id:session.user.id,email:session.user.email};
+    touchLastSeen();
     loadAll().then(function(){STATE.tab='home';renderTabs();mount('home');});
   }else{
     mount('welcome');
     bootTimer=setTimeout(enterAuth,REDUCE?700:2600);
   }
 });
+setInterval(function(){if(ME&&document.visibilityState==='visible')touchLastSeen();},4*60000);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&ME)touchLastSeen();});
 })();
 </script>

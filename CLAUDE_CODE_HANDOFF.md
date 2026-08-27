@@ -353,6 +353,147 @@ Summary of what changed:
       (light↔dark, verified no chrome-bar regression), voice sheet opens
       and degrades gracefully without mic permission, logout/login, and the
       two-account isolation check above
-- [ ] **Deploy reminder**: `deploy/index.html` is synced with every change
-      in this batch, but it is NOT live until the user redeploys it to
-      Vercel — I have no deploy tool on this machine.
+- [x] **Deploy reminder**: `deploy/index.html` is synced with every change
+      in this batch. The consumer app is live at malfaapp.vercel.app via
+      manual Vercel redeploys done by the user (I have no deploy tool). The
+      repo is now also pushed to https://github.com/Talal-ops1/Malfa — see
+      §16 below for how that's connected going forward.
+
+## 16. Active task — separate private admin dashboard (2026-08-28)
+
+Given directly by the user: a real, separate, private admin web app for
+MALFA operators (not a screen inside the consumer app), monitoring users and
+authentication activity. Built at [admin/index.html](admin/index.html) —
+same single-file-per-surface convention as the consumer app, but a distinct
+deployable product with its own login gated to admin accounts.
+
+**Design skills used per the user's instruction**: `ui-ux-pro-max` (its
+generic product/color-palette match was a landing-page green scheme — wrong
+fit, MALFA's own khuzama/paper/charcoal spec from the user overrides it, but
+its chart guidance (line chart for growth, bar for plan distribution, always
+show values as text not hover-only) and table guidance (horizontal scroll,
+not cards) were applied directly) and `emil-design-eng` (panel slide
+easing/duration, restrained motion, no animation on frequent actions).
+
+**Schema additions** (same Supabase project, migration `admin_dashboard_schema`):
+`profiles.is_admin` (bool, default false — the real account
+`talalmqahtani@gmail.com` is the only one set `true`) and
+`profiles.last_seen_at` (heartbeat timestamp); `auth_events` (audit log:
+sign_in/sign_in_failed/sign_out/register/password_reset/session_expired/
+plan_change/account_suspended/account_reactivated, indexed on user_id/
+event_type/created_at, server-timestamped via column default — never
+client-supplied); `plans`/`user_plans` (schema only, deliberately seeded with
+**zero rows** — there is no real subscription/plan system anywhere in MALFA
+yet, so the dashboard's "Plans" section and the KPI's paid/free split show
+this honestly — "لا يوجد نظام خطط مُفعّل بعد" — rather than inventing plan
+names or pricing the user explicitly said not to fabricate).
+
+**RLS**: `auth_events`/`plans`/`user_plans` are admin-select-only
+(`exists(...profiles where id=auth.uid() and is_admin)`). `auth_events` also
+allows a signed-in user to insert **only their own** row and **only** for
+the self-reportable event types (`sign_in`/`sign_in_failed`/`sign_out`/
+`register`) — plan changes/suspensions are not client-insertable, so a
+regular user can never forge those.
+
+**Server-side privileged reads — the security-critical piece**: the
+service-role key is used *only* inside two Supabase Edge Functions, never in
+any browser-shipped code.
+- `admin-api` (one function, `?action=stats|users|user_detail|events|plans`
+  router) — every request re-verifies the caller's JWT via
+  `admin.auth.getUser()` **and** re-checks `profiles.is_admin` itself
+  (doesn't trust the frontend's gate) before touching any data; returns 401
+  for a missing/invalid/expired token, 403 for a valid-but-non-admin token.
+  Reads `auth.users` (email, created_at, last_sign_in_at) via
+  `auth.admin.listUsers()`/`getUserById()` — the GoTrue admin API, not raw
+  SQL — since `auth` isn't exposed through PostgREST.
+- `log-failed-signin` — the one deliberately public (no JWT possible —
+  a failed login has no session) endpoint, and it's narrow on purpose: takes
+  only `{email}`, looks the user up server-side, inserts one
+  `sign_in_failed` row, and **always returns a bare 204 regardless of
+  whether the email exists** — so it can't be used to enumerate accounts. A
+  tiny in-memory per-isolate debounce blunts naive repeated hits.
+
+**Consumer app hooks** (`v4/p9-comp.html`, minimal, per the user's own
+carve-out for "strictly required" hooks): `logAuthEvent()` (self-row RLS
+insert) fires on real login/register success; `handleLogout()` logs
+`sign_out` *before* tearing down the session (has to — the insert needs
+`auth.uid()` to still resolve); a failed `signInWithPassword` calls
+`logFailedSignin()` (the public function above); `touchLastSeen()` updates
+`profiles.last_seen_at` on boot/session-restore and on a 4-minute
+heartbeat/visibility-regain — all verified end-to-end with real events
+(see Verification below).
+
+**"Active now" and "last seen" — defined, not vibes**: active = `last_seen_at`
+within 5 minutes (shown in the KPI card's own subtitle, not left implicit).
+Closing the tab is *not* sign-out — sign-out is only logged on the explicit
+logout button, matching the user's own caution about this.
+
+**Frontend** (`admin/index.html`): RTL, IBM Plex Sans Arabic throughout (not
+the project's Thick Naskh Swash display face — a decorative swash serif
+actively hurts legibility at dense operational information density, which
+contradicts "calm, intelligent, minimal, operational"; noted here rather
+than silently following the letter of "match MALFA's identity" over its
+spirit). Alyamama/Thmanyah Sans were requested "if already licensed" —
+neither actually is in this project (Alyamama was removed this session;
+Thmanyah Sans was never a real loaded font, just a stale fallback name) — so
+per the instruction's own fallback, the project's actual current fonts are
+used instead. Dark charcoal sidebar (fixed, RTL-start/right-anchored) +
+light paper content area, matching "paper should dominate, charcoal is
+chrome." Hand-rolled SVG-free bar/line charts (no charting library —
+values are always shown as text per the accessibility guidance pulled from
+`ui-ux-pro-max`, not hover-only). Users table: search debounced 300ms, 11
+filter chips exactly matching the requested filter set, 3 sort orders,
+paginated (25/page), horizontal-scroll wrapper (not cards) below ~860px. A
+detail side panel slides from the content-start edge. Full UX states:
+loading skeletons, empty search/no-users/no-events, network error+retry,
+permission-denied (signed in but not admin), and a centralized 401 handler
+in `api()` that signs out and returns to login from *any* call site — this
+was a real bug caught during testing (see below), not a guess.
+
+### What's connected to live data vs. fixtures
+
+**Nothing in the admin dashboard is a fixture.** Every KPI, table row, and
+event is a real Supabase query through the two Edge Functions above. The
+only reason `plans`/`user_plans`/`paid_users` show zero is that MALFA has no
+real plan system yet — that's the honest state, not a placeholder.
+
+### Verification
+
+1. `bash v4/build.sh admin/index.html` → `JS OK`.
+2. `get_advisors` (security) clean except one pre-existing, unrelated
+   Auth-settings recommendation (leaked-password protection — a dashboard
+   toggle, not something a migration can fix; worth the user turning on).
+3. Confirmed both Edge Function auth gates directly: no token → 401; a real
+   non-admin account's token → 403.
+4. Temporarily granted `is_admin` to a throwaway QA account, logged into the
+   dashboard with it, and drove every tab: Overview (real counts + working
+   charts), Users (search/filter/sort/pagination + detail panel with real
+   account/plan/event data), Events (empty state, then real rows), Plans
+   (honest empty state), mobile-width fallback layout.
+5. **Caught and fixed a real bug this way**: mid-test, the same QA
+   account's session was invalidated (`sb.auth.signOut()`'s default scope is
+   `'global'` — signing out of the consumer app on one origin revoked the
+   admin dashboard's session on another). The dashboard's individual tab
+   loaders didn't all handle a 401 consistently — fixed by centralizing it
+   in `api()` once, so every call site benefits automatically.
+6. Generated real consumer-app events (wrong password, correct password,
+   logout) and confirmed all three appeared correctly in the admin Events
+   log with accurate status/device/timestamp — end-to-end pipeline verified,
+   not assumed.
+7. Cleaned up: QA account's admin flag and the account itself both removed;
+   only the user's real account remains, correctly flagged admin.
+
+### How to access it
+
+Not deployed yet — `admin-deploy/index.html` is ready (same drag-and-drop
+Vercel flow as the consumer app, but as its **own separate project/URL**,
+kept private — nothing links to it from the consumer app, and it isn't
+discoverable). Sign in with the real MALFA account
+(`talalmqahtani@gmail.com`) — it's the only account with `is_admin=true`.
+
+### Repo / deploy note
+
+The repo is now pushed to https://github.com/Talal-ops1/Malfa (main
+branch). No Vercel Git integration is connected yet — both `deploy/` (consumer
+app) and `admin-deploy/` (this dashboard) still need a manual drag-and-drop
+deploy per change until that's set up.
