@@ -105,7 +105,7 @@ requires asking about first.
 
 **Supabase project:** `ntpwnrsckacwqzvgoysb` (org "Malfa", already existed,
 was empty) — `https://ntpwnrsckacwqzvgoysb.supabase.co`. URL + publishable
-key (`sb_publishable_...`) are embedded in `v4/p9-comp.html` — this is normal
+key (`sb_publishable_...`) are embedded in `v4/index.html` — this is normal
 for Supabase's client model (protected by RLS), not a leaked secret.
 `supabase-js@2` is loaded from a CDN `<script>` tag — the app's only external
 JS dependency (previously zero).
@@ -121,7 +121,7 @@ column — one of رواية/تاريخ/أدب/ثقافة/سيرة/فكر, hand-
 page_to, is_start`), `collections` + `collection_books`. `get_advisors`
 (security) is clean.
 
-**Client-side data layer** (`v4/p9-comp.html`, right after `B`'s
+**Client-side data layer** (`v4/index.html`, right after `B`'s
 declaration): `ME`, `MY_NAME`, `MY_CREATED_AT`, `MY_LIB` (replaces the old
 static `LIB`), `MY_PROGRESS` (book_id → page, replaces reading `B[id].page`
 for the real user), `MY_JOURNEY` (book_id → rows, replaces the old static
@@ -413,7 +413,7 @@ any browser-shipped code.
   whether the email exists** — so it can't be used to enumerate accounts. A
   tiny in-memory per-isolate debounce blunts naive repeated hits.
 
-**Consumer app hooks** (`v4/p9-comp.html`, minimal, per the user's own
+**Consumer app hooks** (`v4/index.html`, minimal, per the user's own
 carve-out for "strictly required" hooks): `logAuthEvent()` (self-row RLS
 insert) fires on real login/register success; `handleLogout()` logs
 `sign_out` *before* tearing down the session (has to — the insert needs
@@ -507,7 +507,7 @@ deploy per change until that's set up.
 this and no longer kept in sync; they can be deleted in a future cleanup but
 weren't touched here to stay in scope.)*
 
-Nine-item request, all in [v4/p9-comp.html](v4/p9-comp.html) plus three new
+Nine-item request, all in [v4/index.html](v4/index.html) plus three new
 Supabase migrations and one new Edge Function. No admin-dashboard changes.
 
 **Font**: the attached `IBMPlexArabic-Text.ttf` is embedded base64 (same

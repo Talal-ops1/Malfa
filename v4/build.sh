@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Validates the inline <script> in p9-comp.html.
+# Validates the inline <script> in index.html.
 # Extracts the script body and syntax-checks it (parse only, never executed)
 # so DOM/window/document references don't trip a real runtime error.
 # Prints "JS OK" on success.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC="${1:-$DIR/p9-comp.html}"
+SRC="${1:-$DIR/index.html}"
 TMP="$(mktemp -t malfa-js-XXXXXX.js)"
 trap 'rm -f "$TMP"' EXIT
 

@@ -2,7 +2,7 @@
 
 MALFA is a single-HTML-file, RTL Arabic, client-only prototype of a reading app.
 There is no backend, no build step, no dependencies — everything (markup, CSS,
-data, and JS) lives in one file: [v4/p9-comp.html](v4/p9-comp.html).
+data, and JS) lives in one file: [v4/index.html](v4/index.html).
 
 ## Rules
 
@@ -24,7 +24,7 @@ data, and JS) lives in one file: [v4/p9-comp.html](v4/p9-comp.html).
   redesign screens, rename things, or "clean up" areas that weren't part of
   the request.
 
-## Architecture (as it exists in v4/p9-comp.html)
+## Architecture (as it exists in v4/index.html)
 
 - One `<style>` block (design tokens in `:root`, then component CSS), one
   `<script>` block — everything else is a couple of `<div>`s (`.stage >
