@@ -497,3 +497,114 @@ The repo is now pushed to https://github.com/Talal-ops1/Malfa (main
 branch). No Vercel Git integration is connected yet — both `deploy/` (consumer
 app) and `admin-deploy/` (this dashboard) still need a manual drag-and-drop
 deploy per change until that's set up.
+
+## 17. Active task — منارة, real friend invites, custom books, IBM font, cleanup (2026-08-28)
+
+*(Since §16: Vercel Git integration was connected for both projects —
+`malfaapp.vercel.app` reads `v4/` as its root, `malfaappl.vercel.app` reads
+`admin/` — so a push to `main` now auto-deploys both. The `deploy/` and
+`admin-deploy/` folders from the manual drag-and-drop era are superseded by
+this and no longer kept in sync; they can be deleted in a future cleanup but
+weren't touched here to stay in scope.)*
+
+Nine-item request, all in [v4/p9-comp.html](v4/p9-comp.html) plus three new
+Supabase migrations and one new Edge Function. No admin-dashboard changes.
+
+**Font**: the attached `IBMPlexArabic-Text.ttf` is embedded base64 (same
+no-network-dependency method as the existing Thick Naskh Swash) as
+`--f-u` (secondary/functional — body, buttons, forms, nav). `--f-d`
+(headline) stays Thick Naskh Swash, unchanged. `FAMS` console-verification
+array updated to list all three families.
+
+**Welcome screen**: added `صُنع بحب من عيينة | الرياض` under the existing
+"مكان كل القراء" line; animation/motion untouched (already calm per the
+6-point override).
+
+**منارة** (new tab inside a book's journey, alongside the existing full
+chronological record): a real LLM call, never a client-side stitch. New
+Edge Function `summarize-journey` — takes only the signed-in caller's own
+`journey_entries` text for that book, calls the Anthropic API
+(`claude-sonnet-4-5`) server-side with a system prompt that explicitly
+forbids summarizing the book's own (copyrighted) content or inventing
+anything the user didn't say, returns 2-5 paragraphs. **The user still needs
+to add `ANTHROPIC_API_KEY` as an Edge Function secret via the Supabase
+dashboard (Project Settings → Edge Functions → Secrets) — I have no tool to
+set it and, per the credential rule, would never accept it pasted into
+chat.** New table `journey_summaries` (owner-only RLS + a public-select
+policy scoped to `is_shared=true`, so a shared منارة is what finally
+populates the previously-empty "تجارب مع الكتب" section in مَلفى — closing
+that loop rather than opening a new fake one). UI: intro line "هنا يقف
+الراوي على أطلال رحلته وتلخيصها." → cached summary (regenerated only when
+new entries exist since the cache) → one checkbox, `مشاركة منارتي مع
+الآخرين`, unchecked by default; checking it opens an editable review step
+(the summary text, editable, with a confirm action) before anything is
+written as shared — no Yes/No buttons anywhere in that flow, per the brief.
+
+**Friend invites**: replaced the old link-copy flow. New `search_profiles(q
+text)` `SECURITY DEFINER` function (id+name only, `execute` revoked from
+`anon`/`public`) backs a live search-as-you-type sheet ("اكتب اسم الحساب
+اللي تبي تشاركه الكتاب"). New table `reading_invites`
+(book_id/user_book_id, from/to, status) with sender-insert / either-side-read
+/ recipient-updates-status RLS. `friendHTML()` now shows real state: a
+pending invite addressed to the signer renders with قبول/رفض buttons
+(`respondInvite()`); a pending invite the signer already sent shows "بانتظار
+ردّ {name}" instead of the generic empty state; otherwise the real empty
+state plus the search-invite button. (Caught and fixed one bug here during
+this pass: after sending an invite, the sheet closed and refreshed the
+screen from stale in-memory invite arrays, so the new "بانتظار الرد" state
+didn't show until next navigation — fixed by re-fetching invites before the
+refresh instead of after.)
+
+**"اختيار مَلفى" removed**: its 4 topic rows now render directly under "من
+مَلفى"'s existing orange-card treatment on Home; اكتشف's section is just
+relabeled "من مَلفى" (no separate card there — that identity lives on Home
+only). "شارك بإثراء مَلفى" / "شارك كتاباتك" added under the same content,
+opening a real single-textarea sheet that inserts into a new
+`contributions` table (self-insert/self-select RLS) — a real row, not
+placeholder theater.
+
+**Books MALFA can't publish / isn't cataloged**: new `user_books` table
+(owner-scoped, entirely separate from the curated public `books` catalog so
+it never leaks into other users' اكتشف). `library_entries`/`journey_entries`
+gained a nullable `user_book_id` alongside the now-nullable `book_id`, with a
+one-of check constraint (fixed a follow-up bug: the first uniqueness
+constraint on `journey_summaries` used all three of
+`user_id,book_id,user_book_id` together, which doesn't dedupe correctly
+since NULL≠NULL in Postgres — replaced with two partial unique indexes,
+matching the pattern `library_entries` already used). مكتبتي's add-book
+sheet gained "ما لقيت الكتاب؟" → photograph the cover (`capture="environment"`
+file input) and/or type title + optional author → starts the reading
+journey immediately, no catalog dependency. Covers go to a **private**
+Storage bucket (`book-covers`, owner-folder-scoped, `createSignedUrl` reads
+— never a public URL, since a photographed cover may itself be copyrighted).
+منارة sharing for these books still only ever shares the user's own
+generated text, never the book's content, same as cataloged books.
+
+**Language cleanup**: خواطر/دردشة removed from all occurrences, replaced
+with vocabulary already used elsewhere (محطة/تسجيلات/تجارب) rather than
+inventing new terms.
+
+### Verification
+
+1. `bash v4/build.sh` → `JS OK` after every edit in this batch, final state
+   confirmed clean.
+2. `get_advisors` (security): clean except the two intentional
+   `SECURITY DEFINER` warnings on `profile_names`/`search_profiles` (both
+   deliberately narrow, id+name only, that's the whole point of the
+   function) and the pre-existing leaked-password-protection Auth setting
+   (unrelated to this batch, a dashboard toggle for the user).
+3. `list_tables`: `journey_summaries`, `reading_invites`, `contributions`,
+   `user_books` all present with RLS enabled.
+4. Grepped the shipped file for خواطر/دردشة (zero hits) and "اختيار مَلفى"
+   as user-facing copy (zero — the only remaining occurrence is a code
+   comment explaining the removal).
+5. **Not yet done**: a live browser QA pass on the deployed site (منارة
+   generation end-to-end needs the user's `ANTHROPIC_API_KEY` secret first),
+   and confirming a shared منارة actually surfaces in a second test
+   account's مَلفى tab.
+
+### Repo / deploy note
+
+Committed on top of the §16 state; `deploy/`/`admin-deploy/` intentionally
+left un-synced (see note at the top of this section — they're superseded by
+the Git-connected Vercel deploy).
