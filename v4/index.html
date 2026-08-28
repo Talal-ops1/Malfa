@@ -56,6 +56,7 @@
   :root:not([data-theme="dark"]) .stage{background:radial-gradient(120% 80% at 50% 0%,#fff 0%,#F0EADC 60%)}
   :root:not([data-theme="dark"]) .phone{box-shadow:0 0 0 10px #E4DCC9,0 0 0 11px rgba(0,0,0,.05),0 44px 100px -30px rgba(0,0,0,.22)}
   :root:not([data-theme="dark"]) .statusbar{color:var(--ink)}
+  :root:not([data-theme="dark"]) .open-q{color:var(--khz-txt)}
 }
 :root[data-theme="light"]{
   --ground:#FAF7F1;--ground-2:#F0EADC;--rule:rgba(23,17,10,.08);--rule-2:rgba(23,17,10,.16);
@@ -66,6 +67,7 @@ body[data-theme="light"]{background:#F0EADC}
 :root[data-theme="light"] .stage{background:radial-gradient(120% 80% at 50% 0%,#fff 0%,#F0EADC 60%)}
 :root[data-theme="light"] .phone{box-shadow:0 0 0 10px #E4DCC9,0 0 0 11px rgba(0,0,0,.05),0 44px 100px -30px rgba(0,0,0,.22)}
 :root[data-theme="light"] .statusbar{color:var(--ink)}
+:root[data-theme="light"] .open-q{color:var(--khz-txt)}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:#050406;font-family:var(--f-u);color:var(--ink)}
@@ -256,9 +258,13 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .bar{height:2px;background:color-mix(in srgb,var(--ink) 14%,transparent);overflow:hidden;margin-top:14px}
 .bar i{display:block;height:100%;background:var(--khz-txt)}
+.menara-intro{font-family:var(--f-d);font-size:20px;font-weight:600;line-height:1.7;color:var(--ink);
+  text-align:center;max-width:30ch;margin:0 auto;padding:34px var(--pad) 30px}
 .refl-lead{display:flex;align-items:center;gap:7px;color:var(--khz-txt)}
 .refl-lead span{font-family:var(--f-u);font-size:11.5px;font-weight:600}
 .refl-q{font-family:var(--f-d);font-size:18px;font-weight:400;line-height:1.85;margin:10px 0 0;color:var(--ink)}
+.refl-q.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.refl-more{margin-top:6px;display:none}
 .refl-row{display:flex;align-items:center;gap:11px;margin-top:14px}
 .play{width:34px;height:34px;border-radius:50%;background:var(--khz);color:#fff;display:flex;align-items:center;
   justify-content:center;flex:none;transition:background var(--t1) ease,transform var(--press-out) var(--ease-out)}
@@ -465,13 +471,13 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .welcome{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:0 44px}
 .w-mark{font-family:var(--f-d);font-size:42px;font-weight:700;color:var(--ink);margin:0;
-  opacity:0;transform:translateY(5px) scale(.98);animation:wIn 1000ms var(--ease-out) 160ms forwards}
+  opacity:0;transform:translateY(5px) scale(.98);animation:wIn 900ms var(--ease-out) 150ms forwards}
 .w-tag{font-family:var(--f-u);font-size:15px;font-weight:500;color:var(--ink-2);margin:16px 0 0;
-  opacity:0;transform:translateY(5px);animation:wIn 900ms var(--ease-out) 820ms forwards}
+  opacity:0;transform:translateY(5px);animation:wIn 800ms var(--ease-out) 900ms forwards}
 .w-love{position:absolute;bottom:56px;inset-inline:0;text-align:center;
-  font-family:var(--f-u);font-size:11.5px;color:var(--ink-3);opacity:0;animation:wFade 1000ms ease 1650ms forwards}
+  font-family:var(--f-u);font-size:11.5px;color:var(--ink-3);opacity:0;animation:wFade 800ms ease 1650ms forwards}
 @keyframes wIn{to{opacity:1;transform:none}}
-@keyframes wFade{to{opacity:.7}}
+@keyframes wFade{to{opacity:.75}}
 
 .auth-h{font-family:var(--f-d);font-size:27px;font-weight:700;line-height:1.44;margin:14px 0 0}
 .field{margin-top:16px}
@@ -655,9 +661,6 @@ var ST=[
    no art). Every author died 600+ years ago. */
 var B={
 alfleila:{t:'ألف ليلة وليلة',a:'تراث شعبي',pub:'—',st:1,l:'type',pages:600,page:0,year:'قديم',g:'رواية'},
-kalila:{t:'كليلة ودمنة',a:'ابن المقفع',pub:'—',st:6,l:'type',pages:280,page:0,year:'756',g:'أدب'},
-bukhala:{t:'البخلاء',a:'الجاحظ',pub:'—',st:8,l:'type',pages:320,page:0,year:'868',g:'أدب'},
-hayy:{t:'حي بن يقظان',a:'ابن طفيل',pub:'—',st:2,l:'type',pages:120,page:0,year:'1185',g:'فكر'},
 ghufran:{t:'رسالة الغفران',a:'أبو العلاء المعري',pub:'—',st:5,l:'type',pages:260,page:0,year:'1057',g:'أدب'},
 muqaddimah:{t:'مقدمة ابن خلدون',a:'ابن خلدون',pub:'—',st:0,l:'type',pages:540,page:0,year:'1406',g:'تاريخ'},
 tabari:{t:'تاريخ الطبري (مختارات)',a:'الطبري',pub:'—',st:7,l:'type',pages:480,page:0,year:'923',g:'تاريخ'},
@@ -680,6 +683,7 @@ var sb=window.supabase.createClient(
 var ME=null;                 /* {id, email} once signed in */
 var MY_NAME='';
 var MY_CREATED_AT=null;
+var MY_DISCOVERABLE=true;    /* public account — findable in friend search across all of MALFA */
 var MY_LIB={reading:[],next:[],finished:[],dropped:[]};
 var MY_PROGRESS={};          /* book key (catalog id or user_book uuid) -> page */
 var MY_JOURNEY={};           /* book key -> [{note,duration_sec,page_from,page_to,is_start,created_at}] */
@@ -731,9 +735,19 @@ function loadGenres(){
   });
 }
 function loadProfile(){
-  return sb.from('profiles').select('name,created_at').eq('id',ME.id).single().then(function(res){
+  return sb.from('profiles').select('name,created_at,is_discoverable').eq('id',ME.id).single().then(function(res){
     MY_NAME=(res.data&&res.data.name)||'';
     MY_CREATED_AT=res.data&&res.data.created_at;
+    MY_DISCOVERABLE=res.data?res.data.is_discoverable!==false:true;
+  });
+}
+function togglePublicAccount(){
+  var next=!MY_DISCOVERABLE;
+  MY_DISCOVERABLE=next;
+  refreshIfCurrent('account');
+  sb.from('profiles').update({is_discoverable:next}).eq('id',ME.id).then(function(res){
+    if(res.error){MY_DISCOVERABLE=!next;refreshIfCurrent('account');toast('صار خطأ، حاول مرة ثانية.');return;}
+    toast(next?'حسابك عام الآن — يظهر في البحث بين قرّاء مَلفى.':'حسابك خاص الآن — ما يظهر في البحث.');
   });
 }
 function fmtMonthYear(iso){if(!iso)return'';var d=new Date(iso);return AR_MONTHS[d.getMonth()]+' '+d.getFullYear();}
@@ -820,11 +834,10 @@ function loadAll(){
 }
 
 /* real historical authors of the catalog above — factual, not simulated people */
-var AUTHORS=[{n:'ابن المقفع',st:6},{n:'الجاحظ',st:8},{n:'ابن طفيل',st:2},
- {n:'أبو العلاء المعري',st:5},{n:'ابن خلدون',st:0},{n:'الطبري',st:7},
+var AUTHORS=[{n:'أبو العلاء المعري',st:5},{n:'ابن خلدون',st:0},{n:'الطبري',st:7},
  {n:'ابن عبد ربه',st:9},{n:'بديع الزمان الهمذاني',st:10}];
 
-var GENRES=['رواية','تاريخ','أدب','ثقافة','سيرة','فكر'];
+var GENRES=['رواية','تاريخ','أدب','ثقافة','سيرة'];
 
 /* من مَلفى editorial topics — plain topic pages, real short essays, no filler */
 var TOPIC_PAGES={
@@ -912,7 +925,7 @@ function welcomeHTML(){
   return '<div class="welcome" data-skip="1">'
     +'<h1 class="w-mark">مَــلفى</h1>'
     +'<p class="w-tag">مكان كل القراء</p>'
-    +'<p class="w-love">صُنع بحب من عيينة | الرياض</p>'
+    +'<p class="w-love">صُنع بحب من العيينة | الرياض</p>'
     +'</div>';
 }
 
@@ -1135,7 +1148,8 @@ function homeHTML(){
     '<div class="s20"></div><div class="hr"></div><div class="s18" style="height:18px"></div>'
     +'<div class="pad">'
       +'<div class="refl-lead">'+ic('wave',15)+'<span>آخر شيء علق معك</span></div>'
-      +'<p class="refl-q">«'+esc(latest.row.note)+'»</p>'
+      +'<p class="refl-q clamp" id="reflQ">«'+esc(latest.row.note)+'»</p>'
+      +'<button class="lnk plain refl-more" id="reflMoreBtn" data-reflmore="1">عرض المزيد'+ic('arrow',13)+'</button>'
       +'<div class="refl-row"><button class="play" data-play="1">'+ic('play',15)+'</button>'
         +'<span class="wave" id="homeWave">'+waveBars(28,0)+'</span>'
         +'<span class="meta tnum">'+esc(fmtDur(latest.row.duration_sec))+'</span></div>'
@@ -1144,6 +1158,8 @@ function homeHTML(){
 
   +'<div class="s32"></div><div class="hr"></div><div class="s24"></div>'
   +sec('بعدها','مكتبتي','')
+  +'<div class="s14"></div>'
+  +'<div class="chips">'+GENRES.map(function(g){return '<button class="chip" data-genre="'+esc(g)+'">'+esc(g)+'</button>';}).join('')+'</div>'
   +'<div class="s14"></div>'
   +'<div class="rail">'+Object.keys(B).filter(function(id){return id!==STATE.book;}).slice(0,6)
     .map(function(i){return bk(i,102);}).join('')+'</div>'
@@ -1160,8 +1176,6 @@ function homeHTML(){
   +'</button>'
   +'<div class="s20"></div>'
   +'<div class="pad"><p class="body" style="margin-top:0;max-width:32ch">مواضيع قصيرة عن القراءة، بيد محرري مَلفى.</p></div>'
-  +'<div class="s14"></div>'
-  +'<div class="chips">'+GENRES.map(function(g){return '<button class="chip" data-genre="'+esc(g)+'">'+esc(g)+'</button>';}).join('')+'</div>'
   +'<div class="s16"></div>'
   +TOPIC_ORDER.map(function(id,i){return topicRowHTML(id,i+1);}).join('<div class="hr"></div>')
   +'<div class="s16"></div>'
@@ -1276,6 +1290,17 @@ function wireDiscoverSearch(root){
     if(results)results.innerHTML=discoverResultsHTML(q.value,STATE.genreFilter||'');
   });
 }
+function wireHomeReflection(root){
+  var q=root.querySelector('#reflQ'),btn=root.querySelector('#reflMoreBtn');
+  if(!q||!btn)return;
+  if(q.scrollHeight>q.clientHeight+1)btn.style.display='inline-flex';
+  btn.addEventListener('click',function(){
+    var expanded=q.classList.toggle('clamp')===false;
+    btn.textContent='';
+    btn.appendChild(document.createTextNode(expanded?'عرض أقل':'عرض المزيد'));
+    btn.insertAdjacentHTML('beforeend',ic('arrow',13));
+  });
+}
 function discoverResultsHTML(query,genre){
   var list=searchBooks(query,genre);
   if(!list.length){
@@ -1361,7 +1386,12 @@ function accountHTML(){
   +rowHTML('users','المتابعون والمتابَعون','0 · 0')+'<div class="hr"></div>'
   +rowHTML('share','مشاركاتي','0')+'<div class="hr"></div>'
   +'<div class="s20"></div>'
-  +rowHTML('lock','الخصوصية','')+'<div class="hr"></div>'
+  +'<button class="row" data-togglepublic="1"><span style="color:var(--ink-2)">'+ic('lock',20)+'</span>'
+    +'<span class="row-b"><span class="row-t">الخصوصية</span>'
+    +'<span class="meta" style="display:block;margin-top:3px">'+(MY_DISCOVERABLE?'حساب عام — يظهر في بحث الأصدقاء بين كل قرّاء مَلفى':'حساب خاص — ما يظهر في البحث')+'</span></span>'
+    +'<span class="meta tnum">'+(MY_DISCOVERABLE?'عام':'خاص')+'</span>'
+    +'<span class="ic ch" style="width:20px;height:20px"><svg viewBox="0 0 24 24">'+P.chev+'</svg></span></button>'
+  +'<div class="hr"></div>'
   +rowHTML('sliders','الإعدادات','')+'<div class="hr"></div>'
   +rowHTML('down','تصدير بياناتي','')+'<div class="hr"></div>'
   +'<div class="s20"></div>'
@@ -1423,7 +1453,7 @@ function fullJourneyHTML(b){
 }
 function menaraHTML(bookId){
   var cached=MY_SUMMARIES[bookId];
-  var intro='<div class="pad"><p class="meta" style="margin-top:0">هنا يقف الراوي على أطلال رحلته وتلخيصها.</p></div><div class="s16"></div>';
+  var intro='<p class="menara-intro">هنا يقف الراوي على أطلال رحلته وتلخيصها.</p>';
   if(!cached){
     var hasEntries=MY_JOURNEY[bookId]&&MY_JOURNEY[bookId].some(function(e){return e.note&&e.note.trim();});
     if(!hasEntries){
@@ -1705,6 +1735,7 @@ function mount(name,mode){
   if(name==='discover')wireDiscoverSearch(el);
   if(name==='onboardBook')wireOnboardSearch(el);
   app.appendChild(el);
+  if(name==='home')wireHomeReflection(el);
   el.addEventListener('scroll',function(){el.classList.toggle('scrolled',el.scrollTop>6);},{passive:true});
   if(!mode){
     el.classList.add('on');
@@ -2202,6 +2233,7 @@ document.getElementById('phone').addEventListener('click',function(e){
   if((t=e.target.closest('[data-contribute]'))){openSheet('contribute');return;}
   if((t=e.target.closest('[data-manualbook]'))){openSheet('manualbook');return;}
   if((t=e.target.closest('[data-invitefriend]'))){openSheet('invitefriend',{bookId:t.dataset.invitefriend});return;}
+  if((t=e.target.closest('[data-togglepublic]'))){togglePublicAccount();return;}
   if((t=e.target.closest('[data-inviteaccept]'))){respondInvite(t.dataset.inviteaccept,true);return;}
   if((t=e.target.closest('[data-invitedecline]'))){respondInvite(t.dataset.invitedecline,false);return;}
   if((t=e.target.closest('[data-shareexp]'))){shareExperience();return;}
@@ -2331,7 +2363,7 @@ sb.auth.getSession().then(function(res){
     loadAll().then(function(){STATE.tab='home';renderTabs();mount('home');});
   }else{
     mount('welcome');
-    bootTimer=setTimeout(enterAuth,REDUCE?700:2600);
+    bootTimer=setTimeout(enterAuth,REDUCE?700:3000);
   }
 });
 setInterval(function(){if(ME&&document.visibilityState==='visible')touchLastSeen();},4*60000);

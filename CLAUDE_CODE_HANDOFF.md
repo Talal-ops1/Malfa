@@ -516,7 +516,7 @@ no-network-dependency method as the existing Thick Naskh Swash) as
 (headline) stays Thick Naskh Swash, unchanged. `FAMS` console-verification
 array updated to list all three families.
 
-**Welcome screen**: added `صُنع بحب من عيينة | الرياض` under the existing
+**Welcome screen**: added `صُنع بحب من العيينة | الرياض` under the existing
 "مكان كل القراء" line; animation/motion untouched (already calm per the
 6-point override).
 
@@ -608,3 +608,94 @@ inventing new terms.
 Committed on top of the §16 state; `deploy/`/`admin-deploy/` intentionally
 left un-synced (see note at the top of this section — they're superseded by
 the Git-connected Vercel deploy).
+
+## 18. Active task — welcome timing fix, public accounts, home compaction, category cleanup, light-mode headline (2026-08-28)
+
+Ten-item follow-up request, applied only on top of the existing product.
+
+**Welcome motion**: the sequence (logo → tagline → credit line) was already
+coded correctly, but the auto-advance timer (2600ms) fired *before* the
+credit line's own fade-in animation finished (it completed at 2650ms) — so
+`صُنع بحب من العيينة | الرياض` was visible for at most a few ms before the
+screen transitioned away. Fixed by tightening the fade durations slightly
+and extending the timer to 3000ms, giving the credit line a full ~550ms
+visible hold before advancing. Verified with a scripted timing probe (not
+guesswork): logged `.w-love`'s computed opacity every 250ms across a real
+page load — confirmed 0 until ~1650ms, fading to 0.75 by ~2450ms, held
+through 3000ms. Also fixed the credit line's wording per the user's
+correction mid-session: `من عيينة` → `من العيينة`.
+
+**Public accounts**: new `profiles.is_discoverable` column (default `true`,
+matching prior de-facto behavior since every account was already globally
+searchable with no opt-out). `search_profiles()` now filters on it. The
+"الخصوصية" row in حسابي — previously a dead `قريبًا` placeholder — is now a
+real toggle (`togglePublicAccount()`), optimistically updated with rollback
+on failure.
+
+**Home compaction**: "آخر شيء علق معك" now clamps to 2 lines
+(`-webkit-line-clamp`) with a real "عرض المزيد"/"عرض أقل" toggle
+(`wireHomeReflection()`), shown only when the text actually overflows.
+**Bug caught during QA**: the overflow-check first ran before the screen
+element was attached to the DOM, so `scrollHeight` always read 0 and the
+button never appeared regardless of text length — fixed by moving the wiring
+call to after `app.appendChild(el)` in `mount()`.
+
+**"بعدها" categories + catalog cleanup**: the genre chips
+(رواية/تاريخ/أدب/ثقافة/سيرة) moved from "من مَلفى" (where they didn't
+belong — book browsing mixed into the editorial/writing section) to directly
+under "بعدها", reusing the existing `data-genre` → Discover-filtered handler
+unchanged. Removed three catalog books entirely per the user's request
+(كليلة ودمنة، البخلاء، حي بن يقظان) — from `B`, `AUTHORS`, and the `books`
+table (verified zero real rows referenced them first). `فكر` dropped from
+`GENRES` since no remaining book carries that genre (would've been a
+dead-end filter chip).
+
+**منارة**: the "not configured" honesty was already correct — the Edge
+Function properly returns `not_configured` when `ANTHROPIC_API_KEY` is
+unset, and the client already shows a real toast, never fakes success. No
+code change needed there; see the developer setup steps given directly to
+the user in chat (create the key at console.anthropic.com, store it as an
+Edge Function secret in the Supabase dashboard — never in client code,
+already wired to `summarize-journey` / "ولّد منارتك").
+
+**منارة intro**: `هنا يقف الراوي على أطلال رحلته وتلخيصها.` moved from a
+small right-aligned `.meta` line to a dedicated `.menara-intro` treatment —
+centered, `--f-d` display serif at 20px/600 weight, generous block padding.
+
+**Light mode headline**: added a single, restrained light-mode-only override
+— `.open-q` (the "وش تقرأ اليوم؟" flagship headline) renders in `--khz-txt`
+(khuzama purple) instead of plain ink when light mode is active, in both the
+system-preference and explicit-choice CSS paths. Deliberately scoped to just
+this one headline, not `.h1` globally, per "selected major headlines" /
+"restrained" — body text, row labels, and other headings are untouched.
+
+**Real bug found and fixed during QA (not part of the 10 items, but blocking
+core functionality)**: `library_entries` and `journey_summaries` had *partial*
+unique indexes (`... WHERE book_id IS NOT NULL`) from the Batch 3 custom-books
+migration — but Supabase's client `upsert(row, {onConflict:'user_id,book_id'})`
+cannot target a partial index (PostgREST requires an exact, non-partial
+match), so every "add to library" and every منارة generation attempt was
+silently failing with a 400 (`42P10: no unique or exclusion constraint
+matching the ON CONFLICT specification`). Fixed by replacing both partial
+indexes with plain composite `UNIQUE` constraints — functionally identical
+(NULL is still never equal to NULL, so rows using the other FK are naturally
+exempt) but a valid upsert target. Confirmed fixed with a real signup →
+add-book → journey-entry flow in a live browser session.
+
+### Verification
+
+1. `bash v4/build.sh` → `JS OK` after every edit.
+2. `get_advisors` (security): same three pre-existing/intentional warnings as
+   §17, nothing new.
+3. Live QA in a real browser against a throwaway signed-up test account
+   (`qa-batch4-test@malfa-test.com`, deleted afterward along with its library/
+   journey rows): scripted welcome-timing probe: confirmed onboarding book
+   list excludes the 3 removed titles; confirmed "بعدها" chips + rail;
+   confirmed "من مَلفى" section intact below it; confirmed حسابي's public/
+   private toggle flips real DB state both directions; confirmed the
+   reflection clamp/expand/collapse cycle against a real long journey entry;
+   confirmed منارة's centered intro and its honest "needs the AI key" toast;
+   confirmed light mode's `.open-q` purple tint against otherwise-normal body
+   text, and dark mode unaffected.
+4. Cleaned up: QA account and all its rows deleted; DB back to just the real
+   founder account.
