@@ -651,12 +651,19 @@ table (verified zero real rows referenced them first). `فكر` dropped from
 dead-end filter chip).
 
 **منارة**: the "not configured" honesty was already correct — the Edge
-Function properly returns `not_configured` when `ANTHROPIC_API_KEY` is
-unset, and the client already shows a real toast, never fakes success. No
-code change needed there; see the developer setup steps given directly to
-the user in chat (create the key at console.anthropic.com, store it as an
-Edge Function secret in the Supabase dashboard — never in client code,
-already wired to `summarize-journey` / "ولّد منارتك").
+Function properly returns `not_configured` when its LLM key is unset, and
+the client already shows a real toast, never fakes success.
+
+**Provider switch (same conversation, right after this batch): Anthropic → Google
+Gemini.** The user wants a free tier (Anthropic has none, only limited trial
+credits), so `summarize-journey` was redeployed (v2) calling
+`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`
+via `x-goog-api-key` instead of `api.anthropic.com`. Same system prompt,
+same "only the user's own text, never the book's" constraint, same
+`journey_summaries` upsert — only the model call changed. Env var is now
+`GEMINI_API_KEY` (get it free at Google AI Studio, no billing required for
+the free tier) instead of `ANTHROPIC_API_KEY` — set the same way, as an Edge
+Function secret in the Supabase dashboard, never in client code.
 
 **منارة intro**: `هنا يقف الراوي على أطلال رحلته وتلخيصها.` moved from a
 small right-aligned `.meta` line to a dedicated `.menara-intro` treatment —
