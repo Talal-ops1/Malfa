@@ -706,3 +706,52 @@ add-book → journey-entry flow in a live browser session.
    text, and dark mode unaffected.
 4. Cleaned up: QA account and all its rows deleted; DB back to just the real
    founder account.
+
+## 19. Active task — welcome on every launch + first-person منارة (2026-08-29)
+
+Applied only to the opening flow and منارة.
+
+**Welcome:** boot now mounts `welcome` before checking Supabase Auth, so the
+screen appears for signed-in, signed-out, first-time, and returning users.
+Auth/session loading runs behind the welcome screen; after a fixed 3200ms hold,
+`finishWelcome()` sends a signed-in user to Home and a signed-out user to Auth.
+The logo uses a 4px/0.99-scale, 480ms ease-out reveal; the tagline follows with
+a 420ms reveal. The bottom credit is visible from the first frame and reads
+exactly `صُنع بحب من عيينة | الرياض`. Reduced-motion keeps all three elements
+static and fully visible while preserving the same readable hold.
+
+**منارة:** canonical Edge Function source is now tracked at
+`supabase/functions/summarize-journey/index.ts`. The browser sends only the
+catalog/custom-book identifier — not the title or any book text. The function
+queries only that authenticated user's complete chronological
+`journey_entries.note` set and optionally their display name. Its writing prompt
+requires first person, preserves the reader's vocabulary, disagreement,
+uncertainty, and point of view, forbids outside book knowledge and unsupported
+claims, and limits the result to 1–5 concise paragraphs based on source volume.
+
+Every candidate then gets a second Gemini quality pass checking support,
+first-person voice, voice preservation, disagreement preservation, concision,
+and external/AI-narrator tone. A failed candidate is regenerated once using the
+specific issues and checked again; a second failure returns
+`quality_check_failed` and is never saved. A local deterministic guard also
+rejects explicit third-person labels (`القارئ`, `المستخدم`, `صاحب التجربة`).
+The same guard runs before rendering a cached summary: a legacy third-person
+row is hidden and the user sees `ولّد منارتك` instead, so the old narrator-style
+output cannot remain visible after this release.
+
+**Deployment status:** the consumer HTML is ready for the Git-connected Vercel
+deploy. The updated Edge Function source is ready but is not yet the active
+Supabase version because this Codex browser session is not authenticated to the
+Supabase dashboard and no Supabase deployment connector/CLI is available in the
+current environment. Do not claim the new first-person behavior is live until
+this exact source is deployed as `summarize-journey` with the existing
+server-side `GEMINI_API_KEY` secret unchanged.
+
+**Verification:** `bash v4/build.sh` prints `JS OK`; a real local browser timing
+probe confirmed logo opacity rises first, tagline second, the exact bottom line
+stays at opacity .75 from the first frame, the screen remains `welcome` through
+1500ms, and logged-out routing reaches `auth` after 3200ms. Static checks confirm
+welcome is mounted before `getSession()`, the signed-in/out destination branch,
+no `book_title` in either request or function, and the full generate → QA →
+regenerate → QA gate. Live generated-text comparison remains pending the Edge
+Function deployment.

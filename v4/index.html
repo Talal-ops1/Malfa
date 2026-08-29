@@ -473,13 +473,12 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .welcome{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:0 44px}
 .w-mark{font-family:var(--f-d);font-size:42px;font-weight:700;color:var(--ink);margin:0;
-  opacity:0;transform:translateY(5px) scale(.98);animation:wIn 900ms var(--ease-out) 150ms forwards}
+  opacity:0;transform:translateY(4px) scale(.99);animation:wIn 480ms var(--ease-out) 120ms forwards}
 .w-tag{font-family:var(--f-u);font-size:15px;font-weight:500;color:var(--ink-2);margin:16px 0 0;
-  opacity:0;transform:translateY(5px);animation:wIn 800ms var(--ease-out) 900ms forwards}
+  opacity:0;transform:translateY(4px);animation:wIn 420ms var(--ease-out) 680ms forwards}
 .w-love{position:absolute;bottom:56px;inset-inline:0;text-align:center;
-  font-family:var(--f-u);font-size:11.5px;color:var(--ink-3);opacity:0;animation:wFade 800ms ease 1650ms forwards}
+  font-family:var(--f-u);font-size:11.5px;color:var(--ink-3);opacity:.75}
 @keyframes wIn{to{opacity:1;transform:none}}
-@keyframes wFade{to{opacity:.75}}
 
 .auth-h{font-family:var(--f-d);font-size:27px;font-weight:700;line-height:1.44;margin:14px 0 0}
 .field{margin-top:16px}
@@ -924,10 +923,10 @@ function sec(title,link,toast){
    Logo, then the line, then the credit — one at a time, quietly.
    ============================================================ */
 function welcomeHTML(){
-  return '<div class="welcome" data-skip="1">'
+  return '<div class="welcome">'
     +'<h1 class="w-mark">مَــلفى</h1>'
     +'<p class="w-tag">مكان كل القراء</p>'
-    +'<p class="w-love">صُنع بحب من العيينة | الرياض</p>'
+    +'<p class="w-love">صُنع بحب من عيينة | الرياض</p>'
     +'</div>';
 }
 
@@ -1465,8 +1464,12 @@ function fullJourneyHTML(b){
       :'<div class="empty" style="padding:8px 0 26px">'+ic('wave',26)+'<h3>ما بعد سجّلت رحلة مع هذا الكتاب.</h3>'
         +'<p>سجّل أول محطة بصوتك عشان تبدأ رحلتك معه.</p></div>');
 }
+function menaraHasExternalNarrator(text){
+  return /(?:^|[\s،.])(القارئ|المستخدم|صاحب التجربة)(?:[\s،.]|$)/.test(text||'');
+}
 function menaraHTML(bookId){
   var cached=MY_SUMMARIES[bookId];
+  if(cached&&menaraHasExternalNarrator(cached.summary_text))cached=null;
   var intro='<p class="menara-intro">هنا يقف الراوي على أطلال رحلته وتلخيصها.</p>';
   if(!cached){
     var hasEntries=MY_JOURNEY[bookId]&&MY_JOURNEY[bookId].some(function(e){return e.note&&e.note.trim();});
@@ -1892,7 +1895,7 @@ function generateMenara(bookId,btn){
   var custom=isCustomBook(bookId);
   var origText=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='لحظة...';}
-  edgeFn('summarize-journey',{book_id:custom?null:bookId,user_book_id:custom?bookId:null,book_title:b.t})
+  edgeFn('summarize-journey',{book_id:custom?null:bookId,user_book_id:custom?bookId:null})
     .then(function(res){
       if(btn){btn.disabled=false;btn.textContent=origText;}
       if(!res.ok){
@@ -2303,7 +2306,6 @@ document.getElementById('phone').addEventListener('click',function(e){
     },110);
     return;
   }
-  if((t=e.target.closest('[data-skip]'))){enterAuth();return;}
   if((t=e.target.closest('[data-authtoggle]'))){
     authMode=authMode==='login'?'signup':'login';
     document.getElementById('authBody').innerHTML=authBodyHTML();
@@ -2351,11 +2353,17 @@ if(document.fonts&&document.fonts.ready){
   });
 }
 
-/* ---------- opening: welcome auto-advances to login/sign-up, unless a session is already active ---------- */
+/* ---------- opening: welcome is always shown, then auth state decides the destination ---------- */
 var bootTimer=null;
-function enterAuth(){
+var BOOT_READY=null,BOOT_DONE=false;
+function finishWelcome(){
+  if(BOOT_DONE)return;BOOT_DONE=true;
   if(bootTimer){clearTimeout(bootTimer);bootTimer=null;}
-  if(current&&current.dataset.name==='welcome')mount('auth','fade');
+  if(!(current&&current.dataset.name==='welcome'))return;
+  (BOOT_READY||Promise.resolve()).then(function(){
+    if(ME){STATE.tab='home';renderTabs();mount('home','fade');}
+    else mount('auth','fade');
+  });
 }
 function handleLogout(){
   var uid=ME&&ME.id;
@@ -2370,17 +2378,18 @@ function handleLogout(){
   }
   if(uid)logAuthEvent(uid,'sign_out').then(finish,finish);else finish();
 }
-sb.auth.getSession().then(function(res){
+mount('welcome');
+BOOT_READY=sb.auth.getSession().then(function(res){
   var session=res.data&&res.data.session;
-  if(session){
-    ME={id:session.user.id,email:session.user.email};
-    touchLastSeen();
-    loadAll().then(function(){STATE.tab='home';renderTabs();mount('home');});
-  }else{
-    mount('welcome');
-    bootTimer=setTimeout(enterAuth,REDUCE?700:3000);
-  }
+  if(!session)return;
+  ME={id:session.user.id,email:session.user.email};
+  touchLastSeen();
+  return loadAll();
+}).catch(function(err){
+  console.error('[MALFA boot]',err);
+  ME=null;
 });
+bootTimer=setTimeout(finishWelcome,3200);
 setInterval(function(){if(ME&&document.visibilityState==='visible')touchLastSeen();},4*60000);
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&ME)touchLastSeen();});
 })();
