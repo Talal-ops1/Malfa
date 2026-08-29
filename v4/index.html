@@ -1414,9 +1414,21 @@ function rowHTML(icon,t,meta){
    SCREEN — تفاصيل الكتاب
    ============================================================ */
 var bookTab='full';
+function loadMenaraIfNeeded(bookId){
+  if(MY_SUMMARIES[bookId]!==undefined)return;
+  var custom=isCustomBook(bookId);
+  var q=sb.from('journey_summaries').select('*').eq('user_id',ME.id);
+  q=custom?q.eq('user_book_id',bookId):q.eq('book_id',bookId);
+  q.maybeSingle().then(function(res){
+    MY_SUMMARIES[bookId]=res.data||null;
+    var body=document.getElementById('bookTabBody');
+    if(body&&bookTab==='menara'&&STATE.book===bookId)body.innerHTML=menaraHTML(bookId);
+  });
+}
 function bookHTML(){
   var b=myBookView(STATE.book),st=stock(b.st);
   var jcount=MY_JOURNEY[b.id]?MY_JOURNEY[b.id].length:0;
+  if(bookTab==='menara')loadMenaraIfNeeded(b.id);
   return ''
   +'<div class="navbar"><button class="hdr-btn" data-back="1">'+ic('back',22)+'</button>'
     +'<div class="nt">'+esc(b.t)+'</div>'
@@ -2254,6 +2266,7 @@ document.getElementById('phone').addEventListener('click',function(e){
     bookTab=t.dataset.booktab;
     var body=document.getElementById('bookTabBody');
     var b=myBookView(STATE.book);
+    if(bookTab==='menara')loadMenaraIfNeeded(b.id);
     if(body)body.innerHTML=bookTab==='menara'?menaraHTML(b.id):fullJourneyHTML(b);
     document.querySelectorAll('[data-booktab]').forEach(function(x){x.classList.toggle('on',x.dataset.booktab===bookTab);});
     syncSegInd(current);
