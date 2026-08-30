@@ -1,0 +1,14 @@
+[functions.upload-cover]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
+
+[functions.summarize-journey]
+verify_jwt = false
+
+[functions.log-failed-signin]
+verify_jwt = false
+
+[functions.admin-api]
+verify_jwt = false

@@ -212,7 +212,7 @@ tbody tr:last-child td{border-bottom:0}
 
 <div id="app"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="vendor/supabase-2.112.4.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -228,7 +228,11 @@ var STATE = { session:null, isAdmin:false, adminName:'', tab:'overview',
   usersPage:1, usersFilter:'', usersSearch:'', usersSort:'created_desc',
   eventsPage:1, eventsFilter:'', panelUser:null };
 
-function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function esc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function fmtDate(iso){
   if(!iso) return '—';
   var d = new Date(iso);
@@ -611,13 +615,13 @@ function loadUsers(){
     });
 }
 function userRowHTML(u){
-  var planCls = u.plan_status==='active'?'paid':u.plan_status;
+  var planCls = {active:'paid',free:'free',trial:'trial',expired:'expired',cancelled:'cancelled'}[u.plan_status]||'free';
   var planLabel = {free:'مجانية',active:'مدفوعة',trial:'تجريبية',expired:'منتهية',cancelled:'ملغاة'}[u.plan_status]||u.plan_status;
-  return '<tr data-uid="'+u.id+'">'
+  return '<tr data-uid="'+esc(u.id)+'">'
     + '<td><div class="name-cell"><span class="mini-avatar">'+esc(initials(u.name,u.email))+'</span>'
       + '<span><div>'+esc(u.name||'—')+'</div><div style="font-size:11.5px;color:var(--ink-3)">'+esc(u.email)+'</div></span></div></td>'
     + '<td><span class="status-dot '+(u.is_online?'on':'off')+'"></span>'+(u.is_online?'نشط الآن':'غير متصل')+'</td>'
-    + '<td><span class="badge '+planCls+'">'+planLabel+'</span></td>'
+    + '<td><span class="badge '+planCls+'">'+esc(planLabel)+'</span></td>'
     + '<td class="mono">'+fmtDate(u.created_at)+'</td>'
     + '<td class="mono">'+(u.last_sign_in_at?relTime(u.last_sign_in_at):'أبدًا')+'</td>'
     + '<td class="mono">'+relTime(u.last_seen_at)+'</td>'
@@ -663,13 +667,14 @@ function openUserPanel(uid){
         + '</div>'
       + '<div class="panel-sec"><h4>الخطط</h4>'
         + (u.plans.length ? u.plans.map(function(p){
-            return '<div class="kv"><span class="k">'+esc(p.plans?p.plans.name:p.plan_id)+'</span><span class="badge '+(p.status==='active'?'paid':p.status)+'">'+esc(p.status)+'</span></div>';
+            var statusClass={active:'paid',free:'free',trial:'trial',expired:'expired',cancelled:'cancelled'}[p.status]||'free';
+            return '<div class="kv"><span class="k">'+esc(p.plans?p.plans.name:p.plan_id)+'</span><span class="badge '+statusClass+'">'+esc(p.status)+'</span></div>';
           }).join('') : '<p style="font-size:12.5px;color:var(--ink-3)">ما عنده أي خطة مسجّلة.</p>')
         + '</div>'
       + '<div class="panel-sec"><h4>سجل النشاط (آخر 50)</h4>'
         + (u.events.length ? u.events.map(function(ev){
             return '<div class="timeline-i"><span class="d"></span><div class="b">'
-              + '<div class="e">'+(eventLabels[ev.event_type]||ev.event_type)+(ev.status==='failure'?' <span class="badge failure" style="margin-inline-start:6px">فشل</span>':'')+'</div>'
+              + '<div class="e">'+esc(eventLabels[ev.event_type]||ev.event_type)+(ev.status==='failure'?' <span class="badge failure" style="margin-inline-start:6px">فشل</span>':'')+'</div>'
               + '<div class="t">'+fmtDate(ev.created_at)+(ev.device?' · '+esc(ev.device):'')+'</div></div></div>';
           }).join('') : '<div class="state" style="padding:20px 0">'+ic('empty',24)+'<p>ما فيه نشاط مسجّل لهذا المستخدم بعد.</p></div>')
         + '</div>';
@@ -714,7 +719,7 @@ function loadEvents(){
     holder.innerHTML = '<table><thead><tr><th>المستخدم</th><th>الحدث</th><th>الحالة</th><th>الوقت</th><th>الجهاز/المنصة</th><th>سبب الفشل</th></tr></thead><tbody>'
       + d.rows.map(function(ev){
           return '<tr><td>'+esc(ev.user_email||'—')+'</td>'
-            + '<td>'+(EVENT_LABELS[ev.event_type]||ev.event_type)+'</td>'
+            + '<td>'+esc(EVENT_LABELS[ev.event_type]||ev.event_type)+'</td>'
             + '<td><span class="badge '+(ev.status==='success'?'success':'failure')+'">'+(ev.status==='success'?'نجاح':'فشل')+'</span></td>'
             + '<td class="mono">'+fmtDate(ev.created_at)+'</td>'
             + '<td>'+esc(ev.platform||ev.device||'—')+'</td>'
@@ -757,7 +762,6 @@ function renderSettings(c){
     + '<h3>هويتك</h3>'
     + '<div class="kv"><span class="k">الاسم</span><span>'+esc(STATE.adminName)+'</span></div>'
     + '<div class="kv"><span class="k">صلاحية</span><span class="badge paid">مدير</span></div>'
-    + '<p style="font-size:12px;color:var(--ink-3);margin-top:16px">إعدادات إضافية (صلاحيات فرعية، إشعارات، تدقيق) — قريبًا.</p>'
     + '</div>';
 }
 

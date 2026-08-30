@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 
 // منارة reads only the authenticated reader's own chronological journey
 // entries. The book title and the book's text are deliberately not sent to
@@ -14,15 +14,25 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-function json(body: unknown, status = 200) {
+const allowedOrigins = new Set([
+  "https://malfaapp.vercel.app",
+  "https://malfaappl.vercel.app",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+]);
+function cors(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  return {
+    ...(allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
+function json(req: Request, body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
+    headers: { ...cors(req), "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
   });
 }
 
@@ -57,8 +67,15 @@ async function callGemini(
   }
 
   const data = await res.json();
+  // Gemini 3.x can return separate internal-thought parts. Those are not part
+  // of the requested answer and would corrupt both JSON QA responses and the
+  // reader-facing narrative if concatenated with the final text.
   const parts = data?.candidates?.[0]?.content?.parts || [];
-  const text = parts.map((part: { text?: string }) => part.text || "").join("\n").trim();
+  const text = parts
+    .filter((part: { thought?: boolean }) => part.thought !== true)
+    .map((part: { text?: string }) => part.text || "")
+    .join("\n")
+    .trim();
   if (!text) throw new Error("empty_summary");
   return text;
 }
@@ -117,6 +134,26 @@ function passesQuality(result: QualityResult, summary: string) {
     !hasExternalNarrator(summary);
 }
 
+type SourceMap = { paragraph_index: number; source_ids: string[] }[];
+const mappingInstruction = `اربط كل فقرة في المنارة بمصادرها من المحطات المعطاة. أعد JSON فقط بالشكل:
+{"paragraphs":[{"paragraph_index":0,"source_ids":["uuid"]}]}
+استخدم فقط معرفات source الموجودة في المادة. يجب أن يكون لكل فقرة مصدر واحد على الأقل، ولا تضف أي تفسير.`;
+
+async function buildSourceMap(entriesText: string, summary: string, validIds: Set<string>): Promise<SourceMap> {
+  const raw = await callGemini(mappingInstruction, `المصادر:\n${entriesText}\n\nالمنارة:\n${summary}`, { json: true, maxTokens: 500, temperature: 0 });
+  let parsed: { paragraphs?: SourceMap } = {};
+  try { parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")); } catch { throw new Error("source_map_failed"); }
+  const paragraphs = summary.split(/\n+/).filter(Boolean);
+  const map = Array.isArray(parsed.paragraphs) ? parsed.paragraphs : [];
+  if (map.length !== paragraphs.length) throw new Error("source_map_failed");
+  for (let i = 0; i < map.length; i++) {
+    if (map[i].paragraph_index !== i || !Array.isArray(map[i].source_ids) || !map[i].source_ids.length) throw new Error("source_map_failed");
+    map[i].source_ids = [...new Set(map[i].source_ids.filter((id) => validIds.has(id)))];
+    if (!map[i].source_ids.length) throw new Error("source_map_failed");
+  }
+  return map;
+}
+
 async function inspectQuality(entriesText: string, summary: string) {
   const prompt = `المادة الخام بالترتيب الزمني:\n${entriesText}\n\nالمنارة المرشحة:\n${summary}`;
   return parseQuality(await callGemini(qaInstruction, prompt, {
@@ -127,19 +164,22 @@ async function inspectQuality(entriesText: string, summary: string) {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  const origin = req.headers.get("origin") || "";
+  if (origin && !allowedOrigins.has(origin)) return json(req, { error: "origin_not_allowed" }, 403);
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req) });
+  if (req.method !== "POST") return json(req, { error: "method_not_allowed" }, 405);
+  if (Number(req.headers.get("content-length") || 0) > 2048) return json(req, { error: "invalid_request" }, 400);
 
   const authHeader = req.headers.get("Authorization") || "";
   const jwt = authHeader.replace(/^Bearer\s+/i, "");
-  if (!jwt) return json({ error: "missing_auth" }, 401);
+  if (!jwt) return json(req, { error: "missing_auth" }, 401);
 
   const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
-  if (userErr || !userData?.user) return json({ error: "invalid_token" }, 401);
+  if (userErr || !userData?.user) return json(req, { error: "invalid_token" }, 401);
   const userId = userData.user.id;
 
   if (!GEMINI_API_KEY) {
-    return json({ error: "not_configured", message: "GEMINI_API_KEY غير مضبوط على الخادم." }, 503);
+    return json(req, { error: "not_configured" }, 503);
   }
 
   let body: Record<string, unknown> = {};
@@ -147,24 +187,24 @@ Deno.serve(async (req: Request) => {
   const bookId = body.book_id ? String(body.book_id).slice(0, 120) : null;
   const userBookId = body.user_book_id ? String(body.user_book_id).slice(0, 120) : null;
   if ((!bookId && !userBookId) || (bookId && userBookId)) {
-    return json({ error: "invalid_book" }, 400);
+    return json(req, { error: "invalid_book" }, 400);
   }
 
   let query = admin
     .from("journey_entries")
-    .select("note,is_start,created_at")
+    .select("id,note,is_start,created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: true });
   query = bookId ? query.eq("book_id", bookId) : query.eq("user_book_id", userBookId);
 
   const { data: entries, error: entriesErr } = await query;
-  if (entriesErr) return json({ error: "server_error", message: String(entriesErr) }, 500);
+  if (entriesErr) return json(req, { error: "server_error" }, 500);
 
   const notes = (entries || []).filter((entry: { note?: string }) => entry.note?.trim());
-  if (!notes.length) return json({ error: "no_entries" }, 404);
+  if (!notes.length) return json(req, { error: "no_entries" }, 404);
 
-  const entriesText = notes.map((entry: { note: string; is_start?: boolean }, index: number) =>
-    `${index + 1}. ${entry.is_start ? "[بداية الرحلة] " : ""}${entry.note.trim()}`
+  const entriesText = notes.map((entry: { id: string; note: string; is_start?: boolean }, index: number) =>
+    `${index + 1}. [source:${entry.id}] ${entry.is_start ? "[بداية الرحلة] " : ""}${entry.note.trim()}`
   ).join("\n");
 
   const { data: profile } = await admin
@@ -187,28 +227,26 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!passesQuality(quality, summary)) {
-      return json({ error: "quality_check_failed" }, 502);
+      return json(req, { error: "quality_check_failed" }, 502);
     }
 
-    const row = {
-      user_id: userId,
-      book_id: bookId,
-      user_book_id: userBookId,
-      summary_text: summary,
-      updated_at: new Date().toISOString(),
-    };
-    const { data: saved, error: saveErr } = await admin
-      .from("journey_summaries")
-      .upsert(row, { onConflict: bookId ? "user_id,book_id" : "user_id,user_book_id" })
-      .select()
-      .single();
-    if (saveErr) return json({ error: "save_failed", message: String(saveErr) }, 500);
+    const sourceMap = await buildSourceMap(entriesText, summary, new Set(notes.map((entry: { id: string }) => entry.id)));
 
-    return json(saved);
+    const { data: saved, error: saveErr } = await admin.rpc("save_menara_with_sources", {
+      p_user_id: userId,
+      p_book_id: bookId,
+      p_user_book_id: userBookId,
+      p_summary_text: summary,
+      p_source_map: sourceMap,
+    });
+    if (saveErr || !saved) return json(req, { error: "save_failed" }, 500);
+
+    return json(req, { ...saved, source_map: sourceMap });
   } catch (error) {
     const message = String(error);
-    if (message.includes("llm_error:")) return json({ error: "llm_error", message: message.slice(0, 340) }, 502);
-    if (message.includes("empty_summary")) return json({ error: "empty_summary" }, 502);
-    return json({ error: "server_error", message: message.slice(0, 300) }, 500);
+    if (message.includes("llm_error:")) return json(req, { error: "llm_error" }, 502);
+    if (message.includes("empty_summary")) return json(req, { error: "empty_summary" }, 502);
+    if (message.includes("source_map_failed")) return json(req, { error: "source_map_failed" }, 502);
+    return json(req, { error: "server_error" }, 500);
   }
 });
