@@ -63,7 +63,8 @@ async function callGemini(
 
   if (!res.ok) {
     const message = (await res.text()).slice(0, 300);
-    throw new Error(`llm_error:${message}`);
+    console.error("Gemini request failed", res.status, message);
+    throw new Error(`llm_error:${res.status}`);
   }
 
   const data = await res.json();
