@@ -9,8 +9,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const WRITING_MODEL = "gemini-3.6-flash";
-const QA_MODEL = "gemini-2.5-flash-lite";
-const MAPPING_MODEL = "gemini-2.5-flash";
+const QA_MODEL = "gemini-3.5-flash";
+const MAPPING_MODEL = "gemini-3.1-flash-lite";
 const REPAIR_MODEL = "gemini-3.1-flash-lite";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
