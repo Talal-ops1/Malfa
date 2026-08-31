@@ -124,6 +124,11 @@ function passesQuality(result: QualityResult, summary: string) {
 
 type SourceMap = { paragraph_index: number; source_ids: string[] }[];
 type NoteSource = { id: string; note: string };
+const DISAGREEMENT_KINDS = [
+  { label: "التردد أو عدم اليقين", pattern: /متردد|غير متأكد|ما كنت متأكد|ما كنت واثق|لم أكن واثق|شك|حير|محتار/ },
+  { label: "الاعتراض أو التحفظ", pattern: /ما اتفقت|لم أتفق|غير متفق|تحفظ|ما اقتنعت|لم أقتنع|اعترض/ },
+  { label: "تغيّر الرأي", pattern: /تغير رأيي|تغيّر رأيي|تبدل رأيي|تبدّل رأيي|تغيرت نظرتي|تغيّرت نظرتي/ },
+];
 
 const STOP_WORDS = new Set([
   "هذا", "هذه", "ذلك", "التي", "الذي", "على", "إلى", "الى", "عن", "من", "في", "مع",
@@ -170,13 +175,8 @@ function inspectQuality(notes: NoteSource[], summary: string): QualityResult {
   const paragraphs = summary.split(/\n+/).filter(Boolean);
   const supported = sourceMap.length === paragraphs.length && sourceMap.every((row) => row.source_ids.length > 0);
   const firstPerson = /(?:^|[\s،.])(أنا|انا|بدأت|كنت|صرت|خرجت|تعلمت|لاحظت|أحس|حسيت|أشعر|رأيي|رحلتي|عندي|بقي)(?:[\s،.]|$)/.test(summary) && !hasExternalNarrator(summary);
-  const disagreementKinds = [
-    { label: "التردد أو عدم اليقين", pattern: /متردد|غير متأكد|ما كنت متأكد|ما كنت واثق|لم أكن واثق|شك|حير|محتار/ },
-    { label: "الاعتراض أو التحفظ", pattern: /ما اتفقت|لم أتفق|غير متفق|تحفظ|ما اقتنعت|لم أقتنع|اعترض/ },
-    { label: "تغيّر الرأي", pattern: /تغير رأيي|تغيّر رأيي|تبدل رأيي|تبدّل رأيي|تغيرت نظرتي|تغيّرت نظرتي/ },
-  ];
-  const rawDisagreement = disagreementKinds.filter((kind) => kind.pattern.test(raw));
-  const keptDisagreement = disagreementKinds.filter((kind) => kind.pattern.test(summary));
+  const rawDisagreement = DISAGREEMENT_KINDS.filter((kind) => kind.pattern.test(raw));
+  const keptDisagreement = DISAGREEMENT_KINDS.filter((kind) => kind.pattern.test(summary));
   const disagreementPreserved = rawDisagreement.length === 0 || keptDisagreement.length >= Math.min(2, rawDisagreement.length);
   const issues: string[] = [];
   if (!disagreementPreserved) {
@@ -191,6 +191,25 @@ function inspectQuality(notes: NoteSource[], summary: string): QualityResult {
     ai_narrator: hasExternalNarrator(summary),
     issues,
   };
+}
+
+function restoreMissingDisagreement(notes: NoteSource[], summary: string) {
+  const raw = notes.map((note) => note.note).join("\n");
+  const required = DISAGREEMENT_KINDS.filter((kind) => kind.pattern.test(raw));
+  const kept = new Set(DISAGREEMENT_KINDS.filter((kind) => kind.pattern.test(summary)).map((kind) => kind.label));
+  let repaired = summary.trim();
+  for (const kind of required) {
+    if (kept.size >= Math.min(2, required.length)) break;
+    if (kept.has(kind.label)) continue;
+    const sentence = notes.flatMap((note) => note.note.split(/(?<=[.!؟])\s+|\n+/))
+      .map((part) => part.trim())
+      .find((part) => kind.pattern.test(part) && !repaired.includes(part));
+    if (sentence) {
+      repaired += `\n\n${sentence}`;
+      kept.add(kind.label);
+    }
+  }
+  return repaired;
 }
 
 Deno.serve(async (req: Request) => {
@@ -237,17 +256,21 @@ Deno.serve(async (req: Request) => {
     `${index + 1}. [source:${entry.id}] ${entry.is_start ? "[بداية الرحلة] " : ""}${entry.note.trim()}`
   ).join("\n");
 
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("name")
-    .eq("id", userId)
-    .maybeSingle();
-  const displayName = String(profile?.name || "").trim().slice(0, 80);
-  const sourcePrompt = `${displayName ? `اسم الحساب، للاستخدام مرة واحدة فقط إذا جاء طبيعيًا: ${displayName}\n\n` : ""}المادة الخام الكاملة بالترتيب الزمني:\n${entriesText}`;
+  const sourcePrompt = `المادة الخام الكاملة بالترتيب الزمني:\n${entriesText}`;
 
   try {
     let summary = await callGemini(writingInstruction, sourcePrompt);
     let quality = inspectQuality(notes, summary);
+
+    if (quality.disagreement_preserved !== true &&
+        quality.supported === true &&
+        quality.first_person === true &&
+        quality.voice_preserved === true &&
+        quality.concise === true &&
+        quality.ai_narrator === false) {
+      summary = restoreMissingDisagreement(notes, summary);
+      quality = inspectQuality(notes, summary);
+    }
 
     if (!passesQuality(quality, summary)) {
       const issues = (quality.issues || []).join("؛ ") || "الصوت ليس شخصيًا بما يكفي";
@@ -262,7 +285,6 @@ Deno.serve(async (req: Request) => {
     if (!passesQuality(quality, summary)) {
       return json(req, {
         error: "quality_check_failed",
-        candidate: summary,
         checks: {
           supported: quality.supported === true,
           first_person: quality.first_person === true,
