@@ -67,8 +67,8 @@ async function callGemini(
 
   if (!res.ok) {
     const message = (await res.text()).slice(0, 300);
-    console.error("Gemini request failed", res.status, message);
-    throw new Error(`llm_error:${res.status}`);
+    console.error("Gemini request failed", model, res.status, message);
+    throw new Error(`llm_error:${model}:${res.status}`);
   }
 
   const data = await res.json();
@@ -258,8 +258,17 @@ Deno.serve(async (req: Request) => {
     return json(req, { ...saved, source_map: sourceMap });
   } catch (error) {
     const message = String(error);
-    if (message.includes("llm_error:429")) return json(req, { error: "quota_exhausted" }, 429);
-    if (message.includes("llm_error:")) return json(req, { error: "llm_error" }, 502);
+    const providerFailure = message.match(/llm_error:([a-z0-9.-]+):(\d{3})/i);
+    if (providerFailure?.[2] === "429") {
+      return json(req, { error: "quota_exhausted", model: providerFailure[1] }, 429);
+    }
+    if (providerFailure) {
+      return json(req, {
+        error: "llm_error",
+        model: providerFailure[1],
+        provider_status: Number(providerFailure[2]),
+      }, 502);
+    }
     if (message.includes("empty_summary")) return json(req, { error: "empty_summary" }, 502);
     if (message.includes("source_map_failed")) return json(req, { error: "source_map_failed" }, 502);
     return json(req, { error: "server_error" }, 500);
