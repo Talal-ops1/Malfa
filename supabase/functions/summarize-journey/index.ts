@@ -9,9 +9,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const WRITING_MODEL = "gemini-3.6-flash";
-const QA_MODEL = "gemini-3.5-flash";
-const MAPPING_MODEL = "gemini-3.1-flash-lite";
-const REPAIR_MODEL = "gemini-3.1-flash-lite";
+const REPAIR_MODEL = "gemini-3.5-flash";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -99,17 +97,6 @@ const writingInstruction = `أنت محرر عربي يرتب كلام القا�
 
 المعيار النهائي: «هذا أنا، بس مرتب كلامي بشكل أجمل».`;
 
-const qaInstruction = `أنت مدقق صارم لمنارة شخصية. قارن المرشح بالمادة الخام فقط. لا تستخدم معرفتك بالكتاب. أعد JSON صالحًا فقط بهذه البنية:
-{"supported":true,"first_person":true,"voice_preserved":true,"disagreement_preserved":true,"concise":true,"ai_narrator":false,"issues":[]}
-
-supported: كل ادعاء مهم في المرشح له أصل واضح في المادة الخام.
-first_person: النص كله بصوت المتكلم، وليس حديثًا عن القارئ أو المستخدم.
-voice_preserved: الأسلوب قريب من مفردات القارئ ووجهة نظره، لا لغة عامة مصطنعة.
-disagreement_preserved: أي اختلاف أو تردد أو انطباع شخصي مهم محفوظ؛ وإذا لم يوجد أصلًا فالقيمة true.
-concise: المرشح أقصر وأنظف من المادة الخام من دون فقد المعنى المهم؛ وإذا كانت المادة قصيرة جدًا فقيّم عدم الحشو.
-ai_narrator: true إذا بدا النص كراوٍ خارجي أو تقرير ذكاء اصطناعي عن القارئ.
-issues: أسباب قصيرة ومحددة لأي قيمة فاشلة.`;
-
 type QualityResult = {
   supported?: boolean;
   first_person?: boolean;
@@ -119,18 +106,6 @@ type QualityResult = {
   ai_narrator?: boolean;
   issues?: string[];
 };
-
-function parseJsonObject(raw: string) {
-  const clean = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
-  const start = clean.indexOf("{");
-  const end = clean.lastIndexOf("}");
-  if (start < 0 || end < start) throw new Error("invalid_json");
-  return JSON.parse(clean.slice(start, end + 1));
-}
-
-function parseQuality(raw: string): QualityResult {
-  try { return parseJsonObject(raw); } catch (_error) { return { issues: ["تعذر قراءة فحص الجودة"] }; }
-}
 
 function hasExternalNarrator(summary: string) {
   return /(?:^|[\s،.])(القارئ|المستخدم|صاحب التجربة)(?:[\s،.]|$)/.test(summary);
@@ -147,38 +122,65 @@ function passesQuality(result: QualityResult, summary: string) {
 }
 
 type SourceMap = { paragraph_index: number; source_ids: string[] }[];
-const mappingInstruction = `اربط كل فقرة في المنارة بمصادرها من المحطات المعطاة. أعد JSON فقط بالشكل:
-{"paragraphs":[{"paragraph_index":0,"source_ids":["uuid"]}]}
-استخدم فقط معرفات source الموجودة في المادة. يجب أن يكون لكل فقرة مصدر واحد على الأقل، ولا تضف أي تفسير.`;
+type NoteSource = { id: string; note: string };
 
-async function buildSourceMap(entriesText: string, summary: string, validIds: Set<string>): Promise<SourceMap> {
-  const raw = await callGemini(mappingInstruction, `المصادر:\n${entriesText}\n\nالمنارة:\n${summary}`, {
-    json: true,
-    maxTokens: 500,
-    temperature: 0,
-    model: MAPPING_MODEL,
-  });
-  let parsed: { paragraphs?: SourceMap } = {};
-  try { parsed = parseJsonObject(raw); } catch { throw new Error("source_map_failed"); }
-  const paragraphs = summary.split(/\n+/).filter(Boolean);
-  const map = Array.isArray(parsed.paragraphs) ? parsed.paragraphs : [];
-  if (map.length !== paragraphs.length) throw new Error("source_map_failed");
-  for (let i = 0; i < map.length; i++) {
-    if (map[i].paragraph_index !== i || !Array.isArray(map[i].source_ids) || !map[i].source_ids.length) throw new Error("source_map_failed");
-    map[i].source_ids = [...new Set(map[i].source_ids.filter((id) => validIds.has(id)))];
-    if (!map[i].source_ids.length) throw new Error("source_map_failed");
-  }
-  return map;
+const STOP_WORDS = new Set([
+  "هذا", "هذه", "ذلك", "التي", "الذي", "على", "إلى", "الى", "عن", "من", "في", "مع",
+  "كان", "كانت", "لكن", "أني", "اني", "أنه", "انه", "لأن", "لان", "بعد", "قبل", "كل",
+  "شيء", "أكثر", "ما", "مو", "ولا", "عندي", "خلال", "مرة", "بشكل", "حتى",
+]);
+
+function tokens(text: string) {
+  return text
+    .normalize("NFKD")
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/[إأآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((word) => word.length > 2 && !STOP_WORDS.has(word));
 }
 
-async function inspectQuality(entriesText: string, summary: string) {
-  const prompt = `المادة الخام بالترتيب الزمني:\n${entriesText}\n\nالمنارة المرشحة:\n${summary}`;
-  return parseQuality(await callGemini(qaInstruction, prompt, {
-    json: true,
-    maxTokens: 320,
-    temperature: 0,
-    model: QA_MODEL,
-  }));
+function buildSourceMap(notes: NoteSource[], summary: string): SourceMap {
+  const sources = notes.map((note) => ({ id: note.id, words: new Set(tokens(note.note)) }));
+  return summary.split(/\n+/).filter(Boolean).map((paragraph, paragraphIndex) => {
+    const paragraphWords = [...new Set(tokens(paragraph))];
+    const ranked = sources.map((source) => ({
+      id: source.id,
+      score: paragraphWords.filter((word) => source.words.has(word)).length,
+    })).sort((a, b) => b.score - a.score);
+    const best = ranked[0]?.score || 0;
+    const sourceIds = ranked.filter((item) => item.score > 0 && item.score >= Math.max(1, best - 1))
+      .slice(0, 3)
+      .map((item) => item.id);
+    return { paragraph_index: paragraphIndex, source_ids: sourceIds };
+  });
+}
+
+function inspectQuality(notes: NoteSource[], summary: string): QualityResult {
+  const raw = notes.map((note) => note.note).join("\n");
+  const summaryWords = [...new Set(tokens(summary))];
+  const rawWords = new Set(tokens(raw));
+  const sharedRatio = summaryWords.length
+    ? summaryWords.filter((word) => rawWords.has(word)).length / summaryWords.length
+    : 0;
+  const sourceMap = buildSourceMap(notes, summary);
+  const paragraphs = summary.split(/\n+/).filter(Boolean);
+  const supported = sourceMap.length === paragraphs.length && sourceMap.every((row) => row.source_ids.length > 0);
+  const firstPerson = /(?:^|[\s،.])(أنا|انا|بدأت|كنت|صرت|خرجت|تعلمت|لاحظت|أحس|حسيت|أشعر|رأيي|رحلتي|عندي|بقي)(?:[\s،.]|$)/.test(summary) && !hasExternalNarrator(summary);
+  const disagreementMarkers = ["متردد", "غير متأكد", "ما اتفقت", "لم أتفق", "تحفظ", "تغير رأيي", "تغيّر رأيي", "شك"];
+  const rawDisagreement = disagreementMarkers.filter((marker) => raw.includes(marker));
+  const keptDisagreement = disagreementMarkers.filter((marker) => summary.includes(marker));
+  return {
+    supported,
+    first_person: firstPerson,
+    voice_preserved: sharedRatio >= 0.28,
+    disagreement_preserved: rawDisagreement.length === 0 || keptDisagreement.length >= Math.min(2, rawDisagreement.length),
+    concise: summary.trim().length >= 40 && summary.trim().length < raw.trim().length * 0.9,
+    ai_narrator: hasExternalNarrator(summary),
+    issues: [],
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -235,7 +237,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     let summary = await callGemini(writingInstruction, sourcePrompt);
-    let quality = await inspectQuality(entriesText, summary);
+    let quality = inspectQuality(notes, summary);
 
     if (!passesQuality(quality, summary)) {
       const issues = (quality.issues || []).join("؛ ") || "الصوت ليس شخصيًا بما يكفي";
@@ -244,7 +246,7 @@ Deno.serve(async (req: Request) => {
         temperature: 0.15,
         model: REPAIR_MODEL,
       });
-      quality = await inspectQuality(entriesText, summary);
+      quality = inspectQuality(notes, summary);
     }
 
     if (!passesQuality(quality, summary)) {
@@ -262,7 +264,7 @@ Deno.serve(async (req: Request) => {
       }, 502);
     }
 
-    const sourceMap = await buildSourceMap(entriesText, summary, new Set(notes.map((entry: { id: string }) => entry.id)));
+    const sourceMap = buildSourceMap(notes, summary);
 
     const { data: saved, error: saveErr } = await admin.rpc("save_menara_with_sources", {
       p_user_id: userId,
