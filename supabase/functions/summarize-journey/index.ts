@@ -120,9 +120,16 @@ type QualityResult = {
   issues?: string[];
 };
 
-function parseQuality(raw: string): QualityResult {
+function parseJsonObject(raw: string) {
   const clean = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
-  try { return JSON.parse(clean); } catch (_error) { return { issues: ["تعذر قراءة فحص الجودة"] }; }
+  const start = clean.indexOf("{");
+  const end = clean.lastIndexOf("}");
+  if (start < 0 || end < start) throw new Error("invalid_json");
+  return JSON.parse(clean.slice(start, end + 1));
+}
+
+function parseQuality(raw: string): QualityResult {
+  try { return parseJsonObject(raw); } catch (_error) { return { issues: ["تعذر قراءة فحص الجودة"] }; }
 }
 
 function hasExternalNarrator(summary: string) {
@@ -152,7 +159,7 @@ async function buildSourceMap(entriesText: string, summary: string, validIds: Se
     model: MAPPING_MODEL,
   });
   let parsed: { paragraphs?: SourceMap } = {};
-  try { parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")); } catch { throw new Error("source_map_failed"); }
+  try { parsed = parseJsonObject(raw); } catch { throw new Error("source_map_failed"); }
   const paragraphs = summary.split(/\n+/).filter(Boolean);
   const map = Array.isArray(parsed.paragraphs) ? parsed.paragraphs : [];
   if (map.length !== paragraphs.length) throw new Error("source_map_failed");
