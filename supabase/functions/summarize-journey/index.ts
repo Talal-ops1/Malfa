@@ -55,7 +55,7 @@ async function callGemini(
         system_instruction: { parts: [{ text: systemInstruction }] },
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
-          maxOutputTokens: options.maxTokens || 900,
+          maxOutputTokens: options.maxTokens || 1800,
           temperature: options.temperature ?? 0.25,
           ...(options.json ? { responseMimeType: "application/json" } : {}),
         },
@@ -104,6 +104,7 @@ type QualityResult = {
   voice_preserved?: boolean;
   disagreement_preserved?: boolean;
   concise?: boolean;
+  coherent?: boolean;
   ai_narrator?: boolean;
   issues?: string[];
 };
@@ -118,6 +119,7 @@ function passesQuality(result: QualityResult, summary: string) {
     result.voice_preserved === true &&
     result.disagreement_preserved === true &&
     result.concise === true &&
+    result.coherent === true &&
     result.ai_narrator === false &&
     !hasExternalNarrator(summary);
 }
@@ -178,16 +180,21 @@ function inspectQuality(notes: NoteSource[], summary: string): QualityResult {
   const rawDisagreement = DISAGREEMENT_KINDS.filter((kind) => kind.pattern.test(raw));
   const keptDisagreement = DISAGREEMENT_KINDS.filter((kind) => kind.pattern.test(summary));
   const disagreementPreserved = rawDisagreement.length === 0 || keptDisagreement.length >= Math.min(2, rawDisagreement.length);
+  const coherent = summary.split(/\n+/).filter(Boolean).every((paragraph) =>
+    /[.!؟…»”]$/.test(paragraph.trim()) && !/(?:لكن|وما زلت|ما زلت|أو|و)$/.test(paragraph.trim())
+  );
   const issues: string[] = [];
   if (!disagreementPreserved) {
     issues.push(`لم تُحفظ فئتان على الأقل من: ${rawDisagreement.map((kind) => kind.label).join("، ")}`);
   }
+  if (!coherent) issues.push("توجد فقرة أو جملة مقطوعة؛ يجب إكمالها من دون إضافة فكرة جديدة.");
   return {
     supported,
     first_person: firstPerson,
     voice_preserved: sharedRatio >= 0.28,
     disagreement_preserved: disagreementPreserved,
     concise: summary.trim().length >= 40 && summary.trim().length < raw.trim().length * 0.9,
+    coherent,
     ai_narrator: hasExternalNarrator(summary),
     issues,
   };
@@ -267,6 +274,7 @@ Deno.serve(async (req: Request) => {
         quality.first_person === true &&
         quality.voice_preserved === true &&
         quality.concise === true &&
+        quality.coherent === true &&
         quality.ai_narrator === false) {
       summary = restoreMissingDisagreement(notes, summary);
       quality = inspectQuality(notes, summary);
@@ -291,6 +299,7 @@ Deno.serve(async (req: Request) => {
           voice_preserved: quality.voice_preserved === true,
           disagreement_preserved: quality.disagreement_preserved === true,
           concise: quality.concise === true,
+          coherent: quality.coherent === true,
           ai_narrator: quality.ai_narrator === true,
           external_narrator: hasExternalNarrator(summary),
         },
