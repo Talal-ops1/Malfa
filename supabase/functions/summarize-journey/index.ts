@@ -241,7 +241,18 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!passesQuality(quality, summary)) {
-      return json(req, { error: "quality_check_failed" }, 502);
+      return json(req, {
+        error: "quality_check_failed",
+        checks: {
+          supported: quality.supported === true,
+          first_person: quality.first_person === true,
+          voice_preserved: quality.voice_preserved === true,
+          disagreement_preserved: quality.disagreement_preserved === true,
+          concise: quality.concise === true,
+          ai_narrator: quality.ai_narrator === true,
+          external_narrator: hasExternalNarrator(summary),
+        },
+      }, 502);
     }
 
     const sourceMap = await buildSourceMap(entriesText, summary, new Set(notes.map((entry: { id: string }) => entry.id)));
