@@ -170,13 +170,17 @@ function inspectQuality(notes: NoteSource[], summary: string): QualityResult {
   const paragraphs = summary.split(/\n+/).filter(Boolean);
   const supported = sourceMap.length === paragraphs.length && sourceMap.every((row) => row.source_ids.length > 0);
   const firstPerson = /(?:^|[\s،.])(أنا|انا|بدأت|كنت|صرت|خرجت|تعلمت|لاحظت|أحس|حسيت|أشعر|رأيي|رحلتي|عندي|بقي)(?:[\s،.]|$)/.test(summary) && !hasExternalNarrator(summary);
-  const disagreementMarkers = ["متردد", "غير متأكد", "ما اتفقت", "لم أتفق", "تحفظ", "تغير رأيي", "تغيّر رأيي", "شك"];
-  const rawDisagreement = disagreementMarkers.filter((marker) => raw.includes(marker));
-  const keptDisagreement = disagreementMarkers.filter((marker) => summary.includes(marker));
+  const disagreementKinds = [
+    { label: "التردد أو عدم اليقين", pattern: /متردد|غير متأكد|ما كنت متأكد|ما كنت واثق|لم أكن واثق|شك|حير|محتار/ },
+    { label: "الاعتراض أو التحفظ", pattern: /ما اتفقت|لم أتفق|غير متفق|تحفظ|ما اقتنعت|لم أقتنع|اعترض/ },
+    { label: "تغيّر الرأي", pattern: /تغير رأيي|تغيّر رأيي|تبدل رأيي|تبدّل رأيي|تغيرت نظرتي|تغيّرت نظرتي/ },
+  ];
+  const rawDisagreement = disagreementKinds.filter((kind) => kind.pattern.test(raw));
+  const keptDisagreement = disagreementKinds.filter((kind) => kind.pattern.test(summary));
   const disagreementPreserved = rawDisagreement.length === 0 || keptDisagreement.length >= Math.min(2, rawDisagreement.length);
   const issues: string[] = [];
   if (!disagreementPreserved) {
-    issues.push(`لم تُحفظ علامتا تردد أو اختلاف على الأقل من المادة: ${rawDisagreement.join("، ")}`);
+    issues.push(`لم تُحفظ فئتان على الأقل من: ${rawDisagreement.map((kind) => kind.label).join("، ")}`);
   }
   return {
     supported,
