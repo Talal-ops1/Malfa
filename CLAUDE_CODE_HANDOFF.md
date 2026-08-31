@@ -755,3 +755,55 @@ welcome is mounted before `getSession()`, the signed-in/out destination branch,
 no `book_title` in either request or function, and the full generate → QA →
 regenerate → QA gate. Live generated-text comparison remains pending the Edge
 Function deployment.
+
+## 20. Production hardening + live end-to-end QA (2026-08-31)
+
+The Batch 19 deployment note above is superseded: the current
+`summarize-journey` source is deployed live in Supabase and was verified against
+the authenticated QA reader's complete journey.
+
+**Security and dependencies:** consumer/admin now vendor exact
+`@supabase/supabase-js` 2.112.4 files locally. Vercel configs contain generated
+CSP script hashes, frame denial, HSTS, restrictive permissions policies, and
+explicit Supabase-only connect/media sources. Stored user-controlled output is
+escaped in account, book, collection, invite, journey, Menara, and admin paths.
+Admin data remains behind server-side `is_admin` checks and an immutable
+`admin_actions` audit insert; unauthenticated live requests return 401.
+
+**Database/backend:** tracked migrations harden RLS and relationship guards,
+add atomic Menara/source-map persistence, immutable admin audit rows, secure
+custom-book cover/audio ownership, ten verified starter books, and server-
+derived invite title snapshots. All Edge Functions authenticate the JWT inside
+the function, keep service-role/Gemini secrets server-side, enforce exact CORS
+origins, reject oversized/invalid requests, and return no secret material.
+
+**Live Menara:** one free-tier `gemini-3.6-flash` call organizes only the
+authenticated reader's `journey_entries.note` text; neither title nor book text
+is sent. Server-side deterministic QA rejects external narrator labels, checks
+first-person voice, lexical support, concision, completed paragraphs, and
+preservation of uncertainty/disagreement. Every paragraph is linked to the
+highest-overlap original entry IDs. If the AI omits a required disagreement
+category, an exact sentence from that reader's own source entry is restored
+before the result is rechecked; no new idea is invented. Provider failures log
+only model/status, and quota exhaustion receives an honest retry message.
+
+Live result passed with two complete first-person paragraphs preserving initial
+hesitation, uncertainty, disagreement, changed opinion, and final reservation.
+The share checkbox was unchecked by default; checking it opened an editable
+review sheet before publishing; cancellation restored the private state. No
+shared/public write was made during QA.
+
+**Other verified flows:** welcome appeared for signed-in and signed-out launches
+with the exact tagline and bottom credit; real signup/login/no-guest behavior;
+per-account library isolation; custom private book + secure cover; accepted
+account-name invite; real MediaRecorder audio upload/playback/pause/resume;
+completion metrics; compact reflection expansion; category-to-Discover routing;
+light/dark themes; empty states; and IBM Arabic Text activation. Ten starter
+books use locally stored, source-documented public-domain covers; filler titles
+remain absent.
+
+**Final automated checks:** `bash v4/build.sh` → `JS OK` after every change;
+`test_xss.py`, `test_security_headers.py`, `test_content_integrity.py`, and the
+live `test_edge_boundaries.py` all pass. The GitHub `main` branch and live
+Supabase function contain the verified source. The only unrelated untracked
+workspace items are `gsap-skills-main/` and its zip; they were never staged.
