@@ -8,7 +8,10 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-const MODEL = "gemini-3.6-flash";
+const WRITING_MODEL = "gemini-3.6-flash";
+const QA_MODEL = "gemini-2.5-flash-lite";
+const MAPPING_MODEL = "gemini-2.5-flash";
+const REPAIR_MODEL = "gemini-3.1-flash-lite";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -39,10 +42,11 @@ function json(req: Request, body: unknown, status = 200) {
 async function callGemini(
   systemInstruction: string,
   prompt: string,
-  options: { json?: boolean; maxTokens?: number; temperature?: number } = {},
+  options: { json?: boolean; maxTokens?: number; temperature?: number; model?: string } = {},
 ) {
+  const model = options.model || WRITING_MODEL;
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
       method: "POST",
       headers: {
@@ -141,7 +145,12 @@ const mappingInstruction = `اربط كل فقرة في المنارة بمصا�
 استخدم فقط معرفات source الموجودة في المادة. يجب أن يكون لكل فقرة مصدر واحد على الأقل، ولا تضف أي تفسير.`;
 
 async function buildSourceMap(entriesText: string, summary: string, validIds: Set<string>): Promise<SourceMap> {
-  const raw = await callGemini(mappingInstruction, `المصادر:\n${entriesText}\n\nالمنارة:\n${summary}`, { json: true, maxTokens: 500, temperature: 0 });
+  const raw = await callGemini(mappingInstruction, `المصادر:\n${entriesText}\n\nالمنارة:\n${summary}`, {
+    json: true,
+    maxTokens: 500,
+    temperature: 0,
+    model: MAPPING_MODEL,
+  });
   let parsed: { paragraphs?: SourceMap } = {};
   try { parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")); } catch { throw new Error("source_map_failed"); }
   const paragraphs = summary.split(/\n+/).filter(Boolean);
@@ -161,6 +170,7 @@ async function inspectQuality(entriesText: string, summary: string) {
     json: true,
     maxTokens: 320,
     temperature: 0,
+    model: QA_MODEL,
   }));
 }
 
@@ -223,7 +233,10 @@ Deno.serve(async (req: Request) => {
     if (!passesQuality(quality, summary)) {
       const issues = (quality.issues || []).join("؛ ") || "الصوت ليس شخصيًا بما يكفي";
       const repairPrompt = `${sourcePrompt}\n\nالمحاولة السابقة:\n${summary}\n\nمشكلات فحص الجودة:\n${issues}\n\nأعد كتابة المنارة من الصفر ملتزمًا بالقواعد. أخرج نص المنارة فقط.`;
-      summary = await callGemini(writingInstruction, repairPrompt, { temperature: 0.15 });
+      summary = await callGemini(writingInstruction, repairPrompt, {
+        temperature: 0.15,
+        model: REPAIR_MODEL,
+      });
       quality = await inspectQuality(entriesText, summary);
     }
 
@@ -245,6 +258,7 @@ Deno.serve(async (req: Request) => {
     return json(req, { ...saved, source_map: sourceMap });
   } catch (error) {
     const message = String(error);
+    if (message.includes("llm_error:429")) return json(req, { error: "quota_exhausted" }, 429);
     if (message.includes("llm_error:")) return json(req, { error: "llm_error" }, 502);
     if (message.includes("empty_summary")) return json(req, { error: "empty_summary" }, 502);
     if (message.includes("source_map_failed")) return json(req, { error: "source_map_failed" }, 502);

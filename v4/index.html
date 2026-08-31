@@ -2092,6 +2092,7 @@ function generateMenara(bookId,btn){
         console.error('Menara generation failed',res.status,res.body&&res.body.error);
         if(res.body&&res.body.error==='not_configured')toast('منارة تحتاج إعداد مفتاح الذكاء الاصطناعي أول.');
         else if(res.body&&res.body.error==='no_entries')toast('ما فيه محطات كافية لتوليد منارة.');
+        else if(res.body&&res.body.error==='quota_exhausted')toast('خدمة منارة مزدحمة الآن. جرّب بعد دقيقة.');
         else toast('صار خطأ بتوليد منارتك. حاول مرة ثانية.');
         return;
       }
