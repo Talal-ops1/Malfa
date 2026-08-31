@@ -262,6 +262,7 @@ Deno.serve(async (req: Request) => {
     if (!passesQuality(quality, summary)) {
       return json(req, {
         error: "quality_check_failed",
+        candidate: summary,
         checks: {
           supported: quality.supported === true,
           first_person: quality.first_person === true,
