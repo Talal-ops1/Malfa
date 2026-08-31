@@ -90,6 +90,7 @@ const writingInstruction = `أنت محرر عربي يرتب كلام القا�
 - استخدم فقط الأفكار والمشاعر والآراء والاتفاقات والاعتراضات والشكوك الموجودة صراحة في المادة الخام. لا تستعن بأي معرفة عن الكتاب ولا تضف تفسيرًا أو حقيقة أو اقتباسًا أو نتيجة لم يقلها القارئ.
 - حافظ قدر الإمكان على مفردات القارئ وإيقاعه ودرجة لهجته. نظّم ونقّح من غير تحويل صوته إلى لغة ذكاء اصطناعي عامة أو فصحى متكلفة.
 - لا تمحُ التردد أو الاختلاف أو تغيّر الرأي. إذا قال القارئ إنه غير متأكد أو غير متفق، أبقِ ذلك واضحًا.
+- إذا تكررت علامات التردد أو الاختلاف في أكثر من محطة، حافظ على مثالين مختلفين منها على الأقل من دون اختراع صياغة جديدة.
 - احذف التكرار واجمع الأفكار المتقاربة. اجعل الناتج أقصر بوضوح من المادة الخام متى كانت المادة كافية.
 - اكتب من فقرة إلى خمس فقرات بحسب كمية المادة. لا تحشُ النص إذا كانت التسجيلات قليلة.
 - لا تضف عنوانًا ولا مقدمة مثل «إليك الملخص». ابدأ مباشرة بصوت القارئ.
@@ -172,14 +173,19 @@ function inspectQuality(notes: NoteSource[], summary: string): QualityResult {
   const disagreementMarkers = ["متردد", "غير متأكد", "ما اتفقت", "لم أتفق", "تحفظ", "تغير رأيي", "تغيّر رأيي", "شك"];
   const rawDisagreement = disagreementMarkers.filter((marker) => raw.includes(marker));
   const keptDisagreement = disagreementMarkers.filter((marker) => summary.includes(marker));
+  const disagreementPreserved = rawDisagreement.length === 0 || keptDisagreement.length >= Math.min(2, rawDisagreement.length);
+  const issues: string[] = [];
+  if (!disagreementPreserved) {
+    issues.push(`لم تُحفظ علامتا تردد أو اختلاف على الأقل من المادة: ${rawDisagreement.join("، ")}`);
+  }
   return {
     supported,
     first_person: firstPerson,
     voice_preserved: sharedRatio >= 0.28,
-    disagreement_preserved: rawDisagreement.length === 0 || keptDisagreement.length >= Math.min(2, rawDisagreement.length),
+    disagreement_preserved: disagreementPreserved,
     concise: summary.trim().length >= 40 && summary.trim().length < raw.trim().length * 0.9,
     ai_narrator: hasExternalNarrator(summary),
-    issues: [],
+    issues,
   };
 }
 
