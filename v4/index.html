@@ -302,6 +302,36 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .lp-card h3{font-family:var(--f-d);font-size:17px;font-weight:700;margin:0;line-height:1.4}
 .lp-card p{font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.75;margin:7px 0 0}
 .lp-widgets{display:grid;grid-template-columns:1fr;gap:14px;max-width:760px;margin:0 auto}
+/* ---- rolling books ---- */
+.lp-rolling{overflow:hidden}
+.rb-wrap{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+.rb-track{display:flex;gap:14px;width:max-content;animation:rbScrollL 64s linear infinite}
+.rb-track.rev{animation-name:rbScrollR}
+.rb-set{display:contents}
+.rb-track:hover,.rb-track:focus-visible,.rb-track:active{animation-play-state:paused}
+@keyframes rbScrollL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes rbScrollR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.rb-cv{flex:none}
+.lp-books-grid{display:none}
+@media (prefers-reduced-motion:reduce){
+  .rb-wrap{display:none}
+  .lp-books-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding-inline:var(--pad);margin-top:6px}
+}
+@media (min-width:768px){.lp-books-grid{grid-template-columns:repeat(5,1fr);max-width:1000px;margin-inline:auto}}
+@media (min-width:1440px){.lp-books-grid{max-width:1120px}}
+/* ---- HUMAIN-inspired رحلات متعددة section ---- */
+.lp-journeys{text-align:center}
+.lp-h1-mid{font-family:var(--f-d);font-weight:700;font-size:40px;line-height:1.22;margin:12px 0 0}
+.lp-journey-panels{display:grid;grid-template-columns:1fr;gap:14px;max-width:1000px;margin:0 auto}
+.lp-journey-panel{position:relative;padding:26px 22px;border:1px solid var(--rule);border-radius:var(--r2);
+  background:var(--ground-2);text-align:start;overflow:hidden}
+.lp-journey-n{position:absolute;top:20px;inset-inline-end:22px;font-family:var(--f-d);font-size:15px;
+  font-weight:700;color:var(--ink-3);opacity:.6}
+.lp-journey-panel h3{font-family:var(--f-d);font-size:19px;font-weight:700;margin:14px 0 0}
+.lp-journey-panel p{font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.75;margin:8px 0 0;max-width:34ch}
+@media (min-width:768px){.lp-journey-panels{grid-template-columns:repeat(2,1fr)}.lp-h1-mid{font-size:52px}}
+@media (min-width:1024px){.lp-journey-panels{grid-template-columns:repeat(4,1fr)}.lp-h1-mid{font-size:58px}}
+@media (min-width:1440px){.lp-journey-panels{max-width:1120px}.lp-h1-mid{font-size:64px}}
 .lp-ba{display:grid;grid-template-columns:1fr;gap:14px;max-width:640px;margin:34px auto 0}
 .lp-ba-col{padding:18px;border-radius:var(--r2);border:1px solid var(--rule)}
 .lp-ba-col.before{background:var(--ground-2)}
@@ -327,6 +357,19 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .plan-features li{display:flex;align-items:flex-start;gap:9px;font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.6}
 .plan-features li .ic{color:var(--khz-txt);flex:none;margin-top:1px}
 .plan-card .btn{margin-top:22px}
+.cmp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cmp-table{width:100%;min-width:420px;border-collapse:collapse;font-family:var(--f-u)}
+.cmp-table th,.cmp-table td{padding:12px 10px;text-align:center;font-size:13.5px;border-bottom:1px solid var(--rule)}
+.cmp-table th[scope="row"]{text-align:start;font-weight:500;color:var(--ink);white-space:nowrap}
+.cmp-table thead th{color:var(--ink-3);font-weight:700;font-size:12px;padding-bottom:10px}
+.cmp-table thead th:not([scope="row"]):last-child{color:var(--khz-txt)}
+.cmp-yes{display:inline-flex;align-items:center;gap:5px;color:var(--khz-txt);font-weight:600}
+.cmp-no{color:var(--ink-3)}
+.feat-lock{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-u);font-size:10.5px;font-weight:700;
+  color:var(--khz-txt);background:color-mix(in srgb,var(--khz) 14%,transparent);border-radius:99px;
+  padding:3px 9px;margin-inline-start:8px;vertical-align:middle}
+.feat-lock .ic{width:11px;height:11px}
+.row .feat-lock{margin-inline-start:10px}
 .lp-closing{padding:70px var(--pad);text-align:center;border-top:1px solid var(--rule);margin-top:20px}
 .lp-footer{padding:36px var(--pad) 40px;border-top:1px solid var(--rule)}
 .lp-footer-grid{display:grid;grid-template-columns:1fr;gap:26px;max-width:900px;margin:0 auto}
@@ -929,7 +972,6 @@ var MY_SUMMARIES={};         /* book key -> {summary_text,is_shared,...} — م�
 var PUBLIC_MENARAS=[];       /* narrow RPC: only summaries explicitly shared by their owners */
 var PLANS=[],PLANS_LOADED=false; /* public.plans — single source of truth, pre- and post-login */
 var MY_PLAN=null;            /* public.user_plans row for ME, joined against PLANS by plan_id */
-var MY_MENARA_USED=0;        /* menara_generation_log count this month, for the free-tier quota UI */
 var MY_READING_SESSIONS=[];  /* completed focus sessions, newest first */
 var READING_PREF={daily_goal_minutes:20,reminder_enabled:false,reminder_time:null,selected_book_id:null,selected_user_book_id:null,weekly_days_goal:null};
 var READING_ACTIVE=null,READING_TICK=null,READING_NOTICE=false,READING_SAVE_QUEUE=[];
@@ -1129,7 +1171,7 @@ function respondInvite(inviteId,accept){
   });
 }
 function loadAll(){
-  return Promise.all([loadGenres(),loadProfile(),loadLibrary(),loadJourneyAll(),loadCollections(),loadUserBooks(),loadSharedMenaras(),loadReadingData(),loadMyPlan(),loadMenaraUsage()])
+  return Promise.all([loadGenres(),loadProfile(),loadLibrary(),loadJourneyAll(),loadCollections(),loadUserBooks(),loadSharedMenaras(),loadReadingData(),loadMyPlan()])
     .then(function(){return loadInvites();});
 }
 /* plans is readable by anon and authenticated alike (plans_anon_select /
@@ -1149,23 +1191,26 @@ function loadMyPlan(){
     MY_PLAN=res.error?null:(res.data||null);return MY_PLAN;
   }).catch(function(){MY_PLAN=null;return null;});
 }
-function loadMenaraUsage(){
-  if(!ME)return Promise.resolve(0);
-  return sb.rpc('my_menara_usage_this_month').then(function(res){
-    MY_MENARA_USED=res.error?0:(res.data||0);return MY_MENARA_USED;
-  }).catch(function(){MY_MENARA_USED=0;return 0;});
-}
 function planIsPaidActive(p){
   if(!p||p.plan_id==='free')return false;
   if(p.status!=='active'&&p.status!=='trial')return false;
   if(p.expiry_date&&new Date(p.expiry_date)<new Date())return false;
   return true;
 }
+function currencyLabel(c){return c==='SAR'?'ر.س':(c||'');}
+/* Plain ASCII digits with exactly two decimals when the amount isn't a
+   whole number (96.60, never 96.6 — matches how every other number in the
+   app is rendered; toLocaleString('ar-SA') would switch to Arabic-Indic
+   numerals, which nothing else here does). */
+function fmtPriceValue(n){return (Math.round(n*100)%100===0)?String(Math.round(n)):n.toFixed(2);}
 function fmtPrice(p){
   if(p.price_amount==null||Number(p.price_amount)===0)return 'مجانًا';
-  var n=Number(p.price_amount);
-  return n.toLocaleString('ar-SA')+' '+(p.currency||'SAR');
+  return fmtPriceValue(Number(p.price_amount))+' '+currencyLabel(p.currency);
 }
+/* set right before opening the upgrade sheet from a locked feature so a
+   completed subscription can drop the reader back where they were instead
+   of just landing on الباقات — consumed once by activatePlan(). */
+var PENDING_RETURN=null;
 function activatePlan(planId,btn){
   if(!ME){authMode='signup';push('auth');return;}
   if(btn){btn.disabled=true;btn.textContent='لحظة...';}
@@ -1178,9 +1223,10 @@ function activatePlan(planId,btn){
     MY_PLAN=res.data;
     toast('تم تفعيل الباقة.');
     refreshIfCurrent('plans');refreshIfCurrent('account');
+    var ret=PENDING_RETURN;PENDING_RETURN=null;
+    if(ret==='friend')setTimeout(function(){push('friend');},260);
   });
 }
-var FREE_MENARA_LIMIT=3;
 /* one card renderer, two contexts — landing (pre-login) and الباقات
    والاشتراك (post-login) always read the same PLANS rows, so a price or
    feature can never say one thing on the homepage and another after
@@ -1190,6 +1236,7 @@ function planCardHTML(p,mode){
   var isCurrent=mode==='account'&&currentId===p.id;
   var feats=(p.features||[]).map(function(f){return '<li>'+ic('check',15)+'<span>'+esc(f)+'</span></li>';}).join('');
   var priceUnit=p.billing_period==='year'?' / سنويًا':p.billing_period==='month'?' / شهريًا':'';
+  var isAnnual=p.billing_period==='year',isMonthly=p.billing_period==='month';
   var cta;
   if(mode==='landing'){
     cta='<button class="btn btn-fill btn-full" data-startauth="signup">ابدأ رحلتك</button>';
@@ -1198,16 +1245,40 @@ function planCardHTML(p,mode){
   }else{
     cta='<button class="btn btn-fill btn-full" data-activateplan="'+esc(p.id)+'">'+(p.price_amount?'اشترك الآن':'التحويل للمجانية')+'</button>';
   }
+  var monthlyEquivalent=isAnnual&&p.price_amount?fmtPriceValue(Number(p.price_amount)/12):null;
   return '<div class="plan-card'+(p.is_recommended?' recommended':'')+'">'
     +(isCurrent?'<span class="plan-badge" style="background:var(--ink-2)">باقتك الحالية</span>'
-      :(p.is_recommended?'<span class="plan-badge">الأنسب لقارئ منتظم</span>':''))
+      :(p.is_recommended?'<span class="plan-badge">الأكثر توفيرًا</span>':''))
     +'<div class="plan-name">'+esc(p.name)+'</div>'
     +(p.tagline?'<p class="plan-tagline">'+esc(p.tagline)+'</p>':'')
     +'<div class="plan-price">'+fmtPrice(p)+(p.price_amount?'<span>'+priceUnit+'</span>':'')+'</div>'
+    +(isAnnual?'<span class="plan-trial-tag" style="color:var(--khz-txt);border-color:color-mix(in srgb,var(--khz-txt) 45%,transparent)">شهران مجانًا · '+monthlyEquivalent+' '+currencyLabel(p.currency)+'/شهر</span>'
+      +'<p class="meta" style="margin-top:8px">تُدفع '+fmtPrice(p)+' مرة واحدة سنويًا.</p>':'')
+    +(isMonthly?'<p class="meta" style="margin-top:8px">اشتراك سعودي بسعر يحمل رمزه.</p>':'')
     +(p.is_trial_pricing?'<span class="plan-trial-tag">سعر تجريبي، غير نهائي</span>':'')
     +'<ul class="plan-features">'+feats+'</ul>'
     +cta
     +'</div>';
+}
+var PRICING_COMPARISON_ROWS=[
+  ['مكتبة وتتبع التقدم',true,true],
+  ['روتين وأيام القراءة',true,true],
+  ['سجل الرحلة كتابةً',true,true],
+  ['منارة',false,true],
+  ['الصوت وتحويله إلى نص',false,true],
+  ['القراءة مع شخص',false,true],
+  ['الإحصاءات المتقدمة',false,true],
+  ['التصدير والحصاد السنوي',false,true]
+];
+function pricingComparisonTableHTML(){
+  var rows=PRICING_COMPARISON_ROWS.map(function(r){
+    return '<tr><th scope="row">'+esc(r[0])+'</th>'
+      +'<td>'+(r[1]?'<span class="cmp-yes">'+ic('check',14)+' متاح</span>':'<span class="cmp-no">غير متاح</span>')+'</td>'
+      +'<td>'+(r[2]?'<span class="cmp-yes">'+ic('check',14)+' متاح</span>':'<span class="cmp-no">غير متاح</span>')+'</td></tr>';
+  }).join('');
+  return '<div class="cmp-scroll"><table class="cmp-table"><thead><tr>'
+    +'<th scope="col">الميزة</th><th scope="col">مجاني</th><th scope="col">مَلفى+</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 function statusCardHTML(p){
   var row=MY_PLAN;
@@ -1219,7 +1290,7 @@ function statusCardHTML(p){
     expiryLine='<span class="meta" style="display:block;margin-top:6px">'
       +(lapsed?'انتهت في ':'تتجدد أو تنتهي في ')+esc(fmtMonthYear(row.expiry_date))+'</span>';
   }
-  var showQuota=!p||p.id==='free'||lapsed;
+  var isFreeTier=!p||p.id==='free'||lapsed;
   return '<div class="pad"><div class="rs-card">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'
     +'<div class="lp-ba-lbl">باقتك الحالية</div>'
@@ -1229,8 +1300,7 @@ function statusCardHTML(p){
     +(row&&row.renewal_status==='trial_no_payment'&&!lapsed?'<span class="plan-trial-tag">تجربة بلا دفع</span>':'')
     +expiryLine
     +(lapsed?'<p class="meta" style="margin-top:8px">رجعت لحدود الباقة المجانية لين تفعّل باقة من جديد.</p>':'')
-    +(showQuota?'<div class="s14"></div><p class="meta">استخدمت <b class="tnum">'+MY_MENARA_USED+'</b> من <b class="tnum">'+FREE_MENARA_LIMIT+'</b> منارة هذا الشهر.</p>'
-      +bar(Math.min(100,Math.round(MY_MENARA_USED/FREE_MENARA_LIMIT*100))):'')
+    +(isFreeTier?'<div class="s14"></div><p class="meta"><span class="feat-lock" style="margin-inline-start:0">'+ic('lock',11)+' مَلفى+</span> منارة والقراءة مع شخص غير متاحة في باقتك الحالية.</p>':'')
     +'</div></div>';
 }
 function plansBodyHTML(){
@@ -1244,6 +1314,10 @@ function plansBodyHTML(){
     +'<div class="pad"><div class="kick">الباقات المتاحة</div></div>'
     +'<div class="s12"></div>'
     +'<div class="pad"><div class="lp-plans" style="margin-inline:0;max-width:none">'+PLANS.map(function(p){return planCardHTML(p,'account');}).join('')+'</div></div>'
+    +'<div class="s32"></div>'
+    +'<div class="pad"><div class="kick">مقارنة سريعة</div></div>'
+    +'<div class="s12"></div>'
+    +'<div class="pad">'+pricingComparisonTableHTML()+'</div>'
     +'<div class="s24"></div></div>';
 }
 function plansHTML(){
@@ -1355,7 +1429,7 @@ function welcomeHTML(){
   return '<div class="welcome">'
     +'<h1 class="w-mark">مَــلفى</h1>'
     +'<p class="w-tag">مكان كل القراء</p>'
-    +'<p class="w-love">صُنع بحب من عيينة | الرياض</p>'
+    +'<p class="w-love">صُنع بحب من العيينة | الرياض</p>'
     +'</div>';
 }
 
@@ -1412,6 +1486,76 @@ function landingHeroHTML(){
       +'<button class="btn btn-line" data-scrollto="lp-steps">اكتشف مَلفى</button>'
     +'</div>'
     +'<div class="lp-preview">'+landingHeroPreviewHTML()+'</div>'
+    +'</div>';
+}
+/* Real titles and authors spanning Saudi, Arabic literary, historical, and
+   international works — rendered through مَلفى's own illustrated-cover
+   system (paper stock, spine, typography), never scraped publisher cover
+   photography, so nothing here risks reproducing artwork مَلفى has no
+   license to show. Every title/author pair is real and verifiable. */
+var ROLLING_BOOKS=[
+ ['ترمي بشرر','عبده خال'],['بنات الرياض','رجاء الصانع'],['العدامة','تركي الحمد'],
+ ['شقة الحرية','غازي القصيبي'],['فخاخ الرائحة','يوسف المحيميد'],['الفردوس اليباب','ليلى الجهني'],
+ ['البحريات','أميمة الخميس'],['موت صغير','محمد حسن علوان'],['بين القصرين','نجيب محفوظ'],
+ ['الأيام','طه حسين'],['رجال في الشمس','غسان كنفاني'],['التبر','إبراهيم الكوني'],
+ ['النبي','جبران خليل جبران'],['ألف ليلة وليلة','تراث شعبي'],['مقدمة ابن خلدون','ابن خلدون'],
+ ['رحلة ابن بطوطة','ابن بطوطة'],['العقد الفريد','ابن عبد ربه'],['الأدب الكبير','ابن المقفّع'],
+ ['مئة عام من العزلة','غابرييل غارثيا ماركيز'],['1984','جورج أورويل'],
+ ['الجريمة والعقاب','فيودور دوستويفسكي'],['الحرب والسلام','ليو تولستوي'],
+ ['الشيخ والبحر','إرنست همنغواي'],['عداء الطائرة الورقية','خالد حسيني'],
+ ['الخيميائي','باولو كويلو'],['البؤساء','فيكتور هوغو']
+];
+function miniCoverHTML(t,a,i){
+  var st=stock(i);
+  return '<div class="cv l-type rb-cv" role="img" aria-label="'+esc(t)+' — '+esc(a)+'" '
+    +'style="--cw:108px;--p:'+st.p+';--a:'+st.a+';--b:'+st.b+'">'
+    +'<span class="cv-plate"><span class="cv-t" style="display:block">'+esc(t)+'</span>'
+    +'<span class="cv-foot"><span class="cv-rule"></span><span class="cv-a" style="display:block">'+esc(a)+'</span></span></span></div>';
+}
+function landingRollingBooksHTML(){
+  var mid=Math.ceil(ROLLING_BOOKS.length/2);
+  var row1=ROLLING_BOOKS.slice(0,mid),row2=ROLLING_BOOKS.slice(mid);
+  function trackHTML(list,offset,rev){
+    var items=list.map(function(b,i){return miniCoverHTML(b[0],b[1],i+offset);}).join('');
+    return '<div class="rb-track'+(rev?' rev':'')+'" tabindex="0" aria-label="مكتبة مَلفى — عيّنة من الكتب">'
+      +'<div class="rb-set">'+items+'</div>'
+      +'<div class="rb-set" aria-hidden="true">'+items+'</div>'
+      +'</div>';
+  }
+  return '<div class="lp-section lp-rolling">'
+    +'<div class="lp-section-head"><span class="lp-eyebrow">مكتبة تكبر معك</span>'
+      +'<h2 class="lp-h2">كتب سعودية وعربية وعالمية، كلها في مَلفى</h2></div>'
+    +'<div class="s10"></div>'
+    +'<div class="rb-wrap">'
+      +trackHTML(row1,0,false)
+      +trackHTML(row2,mid,true)
+    +'</div>'
+    +'<div class="lp-books-grid">'+ROLLING_BOOKS.map(function(b,i){return miniCoverHTML(b[0],b[1],i);}).join('')+'</div>'
+    +'</div>';
+}
+/* HUMAIN-inspired composition ("Unified purpose. A limitless future.") —
+   eyebrow + very large headline + short supporting line + full-width panels
+   underneath, translated into مَلفى's own identity and copy. The four
+   panels are fixed in this exact order — سجل رحلتك must precede منارة,
+   since منارة is literally built from what سجل رحلتك already recorded. */
+function landingJourneysHTML(){
+  var panels=[
+    ['books','مكتبتي','كل كتاب تقرأه له مكان واحد يجمعه — صفحاتك، تقدّمك، وما قررت تقرأه بعده.'],
+    ['mic','سجل رحلتك','دوّن اللي علق معك، كتابة أو صوتًا، أول ما يخطر ببالك — بلا شكل واحد مفروض عليك.'],
+    ['wave','منارة','من محطاتك اللي سجّلتها تتكوّن منارتك — انعكاس لرحلتك بصوتك أنت، لا ملخص للكتاب.'],
+    ['sliders','أيام القراءة','روتين هادئ يذكّرك بعادتك، ويوريك كم يوم رجعت فيه لكتابك هالأسبوع.']
+  ];
+  return '<div class="lp-section lp-journeys">'
+    +'<div class="lp-section-head"><span class="lp-eyebrow">كل ما تقرأه، يعود إليك</span>'
+      +'<h2 class="lp-h1-mid">رحلات متعددة.<br>مَلفى واحد.</h2>'
+      +'<p class="body" style="margin-top:18px;max-width:46ch;margin-inline:auto;color:var(--ink-2)">'
+      +'كل كتاب يأخذك إلى مكان، ومَلفى يحتفظ بما عدت به. سجّل رحلتك، اجمع ما بقي معك، واصنع من قراءتك منارة ترجع إليها.</p></div>'
+    +'<div class="s28"></div>'
+    +'<div class="lp-journey-panels">'+panels.map(function(p,i){
+      return '<div class="lp-journey-panel"><span class="lp-journey-n">0'+(i+1)+'</span>'
+        +'<div class="lp-card-ic">'+ic(p[0],22)+'</div>'
+        +'<h3>'+p[1]+'</h3><p>'+p[2]+'</p></div>';
+    }).join('')+'</div>'
     +'</div>';
 }
 function landingStepsHTML(){
@@ -1491,7 +1635,9 @@ function landingWidgetsHTML(){
 function landingPlansBodyHTML(){
   if(!PLANS_LOADED)return '<div class="pad" style="text-align:center"><span class="meta">نجهّز الباقات...</span></div>';
   if(!PLANS.length)return '';
-  return '<div class="lp-plans">'+PLANS.map(function(p){return planCardHTML(p,'landing');}).join('')+'</div>';
+  return '<div class="lp-plans">'+PLANS.map(function(p){return planCardHTML(p,'landing');}).join('')+'</div>'
+    +'<div class="s32"></div>'
+    +'<div class="pad" style="max-width:760px;margin-inline:auto">'+pricingComparisonTableHTML()+'</div>';
 }
 function landingPlansHTML(){
   loadPlans().then(function(){
@@ -1528,13 +1674,16 @@ function landingFooterHTML(){
       +'<div class="lp-footer-col"><h4>السياسات</h4>'
         +'<button data-privacy="1">سياسة الخصوصية</button></div>'
     +'</div>'
-    +'<div class="lp-footer-bottom"><p>© '+new Date().getFullYear()+' مَلفى.</p></div>'
+    +'<div class="lp-footer-bottom"><p>© '+new Date().getFullYear()+' مَلفى.</p>'
+      +'<p>صُنع بحب من العيينة | الرياض</p></div>'
     +'</footer>';
 }
 function landingHTML(){
   return '<div class="lp">'
     +landingNavHTML()
     +landingHeroHTML()
+    +landingRollingBooksHTML()
+    +landingJourneysHTML()
     +landingStepsHTML()
     +landingBentoHTML()
     +landingWidgetsHTML()
@@ -1780,7 +1929,9 @@ function homeHTML(){
     +'<span class="row-b"><span class="row-t">اقرأ من كتابك</span></span>'+ic('chev',18)+'</button>'
   +'<div class="hr"></div>'
   +'<button class="row" data-open="friend">'+ic('users',20)
-    +'<span class="row-b"><span class="row-t">اقرأ الكتاب نفسه مع صديق</span></span>'+ic('chev',18)+'</button>'
+    +'<span class="row-b"><span class="row-t">اقرأ الكتاب نفسه مع صديق'
+      +(planIsPaidActive(MY_PLAN)?'':'<span class="feat-lock">'+ic('lock',11)+' مَلفى+</span>')
+      +'</span></span>'+ic('chev',18)+'</button>'
   +'<div class="hr"></div>'
   +'<button class="row" data-shareexp="1">'+ic('share',20)
     +'<span class="row-b"><span class="row-t">شارك التجربة حول الكتاب نفسه</span></span>'+ic('chev',18)+'</button>'
@@ -2255,7 +2406,8 @@ function discoverHTML(){
 
   /* the one filled CTA on this screen */
   +'<div class="s32"></div><div class="hr"></div><div class="s24"></div>'
-  +'<div class="pad"><div class="kick">مع صديق</div>'
+  +'<div class="pad"><div class="kick">مع صديق'
+      +(planIsPaidActive(MY_PLAN)?'':'<span class="feat-lock">'+ic('lock',11)+' مَلفى+</span>')+'</div>'
     +'<h3 class="h2" style="margin-top:8px;max-width:15ch">اقرؤوا نفس الكتاب، كلٌّ على وتيرته.</h3>'
     +'<p class="body" style="margin-top:10px;max-width:32ch">تشوفون تقدّم بعض وتسجيلاتكم أول بأول. بينكم بس، بدون مجموعات.</p>'
     +'<div style="display:flex;gap:14px;align-items:center;margin-top:18px">'
@@ -2430,11 +2582,19 @@ function menaraHTML(bookId){
   var cached=MY_SUMMARIES[bookId];
   if(cached&&menaraHasExternalNarrator(cached.summary_text))cached=null;
   var intro='<p class="menara-intro">هنا يقف الراوي على أطلال رحلته وتلخيصها.</p>';
+  var paid=planIsPaidActive(MY_PLAN);
   if(!cached){
     var hasEntries=MY_JOURNEY[bookId]&&MY_JOURNEY[bookId].some(function(e){return e.note&&e.note.trim();});
     if(!hasEntries){
       return intro+'<div class="empty" style="padding:8px 0 26px">'+ic('wave',26)+'<h3>ما فيه محطات مسجّلة بعد.</h3>'
         +'<p>سجّل رحلتك أول، وبعدها تقدر تولّد منارتك منها.</p></div>';
+    }
+    if(!paid){
+      return intro+'<div class="pad"><div class="rs-card" style="text-align:center">'
+        +'<span class="feat-lock" style="margin-inline-start:0">'+ic('lock',11)+' مَلفى+</span>'
+        +'<h3 class="rs-title" style="margin-top:10px">منارتك جاهزة تتكوّن</h3>'
+        +'<p class="meta" style="margin-top:6px">توليد منارة من رحلتك مع هذا الكتاب من مزايا مَلفى+.</p>'
+        +'<div class="s14"></div><button class="btn btn-fill btn-full" data-upgrade="menara">استكشف مَلفى+</button></div></div><div class="s16"></div>';
     }
     return intro+'<div class="pad"><button class="btn btn-fill btn-full" data-genmenara="'+esc(bookId)+'">ولّد منارتك</button></div><div class="s16"></div>';
   }
@@ -2446,7 +2606,9 @@ function menaraHTML(bookId){
       +'style="width:19px;height:19px;accent-color:var(--khz)">'
       +'<span class="body" style="margin:0">مشاركة منارتي مع الآخرين</span></label></div>'
     +'<div class="s10"></div>'
-    +'<div class="pad"><button class="lnk plain" data-genmenara="'+esc(bookId)+'">ولّد منارة جديدة'+ic('arrow',15)+'</button></div>'
+    +(paid
+      ?'<div class="pad"><button class="lnk plain" data-genmenara="'+esc(bookId)+'">ولّد منارة جديدة'+ic('arrow',15)+'</button></div>'
+      :'<div class="pad"><span class="feat-lock" style="margin-inline-start:0">'+ic('lock',11)+' مَلفى+</span> <span class="meta">توليد منارة جديدة من مزايا مَلفى+.</span></div>')
     +'<div class="s16"></div>';
 }
 /* Merges journey_entries (voice/written notes) with reading_sessions for
@@ -2531,6 +2693,7 @@ function doneHTML(){
    SCREEN — قراءة مشتركة مع صديق
    ============================================================ */
 function friendHTML(){
+  var paid=planIsPaidActive(MY_PLAN);
   var id=STATE.book&&myBookView(STATE.book)?STATE.book:MY_LIB.reading[0],b=id?myBookView(id):null;
   var sentForThis=b?MY_INVITES_SENT.filter(function(i){return (i.book_id||i.user_book_id)===b.id;}):[];
   var hasOpenInvite=sentForThis.some(function(i){return i.status==='pending'||i.status==='accepted';});
@@ -2541,7 +2704,8 @@ function friendHTML(){
     +'<div class="nt">قراءة مشتركة</div><div style="width:44px"></div></div>'
   +'<div class="s12"></div>'
   +'<div class="pad"><div class="kick">مع صديق</div>'
-    +'<h1 class="h1" style="font-size:27px;margin-top:8px">اقرؤوا نفس الكتاب، كلٌّ على وتيرته.</h1></div>'
+    +'<h1 class="h1" style="font-size:27px;margin-top:8px">اقرؤوا نفس الكتاب، كلٌّ على وتيرته.</h1>'
+    +(paid?'':'<p class="meta" style="margin-top:8px"><span class="feat-lock" style="margin-inline-start:0">'+ic('lock',11)+' مَلفى+</span> القراءة مع شخص من مزايا مَلفى+.</p>')+'</div>'
   +'<div class="s24"></div><div class="hr"></div><div class="s24"></div>'
 
   +(MY_INVITES_RECEIVED.length?(
@@ -2550,9 +2714,16 @@ function friendHTML(){
     +MY_INVITES_RECEIVED.map(function(inv){
       return '<div class="pad" style="margin-bottom:10px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'
         +'<span class="body" style="margin:0">'+esc(inv.from_name)+' يدعوك تقرؤون «'+esc(bookTitleFor(inv.book_id,inv.user_book_id,inv.book_title))+'» مع بعض</span></div>'
-        +(inv.status==='pending'?'<div style="display:flex;gap:10px;margin-top:10px">'
-          +'<button class="btn btn-fill btn-sm" data-inviteaccept="'+esc(inv.id)+'">قبول</button>'
-          +'<button class="lnk plain" data-invitedecline="'+esc(inv.id)+'">رفض</button></div>':'<p class="meta" style="margin-top:8px">'+(inv.status==='accepted'?'دعوة مقبولة':'دعوة مرفوضة')+'</p>')+'</div>';
+        +(inv.status==='pending'?(
+          paid
+          ?'<div style="display:flex;gap:10px;margin-top:10px">'
+            +'<button class="btn btn-fill btn-sm" data-inviteaccept="'+esc(inv.id)+'">قبول</button>'
+            +'<button class="lnk plain" data-invitedecline="'+esc(inv.id)+'">رفض</button></div>'
+          :'<p class="meta" style="margin-top:8px">الانضمام لهذه القراءة يحتاج مَلفى+.</p>'
+            +'<div style="display:flex;gap:10px;margin-top:10px">'
+            +'<button class="btn btn-fill btn-sm" data-upgrade="friend">استكشف مَلفى+</button>'
+            +'<button class="lnk plain" data-invitedecline="'+esc(inv.id)+'">رفض</button></div>'
+        ):'<p class="meta" style="margin-top:8px">'+(inv.status==='accepted'?'دعوة مقبولة':'دعوة مرفوضة')+'</p>')+'</div>';
     }).join('')
     +'<div class="s16"></div><div class="hr"></div><div class="s24"></div>'
   ):'')
@@ -2594,15 +2765,34 @@ function friendHTML(){
       +'<p>ادعُ صديقًا يقرأ نفس الكتاب معك، وتشوفون تقدّم بعض أول بأول.</p></div></div>'
   ))
   +'<div class="s16"></div>'
-  +(b&&!hasOpenInvite?
-    '<div class="pad"><button class="btn btn-fill btn-full" data-invitefriend="'+esc(b.id)+'">اكتب اسم الحساب اللي تبي تشاركه الكتاب</button></div>'
-    :'')
+  +(b&&!hasOpenInvite?(
+    paid
+    ?'<div class="pad"><button class="btn btn-fill btn-full" data-invitefriend="'+esc(b.id)+'">اكتب اسم الحساب اللي تبي تشاركه الكتاب</button></div>'
+    :'<div class="pad"><button class="btn btn-fill btn-full" data-upgrade="friend">'+ic('lock',15)+' استكشف مَلفى+ لدعوة صديق</button></div>'
+  ):'')
   +'<div class="s24"></div>';
 }
 
 /* ============================================================
    VOICE SHEET
    ============================================================ */
+/* the one upgrade prompt in the whole app — shown only on direct interaction
+   with a locked مَلفى+ feature (never proactively), so it never nags. */
+function upgradeSheetHTML(){
+  var feature=SHEET_CTX.feature||'friend';
+  var copy=feature==='menara'
+    ?{title:'منارة من مزايا مَلفى+',desc:'حوّل رحلتك مع الكتاب إلى منارة بصوتك، تُبنى من المحطات اللي سجّلتها. اشترك في مَلفى+ لتصنع منارتك.'}
+    :{title:'القراءة مع شخص من مزايا مَلفى+',desc:'شارك رحلة كتاب مع شخص، تابعوا تقدمكم، واجمعوا ما بقي معكم في مَلفى واحد. اشترك في مَلفى+ لبدء قراءة مشتركة.'};
+  return '<div class="grab"></div><div class="sh-in" style="text-align:center">'
+    +'<span class="feat-lock" style="margin-inline-start:0;font-size:11.5px;padding:5px 12px">'+ic('lock',12)+' مَلفى+</span>'
+    +'<div class="s14"></div>'
+    +'<h2 class="v-ask">'+copy.title+'</h2>'
+    +'<p class="v-sub">'+copy.desc+'</p>'
+    +'<div class="s20"></div>'
+    +'<button class="btn btn-fill btn-full" data-upgradecta="1">استكشف مَلفى+</button>'
+    +'<div class="s10"></div>'
+    +'<button class="lnk plain" data-closesheet="1" style="width:100%;justify-content:center">ليس الآن</button></div>';
+}
 function sheetHTML(mode){
   if(mode==='addbook')return addBookSheetHTML();
   if(mode==='collectionpick')return collectionPickSheetHTML();
@@ -2618,6 +2808,7 @@ function sheetHTML(mode){
   if(mode==='reading-edit')return readingEditSheetHTML();
   if(mode==='reading-delete')return readingDeleteSheetHTML();
   if(mode==='menara-nudge')return menaraNudgeSheetHTML();
+  if(mode==='upgrade')return upgradeSheetHTML();
   var bars='';
   for(var i=0;i<38;i++){bars+='<i style="--h:'+(6+((i*7)%18))+'px;animation-delay:'+((i%11)*60)+'ms"></i>';}
   return '<div class="grab"></div><div class="sh-in">'
@@ -3054,6 +3245,11 @@ function generateMenara(bookId,btn){
         if(res.body&&res.body.error==='not_configured')toast('منارة تحتاج إعداد مفتاح الذكاء الاصطناعي أول.');
         else if(res.body&&res.body.error==='no_entries')toast('ما فيه محطات كافية لتوليد منارة.');
         else if(res.body&&res.body.error==='quota_exhausted')toast('خدمة منارة مزدحمة الآن. جرّب بعد دقيقة.');
+        else if(res.body&&res.body.error==='plan_required'){
+          var body2=document.getElementById('bookTabBody');
+          if(body2&&bookTab==='menara')body2.innerHTML=menaraHTML(bookId);
+          openSheet('upgrade',{feature:'menara'});
+        }
         else toast('صار خطأ بتوليد منارتك. حاول مرة ثانية.');
         return;
       }
@@ -3600,7 +3796,11 @@ document.getElementById('phone').addEventListener('click',function(e){
     var o=t.dataset.open;stopPlay();
     if(o==='book')push('book');
     else if(o==='done'){completeBook(STATE.book).then(function(ok){if(ok)push('done');});}
-    else if(o==='friend')push('friend');
+    else if(o==='friend'){
+      var hasPendingInvite=MY_INVITES_RECEIVED.some(function(i){return i.status==='pending';});
+      if(!planIsPaidActive(MY_PLAN)&&!hasPendingInvite)openSheet('upgrade',{feature:'friend',returnTo:'friend'});
+      else push('friend');
+    }
     else if(o==='plans')push('plans');
     return;
   }
@@ -3657,6 +3857,19 @@ document.getElementById('phone').addEventListener('click',function(e){
     return;
   }
   if((t=e.target.closest('[data-activateplan]'))){activatePlan(t.dataset.activateplan,t);return;}
+  if((t=e.target.closest('[data-upgrade]'))){
+    var upFeat=t.dataset.upgrade;
+    openSheet('upgrade',{feature:upFeat,returnTo:upFeat==='friend'?'friend':null});
+    return;
+  }
+  if((t=e.target.closest('[data-upgradecta]'))){
+    var retTo=SHEET_CTX.returnTo||null;
+    closeSheet();
+    if(!ME){authMode='signup';push('auth');return;}
+    PENDING_RETURN=retTo;
+    push('plans');
+    return;
+  }
   if((t=e.target.closest('[data-scrollto]'))){
     var scrollTarget=document.getElementById(t.dataset.scrollto);
     if(scrollTarget)scrollTarget.scrollIntoView({behavior:REDUCE?'auto':'smooth',block:'start'});

@@ -13,7 +13,8 @@ for forbidden in ("خواطر", "دردشة", "كليلة ودمنة", "البخ
     assert forbidden not in HTML, f"forbidden product copy remains: {forbidden}"
 
 assert "مكان كل القراء" in HTML
-assert "صُنع بحب من عيينة | الرياض" in HTML
+assert "صُنع بحب من العيينة | الرياض" in HTML
+assert "صُنع بحب من عيينة | الرياض" not in HTML
 assert "bootTimer=setTimeout(finishWelcome,3200)" in HTML
 assert "هنا يقف الراوي على أطلال رحلته وتلخيصها." in HTML
 assert "مشاركة منارتي مع الآخرين" in HTML

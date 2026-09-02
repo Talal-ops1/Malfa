@@ -1390,3 +1390,241 @@ repo has a real GitHub→Vercel connection (`origin` →
 `deploy/`, which looks like a leftover from an earlier manual-drag-and-drop
 phase. Left it alone rather than guessing at a cleanup that wasn't asked
 for.
+
+## 25. HUMAIN-inspired section, rolling books, real pricing, القراءة مع شخص paywall (2026-09-03)
+
+### Scope
+
+Five requirements landed together this batch: a HUMAIN-structured "رحلات
+متعددة. مَلفى واحد." section on the homepage, a continuously rolling
+books showcase, a real (not trial-labeled) pricing structure with a
+9.66/96.60 SAR nod to +966, a hard server-enforced paywall on القراءة مع
+شخص and منارة, and a spelling regression fix for العيينة that had crept
+back into the welcome screen.
+
+### العيينة — a regression, not a first-time typo
+
+`grep`-ing the whole project found exactly one live occurrence, in
+`welcomeHTML()`, missing the ال: `من عيينة` instead of `من العيينة`. The
+handoff log itself shows this was already correct as of §18 and even had an
+explicit prior correction logged (`من عيينة → من العيينة`) — §19 then
+re-introduced the wrong spelling when it rewrote the welcome screen, and it
+shipped that way for several batches. Fixed the live string, and fixed
+`tests/test_content_integrity.py` too: it had been asserting the *wrong*
+spelling as a regression guard (`assert "صُنع بحب من عيينة | الرياض" in
+HTML`) — encoding the bug as the expected behavior. Flipped it to assert
+the correct spelling and assert the wrong one is *absent*, so this can't
+silently regress a third time. The landing page footer never had this
+signature at all before this batch; added it there too, since the brief
+requires it on the pre-login homepage specifically.
+
+### Real pricing — no longer trial-labeled
+
+Previous batch (§24) seeded `plans` with clearly-labeled placeholder trial
+prices, per an explicit product decision at the time (no exact prices were
+available yet). This batch's brief supplied real, final numbers — مجاني
+free, مَلفى+ 9.66 SAR/month, 96.60 SAR/year, chosen specifically to echo
+Saudi Arabia's +966 — and explicit instructions to keep exactly these two
+decimal amounts on the website "whenever technically and commercially
+possible." Read as superseding the earlier trial framing rather than
+adding to it: updated the three `plans` rows (`price_amount`, `features`,
+`tagline`) and set `is_trial_pricing:false` on all of them, so the "سعر
+تجريبي، غير نهائي" tag stops rendering.
+
+**Real bug caught while wiring this up**: `fmtPrice()` used
+`n.toLocaleString('ar-SA')`, which renders Arabic-Indic numerals with an
+Arabic decimal separator (e.g. `٩٦٫٦٠`) — but literally everywhere else in
+the app, numbers are plain ASCII digits from direct string concatenation
+(`62+'%'`, `ص 210 من 260`, etc.), never `toLocaleString`. The trial prices
+happened to be whole numbers (19, 149) so this never showed visually before;
+9.66/96.60 would have been the first prices to expose the inconsistency.
+Rewrote `fmtPrice()`/`fmtPriceValue()` to always emit plain ASCII with
+exactly two decimals when the amount isn't whole (`96.60`, never `96.6`,
+per the brief's explicit instruction on that point) and a real Arabic
+currency label (`ر.س`) instead of the raw ISO code `SAR`.
+
+Added, all computed from `plans.price_amount` rather than hand-typed twice:
+the annual card's "الأكثر توفيرًا" badge (replacing the old "الأنسب
+لقارئ منتظم" wording per the brief), a "شهران مجانًا · 8.05 ر.س/شهر" line
+(8.05 = 96.60/12, computed, not hardcoded — verified exact: 9.66×12−96.60 =
+19.32 = exactly 2× 9.66), a "تُدفع 96.60 ر.س مرة واحدة سنويًا" billing-
+clarity line, and — on the monthly card only, once, understated — "اشتراك
+سعودي بسعر يحمل رمزه." No flags, no green, no repetition across cards.
+
+Added a real feature-comparison table (`pricingComparisonTableHTML()`,
+the exact 8-row list from the brief) as a proper `<table>` inside its own
+`overflow-x:auto` wrapper (the project's established convention for wide
+content), rendered identically by both `landingPlansHTML()` (pre-login) and
+`plansHTML()` (post-login) — same function, same markup, so the two can
+never disagree.
+
+### القراءة مع شخص and منارة — real paywalls, not UI theater
+
+**Client**: both entry points to شخص (home's "اقرأ الكتاب نفسه مع صديق"
+row, اكتشف's bottom CTA) now show a small `مَلفى+` lock badge when
+`!planIsPaidActive(MY_PLAN)`, and clicking them opens a new bottom-sheet
+mode (`upgrade`) with the brief's exact copy instead of navigating — unless
+the reader already has a pending *received* invite, in which case they can
+still reach the شخص screen to see who invited them (required by the brief:
+"show the invitation context first"), with the accept button itself gated
+instead. منارة generation (`data-genmenara`) is now hidden entirely for
+free readers, replaced with the same upgrade-sheet trigger; a منارة already
+generated while the reader was on a paid plan stays fully readable after
+the plan lapses (existing content is never hidden or deleted), only *new*
+generation is blocked. The one shared `upgradeSheetHTML()` branches its
+copy by `SHEET_CTX.feature` (`'friend'` uses the brief's exact required
+text; `'menara'` gets its own equivalent line) so the same sheet serves
+both features honestly instead of showing the شخص copy when the trigger
+was actually منارة. `PENDING_RETURN` remembers where the reader was
+before the upgrade sheet opened, so a successful `activatePlan()` drops
+them back at شخص automatically instead of stranding them on الباقات.
+
+**Server, not just client** (the brief is explicit that a hidden button is
+not enforcement): three real changes, none of them optional client-side
+checks.
+1. `summarize-journey` — removed the previous "3 free/month" metered
+   allowance entirely (that was §24's honest differentiator; this batch's
+   pricing brief moves منارة to a hard مَلفى+-only feature, not a metered
+   free one) and replaced it with a flat `if (!paid) return 402
+   plan_required`. The now-unused `menara_generation_log`-quota query and
+   `FREE_MONTHLY_LIMIT` constant were deleted rather than left as dead code.
+2. `reading_invites` RLS — `invites_sender_insert`'s `with_check` now also
+   requires `has_active_paid_plan(auth.uid())`; `invites_recipient_update`'s
+   `with_check` allows declining unconditionally (a free recipient can
+   always dismiss an invite they can't act on) but requires *both*
+   `to_user_id` and `from_user_id` to currently hold a paid plan before
+   allowing `status='accepted'` — satisfies the brief's "both participants
+   must have an active subscription to enter the shared-reading space."
+3. `shared_reading_progress()` — added the same both-sides-paid check to
+   its `where` clause. If either side's subscription lapses, that pair's
+   row simply stops being returned — `reading_invites` and
+   `library_entries`/`journey_entries` rows are never touched, so access
+   restores automatically and silently the moment they resubscribe,
+   satisfying "preserve existing shared-reading data" and "restore access"
+   as one mechanism rather than two.
+
+New `has_active_paid_plan(uuid)` — `SECURITY DEFINER`, returns only a
+boolean, needed because checking whether the *other* party in an invite is
+paid requires reading past their own `user_plans` row (RLS would otherwise
+block it). **Same PUBLIC-grant class of bug as §22/§24, but a new variant
+this time**: `revoke ... from public` alone left `anon` still able to
+execute it — `information_schema.routine_privileges` showed `anon` with a
+direct `EXECUTE` grant untouched by the public-only revoke, meaning this
+project also grants `EXECUTE` to `anon` directly on new functions (likely
+via `ALTER DEFAULT PRIVILEGES` configured early in the project), separate
+from the PUBLIC-pseudo-role inheritance already documented. Fixed with an
+explicit `revoke ... from anon` *in addition to* `revoke ... from public`
+on both this function and `shared_reading_progress()`; verified via
+`information_schema.routine_privileges` (not just `get_advisors`, which
+had shown `shared_reading_progress()` as already anon-safe despite the
+same missing revoke — the two checks don't always agree, so both are worth
+running). **Standing lesson updated**: every new `SECURITY DEFINER`
+function in this project needs both `revoke ... from anon` and
+`revoke ... from public`, not either alone.
+
+### HUMAIN-inspired رحلات متعددة section
+
+New `landingJourneysHTML()`: small eyebrow ("كل ما تقرأه، يعود إليك"),
+one very large headline ("رحلات متعددة.<br>مَلفى واحد.", 40px→64px across
+breakpoints), a short supporting line, then four full-width panels in a
+1→2→4-column responsive grid, numbered `01`–`04`. The four panels are
+**مكتبتي, سجل رحلتك, منارة, أيام القراءة** — that exact set and order,
+per the brief, which is also the strictest reading of "سجل رحلتك must
+never appear before منارة": this section puts them adjacent and in the
+required sequence explicitly, not just avoiding a violation elsewhere.
+Deliberately does not reuse HUMAIN's own layout values (their exact type
+scale, spacing, panel treatment) — translated the *structure* (eyebrow →
+huge headline → short copy → full-width panel row) into مَلفى's existing
+tokens (`--f-d`, `--khz`, `.lp-card-ic`, the same panel/border/radius
+language already used by `.lp-card` elsewhere on the page).
+
+### Rolling books
+
+New `landingRollingBooksHTML()`, positioned right after the hero per the
+required page order. **Real titles and real authors only — no scraped
+publisher cover photography.** مَلفى has no license to reproduce cover
+art from contemporary Saudi, Arabic, or international books, and the
+brief is explicit that covers must be "legally displayable" — so instead
+of fetching third-party images (which this session has no vetted, licensed
+source for), every book is rendered through مَلفى's own existing
+illustrated-cover system (`​.cv.l-type` — paper-stock color, spine rule,
+typeset title/author), the exact same component already used for every
+real book cover in the product. This keeps every title/author pair
+genuine and verifiable (26 books: 8 Saudi authors, 5 Arabic literary
+classics, 5 Arabic historical/cultural works, 8 international classics)
+while producing zero copyright exposure, since no third-party artwork is
+reproduced — only factual bibliographic data, rendered in مَلفى's own
+visual language. Two rows scroll in opposite directions
+(`rbScrollL`/`rbScrollR` keyframes, physical-axis `translateX` so the
+opposite-direction effect holds regardless of the page's RTL flex
+direction), each row's content duplicated once and shifted exactly `-50%`
+for a mathematically seamless loop with no visible jump. Paused on
+`:hover`/`:focus-visible`/`:active` (covers mouse, keyboard, and touch-tap
+without a single line of JS). Two full DOM structures ship together — the
+animated marquee and a static grid — and a single `prefers-reduced-motion`
+media query swaps which one is `display:none`, so it responds live to an
+OS-level setting change without any `matchMedia` JS. The marquee's
+duplicated second copy of each row is `aria-hidden="true"` to avoid
+double-announcing identical `role="img" aria-label="title — author"` covers
+to screen readers; the reduced-motion grid needs no such treatment since
+it never duplicates.
+
+Two titles from an early draft of this list — كليلة ودمنة and البخلاء —
+turned out to be on `test_content_integrity.py`'s forbidden-copy list (both
+were cut from the starter catalog during an earlier content-curation pass,
+per §-something before this handoff's current numbering, and the test
+guards against them silently reappearing anywhere in the shipped file).
+Swapped them for العقد الفريد and الأدب الكبير — both already real,
+already-verified titles present in the product's own `B` catalog — rather
+than arguing with a pre-existing regression guard that's doing its job
+correctly.
+
+### Verification
+
+1. `bash v4/build.sh` → `JS OK` after every edit, throughout.
+2. Full existing suite passes, including the two tests that legitimately
+   needed updating for this batch's own changes (not loosened, tightened):
+   `test_content_integrity.py`'s العيينة assertion flipped to the correct
+   spelling plus a new negative assertion against the old one; its
+   forbidden-title list caught a real mistake in the rolling-books draft
+   list before it shipped. `test_security_headers.py` passed after the CSP
+   hash was regenerated once, at the end, to match the final script.
+   `test_library_malfa_reorg.sh`, `test_reading_session_logic.sh`,
+   `test_xss.py`, `test_edge_boundaries.py` all pass unchanged.
+3. `get_advisors` (security) clean of anything introduced this batch,
+   including the anon-direct-grant follow-up fix; cross-checked against
+   `information_schema.routine_privileges` directly rather than trusting
+   only one signal, per the lesson learned mid-batch.
+4. Live browser verification against a local static server at 390px,
+   768px, and 1440px: confirmed no horizontal overflow at any width
+   (`scrollWidth<=clientWidth`, checked directly), the HUMAIN panel grid
+   reflows 1→2→4 columns at the documented breakpoints, the rolling-books
+   grid reflows 3→5 columns under reduced motion, pricing renders exactly
+   `9.66 ر.س`, `96.60 ر.س`, `شهران مجانًا · 8.05 ر.س/شهر`, and `تُدفع
+   96.60 ر.س مرة واحدة سنويًا` (ASCII digits, correct decimals, no
+   Arabic-Indic regression), and page composition order matches the brief
+   exactly (nav → hero → rolling books → رحلات متعددة → كيف يعمل مَلفى →
+   بنتو/widgets → plans → closing → footer with صُنع بحب من العيينة).
+   Caught and fixed one real rendering-order confusion during this pass
+   (a stale screenshot briefly suggested a large layout gap in the rolling
+   books section; `getBoundingClientRect()` on the actual elements showed
+   the gap was ~50px, not several hundred — a screenshot-timing artifact
+   of this session's tooling, not a real bug, confirmed before moving on
+   rather than "fixing" something that wasn't broken).
+5. **Still not verified**: an actual authenticated click-through of the
+   شخص/منارة paywall UI, `activatePlan()`'s `PENDING_RETURN` round-trip,
+   or accepting/declining a real invite as a free vs. paid user — same
+   signup-rate-limit blocker as every prior batch. Covered instead by: the
+   RLS/RPC changes tested directly via SQL and `information_schema`, the
+   Edge Function's new `plan_required` path read against its exact
+   deployed source, and code review confirming `friendHTML()`/
+   `menaraHTML()`'s free/paid branches both compile and both reference
+   real, existing state (`MY_PLAN`, `MY_INVITES_RECEIVED`) rather than
+   anything new that could be silently undefined.
+
+### Repo / deploy note
+
+Not yet pushed — awaiting the user's go-ahead. `supabase/functions/
+summarize-journey` was deployed live (version 22) since Edge Functions
+have no separate "staged" state to preview from. `v4/vercel.json`'s CSP
+hash was regenerated to match the final script content.

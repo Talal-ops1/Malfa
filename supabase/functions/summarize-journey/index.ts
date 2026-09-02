@@ -10,8 +10,6 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const WRITING_MODEL = "gemini-3.6-flash";
 const REPAIR_MODEL = "gemini-3.5-flash";
-// Kept in sync with the "مجاني" plan's feature copy in public.plans.
-const FREE_MONTHLY_LIMIT = 3;
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -252,22 +250,14 @@ Deno.serve(async (req: Request) => {
     return json(req, { error: "not_configured" }, 503);
   }
 
-  // The one real free/paid differentiator that exists in the product today:
-  // every generation is a paid LLM call. Free-tier readers get a monthly
-  // allowance; مَلفى+ (trial-priced, see public.plans) is unlimited.
+  // منارة is a مَلفى+-only feature (see public.plans) — the free plan does
+  // not include it at all, not even a metered allowance. Enforced here,
+  // server-side, since a hidden/disabled button on the client is not
+  // enforcement — a free reader calling this endpoint directly must still
+  // be rejected.
   const paid = await isOnPaidPlan(userId);
   if (!paid) {
-    const monthStart = new Date();
-    monthStart.setUTCDate(1);
-    monthStart.setUTCHours(0, 0, 0, 0);
-    const { count: usedThisMonth } = await admin
-      .from("menara_generation_log")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("created_at", monthStart.toISOString());
-    if ((usedThisMonth || 0) >= FREE_MONTHLY_LIMIT) {
-      return json(req, { error: "plan_limit_reached", limit: FREE_MONTHLY_LIMIT }, 402);
-    }
+    return json(req, { error: "plan_required" }, 402);
   }
 
   let body: Record<string, unknown> = {};
