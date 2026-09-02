@@ -1208,3 +1208,185 @@ reusing the routing instead of adding a second copy of it.
 Pushed and live at the user's request — `malfaapp.vercel.app` serves this
 version. `v4/vercel.json`'s CSP hash was regenerated to match the final
 script content.
+
+## 24. Pre-login homepage, redesigned auth, post-login subscriptions (2026-09-03)
+
+### Scope
+
+A full pre-login experience — MALFA had none before this: a signed-out
+visitor was dropped straight onto the login form with no explanation of
+what the product is. This batch adds a real marketing/product homepage
+(`landingHTML()`), redesigns the login/signup/reset screen as a split-screen
+editorial layout with a password-visibility toggle, and exposes the real
+subscription plans both pre- and post-login from one shared data source.
+
+### Pricing data — a real product decision, not an implementation detail
+
+`plans` had zero rows before this batch, which directly blocked "show the
+actual configured pricing, never invented prices." Asked the user; they
+chose **trial/temporary prices, clearly labeled** over inventing final
+prices or hiding the section. Extended `plans` with the columns a pricing UI
+actually needs (`price_amount`, `currency`, `billing_period`, `tagline`,
+`features` jsonb, `is_recommended`, `sort_order`, `is_trial_pricing`) and
+seeded three real rows — مجاني (free), مَلفى+ شهري (19 SAR/month), مَلفى+
+سنوي (149 SAR/year, recommended) — every one flagged `is_trial_pricing:true`
+so the UI can render a permanent "سعر تجريبي، غير نهائي" tag rather than
+silently presenting a placeholder number as final. `plans_anon_select` makes
+this table readable signed-out too, so `landingHTML()` and the post-login
+`plansHTML()` both call the same `loadPlans()`/`planCardHTML()` — literally
+one function rendering both, not two copies that could drift.
+
+**The one honest free/paid differentiator**: منارة is the only feature with
+a real per-call cost (Gemini API). Added `menara_generation_log` (service-
+role-only insert, owner-select) and a `SECURITY DEFINER` `activate_trial_plan()`
+RPC that performs a real database write — never a fake button — while being
+honestly labelled as a no-payment trial (`renewal_status:'trial_no_payment'`).
+`summarize-journey` now enforces a 3/month free-tier cap server-side before
+calling the model, and logs every successful generation. Client mirrors the
+same constant (`FREE_MENARA_LIMIT=3`) purely for display; the enforcement
+that matters lives in the Edge Function, not the client.
+
+**Recurring gotcha, hit again**: `CREATE FUNCTION` grants `EXECUTE` to the
+`PUBLIC` pseudo-role by default; revoking from `anon` alone leaves `anon`
+able to call it anyway (`anon` inherits through `PUBLIC`). Caught via
+`get_advisors` flagging both new functions as `anon`-executable despite an
+explicit `revoke ... from anon` in the same migration; fixed with a
+follow-up migration revoking from `PUBLIC` explicitly and re-granting to
+`authenticated` only. Same class of bug as §22's
+`enforce_collection_book_owner()` — worth checking proactively on every new
+`SECURITY DEFINER` function from now on, not just this one.
+
+### Pre-login homepage (`landingHTML()`)
+
+New `landing` view, now the default destination for signed-out visitors
+(`finishWelcome()`'s else-branch, previously `mount('auth')`, now
+`mount('landing')`). Built entirely from the existing component language —
+`.rs-card`, `bar()`, `cover()`, real catalog books — rather than a parallel
+marketing-page style system, per the brief's "reuse the design system"
+constraint. Sections, in order: sticky nav (logo, كيف يعمل؟/المزايا/الباقات
+in-page links, تسجيل الدخول, ابدأ رحلتك — nav-links collapse below 768px,
+login stays reachable at every width); hero with the exact required
+headline/subhead and a preview widget built from a real catalog book
+(رسالة الغفران) rather than a generic device mockup; the 4-step "كيف تعمل"
+section in the exact required order (اقرأ بطريقتك → سجل رحلتك → اصنع
+منارتك → ارجع لما بقي معك — سجل رحلتك always precedes منارتك, per the
+brief's explicit activity-order constraint); a 6-card benefits grid with the
+exact required copy points; a widgets showcase (أقرأ الآن، سجل رحلتك،
+منارتك، روتين القراءة، أيام القراءة، plus a سجّلتها-كذا→صارت-منارة
+before/after pair) using illustrative sample states that are visually
+identical to the real in-app widgets but never claim to be the visitor's
+own data (there is no visitor data pre-login); the live pricing section;
+a closing CTA; and an honest footer — only real destinations (سياسة
+الخصوصية via the existing `privacySheetHTML()`, login/signup, in-page nav)
+since the product has no social accounts or contact address to link to yet.
+
+New `wide-content` class-toggle on `.phone` (mirrors §23's `with-nav`
+pattern exactly) so `landing`/`auth`/`plans` — none of which use the
+with-nav sidebar — get a real wide desktop layout (`.app{width:100%}`)
+instead of inheriting the signed-in app's 760px reading column.
+
+### Auth redesign
+
+Split-screen at `>=1024px` (form column, fixed-width up to 480px + a
+sticky-free brand visual panel with a quiet منارة-style quote — no device
+mockup, no live data claims), single column on mobile/tablet exactly as
+before. Added: a password-visibility toggle (new `eyeoff` icon paired with
+the existing `eye` icon, `data-pwtoggle`), a back-to-landing control
+(`data-authback`, falls back to `mount('landing')` directly when there's no
+history depth to pop — covers the password-recovery deep-link and
+post-logout paths, which still land on `auth` directly rather than
+`landing`), and a restyled inline error banner (`.field-err:not(:empty)` — a
+tinted chip instead of bare red text) using the exact same `#authErr`
+element and `textContent` assignments as before, so none of the existing
+validation call sites needed to change.
+
+**Two real bugs caught during live verification, not shipped**:
+
+1. **Stale scroll on every fresh `landing`/`auth` mount.** A brand-new
+   `.screen` element was landing with `scrollTop` near its maximum instead
+   of `0` — reproduced even in a freshly opened browser tab, so not an
+   artifact of manual testing. Root cause: `history.scrollRestoration`
+   defaults to `'auto'`, and this app already does its own scroll
+   bookkeeping per screen (`navSnapshot`'s `scroll` field, replayed in
+   `restoreRoute`) — the browser's native restoration was fighting that.
+   Fixed with one line, `history.scrollRestoration='manual'`, set once at
+   boot before the first `pushState`.
+2. **`position:sticky` inside a `display:flex` row scrolled the whole
+   screen to the bottom on mount.** The auth visual panel was `position:
+   sticky; height:100dvh` as a flex sibling of the form column, intending
+   to pin it while a long form scrolled past. Its sticky containing block
+   was actually `.screen` (the nearest scrolling ancestor — `.auth-col`'s
+   own `overflow-y:auto` never mattered, since the visual panel isn't
+   inside it), and combined with `.screen`'s pre-existing `padding-bottom:
+   56px` desktop convention, laying out the sticky element appears to
+   trigger a one-time corrective auto-scroll in this environment. Fixed by
+   dropping `position:sticky` entirely — the form realistically never
+   exceeds one viewport, so a plain `align-items:stretch` flex row (the
+   default) does the same visual job without the bug.
+
+Both were caught by checking real `scrollTop` values via script, not by
+eyeballing screenshots — this session's screenshot tool intermittently
+returned stale/cached frames after `scrollTop` was set programmatically or
+right after a transition-triggering click (confirmed via direct DOM
+queries returning correct state while the screenshot still showed the
+previous screen) — worth remembering for future verification passes in
+this same tool: prefer `get_page_text` / `getBoundingClientRect()` /
+`scrollTop` reads over trusting a single screenshot when something looks
+wrong, especially right after a click or scroll.
+
+### Post-login subscriptions
+
+New `plansHTML()` ("الباقات والاشتراك", pushed screen, reachable from a new
+compact row in `accountHTML()` that shows the current plan name or an
+"انتهت باقتك" state inline) — a status card (current plan, trial/active/
+expired/cancelled state, expiry date, free-tier منارة usage this month with
+a progress bar) followed by the same `planCardHTML()` grid the landing page
+uses, in `'account'` mode: the current plan's CTA is disabled
+("باقتك الحالية"), every other plan's CTA calls `activatePlan()` →
+`activate_trial_plan()` RPC → toast + refresh. Handles the lapsed states
+(`status` can be `active|trial|expired|cancelled`, or an unexpired row past
+its own `expiry_date`) by falling back to the free-tier quota display,
+matching what `summarize-journey` actually enforces server-side — no UI
+state that isn't backed by real logic.
+
+### Verification
+
+1. `bash v4/build.sh` → `JS OK` after every edit, throughout.
+2. Full existing suite passes unchanged: `test_library_malfa_reorg.sh`,
+   `test_reading_session_logic.sh`, `test_content_integrity.py`,
+   `test_xss.py`, `test_edge_boundaries.py`, `test_security_headers.py`
+   (CSP hash regenerated once, at the end, to match the final script).
+3. `get_advisors` (security) clean after every new migration, including the
+   `PUBLIC`-grant follow-up fix.
+4. Live browser verification against a local static server at 390px,
+   768px, and 1280–1440px: confirmed no horizontal overflow at any width
+   (`scrollWidth<=clientWidth` checked directly, not eyeballed), nav-links
+   collapse/expand at the 768px breakpoint, steps/bento grids reflow to
+   4/3/1 columns correctly, `data-scrollto` in-page navigation lands within
+   a few px of its target section, the password toggle and login/signup/
+   back interactions all produce the expected DOM state, and the pricing
+   section renders the real three `plans` rows with the trial-price tag —
+   confirmed identical between the landing page and (by code review, since
+   a real signup still couldn't be completed — same blocker as §22) the
+   post-login `plansHTML()`, which shares the same render function.
+5. **Still not verified**: an actual authenticated run through `plansHTML()`
+   /`accountHTML()`'s new plan widget, or `activate_trial_plan()`'s success
+   path — same signup-rate-limit blocker as §22/§23. Confirmed instead via
+   `get_advisors`, direct SQL reads of `plans`/`user_plans`, and code review
+   that `plansHTML()`/`acctPlanWidgetHTML()` use the exact same `PLANS`/
+   `MY_PLAN` state and `planCardHTML()` renderer already verified working
+   pre-login.
+
+### Repo / deploy note
+
+Not yet pushed — awaiting the user's go-ahead, per this session's standing
+practice of asking before every push rather than assuming prior approval
+carries forward. `v4/vercel.json`'s CSP hash was regenerated to match the
+final script content. `deploy/index.html` was left untouched: its own git
+history shows it hasn't tracked `v4/index.html` for several batches now
+(last touched at §15, while `v4/` has moved through §16–23 since), and the
+repo has a real GitHub→Vercel connection (`origin` →
+`github.com/Talal-ops1/Malfa`) — `v4/` is the live-served directory, not
+`deploy/`, which looks like a leftover from an earlier manual-drag-and-drop
+phase. Left it alone rather than guessing at a cleanup that wasn't asked
+for.

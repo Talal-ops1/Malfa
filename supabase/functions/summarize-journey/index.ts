@@ -10,6 +10,8 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const WRITING_MODEL = "gemini-3.6-flash";
 const REPAIR_MODEL = "gemini-3.5-flash";
+// Kept in sync with the "مجاني" plan's feature copy in public.plans.
+const FREE_MONTHLY_LIMIT = 3;
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -141,7 +143,7 @@ const STOP_WORDS = new Set([
 function tokens(text: string) {
   return text
     .normalize("NFKD")
-    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/[ً-ٰٟ]/g, "")
     .replace(/[إأآٱ]/g, "ا")
     .replace(/ى/g, "ي")
     .replace(/ة/g, "ه")
@@ -219,6 +221,18 @@ function restoreMissingDisagreement(notes: NoteSource[], summary: string) {
   return repaired;
 }
 
+async function isOnPaidPlan(userId: string): Promise<boolean> {
+  const { data } = await admin
+    .from("user_plans")
+    .select("plan_id,status,expiry_date")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!data || data.plan_id === "free") return false;
+  if (data.status !== "active" && data.status !== "trial") return false;
+  if (data.expiry_date && new Date(data.expiry_date) < new Date()) return false;
+  return true;
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") || "";
   if (origin && !allowedOrigins.has(origin)) return json(req, { error: "origin_not_allowed" }, 403);
@@ -236,6 +250,24 @@ Deno.serve(async (req: Request) => {
 
   if (!GEMINI_API_KEY) {
     return json(req, { error: "not_configured" }, 503);
+  }
+
+  // The one real free/paid differentiator that exists in the product today:
+  // every generation is a paid LLM call. Free-tier readers get a monthly
+  // allowance; مَلفى+ (trial-priced, see public.plans) is unlimited.
+  const paid = await isOnPaidPlan(userId);
+  if (!paid) {
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+    const { count: usedThisMonth } = await admin
+      .from("menara_generation_log")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", monthStart.toISOString());
+    if ((usedThisMonth || 0) >= FREE_MONTHLY_LIMIT) {
+      return json(req, { error: "plan_limit_reached", limit: FREE_MONTHLY_LIMIT }, 402);
+    }
   }
 
   let body: Record<string, unknown> = {};
@@ -316,6 +348,9 @@ Deno.serve(async (req: Request) => {
       p_source_map: sourceMap,
     });
     if (saveErr || !saved) return json(req, { error: "save_failed" }, 500);
+
+    // Count the generation only once it actually succeeded and was saved.
+    await admin.from("menara_generation_log").insert({ user_id: userId });
 
     return json(req, { ...saved, source_map: sourceMap });
   } catch (error) {

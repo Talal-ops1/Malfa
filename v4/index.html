@@ -258,6 +258,85 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   background:#fff;opacity:.28;z-index:41;pointer-events:none}
 
 /* ============================================================
+   PRE-LOGIN HOMEPAGE — an original blend: HUMAIN's bold immersive
+   dark presentation + Thmanyah's structured editorial Arabic cards
+   + مَلفى's own lavender/khuzama identity and calm reading voice.
+   Reuses the same design tokens, fonts, and component language as
+   the signed-in app (.rs-card, .bar, .chip, .btn) rather than
+   inventing a parallel style system.
+   ============================================================ */
+.lp{background:var(--ground);min-height:100%}
+.lp-nav{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px var(--pad);background:var(--chrome-9);backdrop-filter:saturate(160%) blur(22px);
+  -webkit-backdrop-filter:saturate(160%) blur(22px);border-bottom:1px solid var(--rule)}
+.lp-nav-links{display:none;align-items:center;gap:26px}
+.lp-nav-link{font-family:var(--f-u);font-size:14px;font-weight:500;color:var(--ink-2);min-height:44px;display:flex;align-items:center}
+.lp-nav-cta{display:flex;align-items:center;gap:10px}
+.lp-hero{padding:56px var(--pad) 8px;text-align:center;position:relative;overflow:hidden}
+.lp-hero::before{content:'';position:absolute;inset-inline:0;top:-120px;height:420px;z-index:0;pointer-events:none;
+  background:radial-gradient(60% 60% at 50% 30%,color-mix(in srgb,var(--khz) 30%,transparent),transparent 72%)}
+.lp-kicker{position:relative;z-index:1;display:inline-flex;align-items:center;gap:7px;font-family:var(--f-u);
+  font-size:12px;font-weight:600;color:var(--khz-txt);background:color-mix(in srgb,var(--khz) 14%,transparent);
+  padding:7px 14px;border-radius:99px;margin-bottom:22px}
+.lp-h1{position:relative;z-index:1;font-family:var(--f-d);font-weight:700;font-size:38px;line-height:1.32;margin:0 auto;max-width:16ch}
+.lp-sub{position:relative;z-index:1;font-family:var(--f-u);font-size:16px;line-height:1.85;color:var(--ink-2);
+  max-width:38ch;margin:20px auto 0}
+.lp-cta-row{position:relative;z-index:1;display:flex;flex-direction:column;gap:12px;align-items:center;margin-top:30px}
+.lp-cta-row .btn{min-width:220px}
+.lp-preview{position:relative;z-index:1;margin:44px auto 0;max-width:380px;text-align:start}
+.lp-section{padding:64px var(--pad) 8px;scroll-margin-top:84px}
+.lp-section-head{text-align:center;max-width:44ch;margin:0 auto 34px}
+.lp-eyebrow{font-family:var(--f-u);font-size:12px;font-weight:700;color:var(--khz-txt);letter-spacing:.02em}
+.lp-h2{font-family:var(--f-d);font-size:26px;font-weight:700;line-height:1.4;margin:10px 0 0}
+.lp-steps{display:grid;grid-template-columns:1fr;gap:14px;max-width:640px;margin:0 auto}
+.lp-step{display:flex;align-items:flex-start;gap:16px;padding:18px;border:1px solid var(--rule);border-radius:var(--r2);
+  background:var(--ground-2)}
+.lp-step-n{flex:none;width:34px;height:34px;border-radius:50%;background:var(--khz);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-family:var(--f-u);font-weight:700;font-size:14px}
+.lp-step-b h3{font-family:var(--f-d);font-size:17px;font-weight:700;margin:0}
+.lp-step-b p{font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.7;margin:5px 0 0}
+.lp-bento{display:grid;grid-template-columns:1fr;gap:12px;max-width:760px;margin:0 auto}
+.lp-card{padding:22px;border:1px solid var(--rule);border-radius:var(--r2);background:var(--ground-2);text-align:start}
+.lp-card-ic{width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--khz) 16%,transparent);
+  color:var(--khz-txt);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.lp-card h3{font-family:var(--f-d);font-size:17px;font-weight:700;margin:0;line-height:1.4}
+.lp-card p{font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.75;margin:7px 0 0}
+.lp-widgets{display:grid;grid-template-columns:1fr;gap:14px;max-width:760px;margin:0 auto}
+.lp-ba{display:grid;grid-template-columns:1fr;gap:14px;max-width:640px;margin:34px auto 0}
+.lp-ba-col{padding:18px;border-radius:var(--r2);border:1px solid var(--rule)}
+.lp-ba-col.before{background:var(--ground-2)}
+.lp-ba-col.after{background:color-mix(in srgb,var(--khz) 9%,var(--ground-2));border-color:color-mix(in srgb,var(--khz-txt) 30%,transparent)}
+.lp-ba-lbl{font-family:var(--f-u);font-size:11px;font-weight:700;color:var(--ink-3);margin-bottom:8px;display:block}
+.lp-ba-col.after .lp-ba-lbl{color:var(--khz-txt)}
+.lp-ba-col p{font-family:var(--f-d);font-size:15px;line-height:1.85;margin:0;color:var(--ink)}
+.lp-ba-arrow{display:flex;align-items:center;justify-content:center;color:var(--khz-txt)}
+.lp-plans{display:grid;grid-template-columns:1fr;gap:16px;max-width:900px;margin:0 auto}
+.plan-card{padding:26px 22px;border-radius:var(--r2);border:1px solid var(--rule);background:var(--ground-2);
+  display:flex;flex-direction:column;position:relative}
+.plan-card.recommended{border-color:var(--khz-txt);background:color-mix(in srgb,var(--khz) 10%,var(--ground-2));
+  box-shadow:0 0 0 1px var(--khz-txt)}
+.plan-badge{position:absolute;top:-13px;inset-inline-start:22px;background:var(--khz);color:#fff;font-family:var(--f-u);
+  font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px}
+.plan-name{font-family:var(--f-d);font-size:19px;font-weight:700;margin:6px 0 0}
+.plan-tagline{font-family:var(--f-u);font-size:13px;color:var(--ink-2);margin:6px 0 0;line-height:1.6}
+.plan-price{font-family:var(--f-d);font-size:34px;font-weight:700;margin:18px 0 0;display:flex;align-items:baseline;gap:6px}
+.plan-price span{font-family:var(--f-u);font-size:13px;font-weight:500;color:var(--ink-3)}
+.plan-trial-tag{display:inline-flex;font-family:var(--f-u);font-size:10.5px;font-weight:600;color:var(--ink-3);
+  border:1px solid var(--rule-2);border-radius:99px;padding:3px 9px;margin-top:9px}
+.plan-features{list-style:none;padding:0;margin:20px 0 0;display:flex;flex-direction:column;gap:10px}
+.plan-features li{display:flex;align-items:flex-start;gap:9px;font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.6}
+.plan-features li .ic{color:var(--khz-txt);flex:none;margin-top:1px}
+.plan-card .btn{margin-top:22px}
+.lp-closing{padding:70px var(--pad);text-align:center;border-top:1px solid var(--rule);margin-top:20px}
+.lp-footer{padding:36px var(--pad) 40px;border-top:1px solid var(--rule)}
+.lp-footer-grid{display:grid;grid-template-columns:1fr;gap:26px;max-width:900px;margin:0 auto}
+.lp-footer-col h4{font-family:var(--f-u);font-size:12.5px;font-weight:700;color:var(--ink-3);margin:0 0 12px}
+.lp-footer-col a,.lp-footer-col button{display:block;font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);
+  min-height:36px;line-height:36px;text-align:start;width:100%}
+.lp-footer-bottom{text-align:center;margin-top:30px;padding-top:22px;border-top:1px solid var(--rule)}
+.lp-footer-bottom p{font-family:var(--f-u);font-size:12px;color:var(--ink-3);margin:4px 0}
+
+/* ============================================================
    HOME — type opens the screen, not a colour block
    ============================================================ */
 .open-q{font-family:var(--f-d);font-size:31px;font-weight:700;line-height:1.44;margin:8px 0 0}
@@ -531,6 +610,22 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .field input::placeholder{color:var(--ink-3)}
 .field input:focus{box-shadow:inset 0 0 0 1.5px var(--khz-txt)}
 .field-err{font-family:var(--f-u);font-size:12.5px;color:var(--coral);margin:8px 0 0}
+.field-err:not(:empty){padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--coral) 12%,transparent)}
+.field-pass-wrap{position:relative}
+.field-pass-wrap input{padding-inline-end:46px}
+.field-eye{position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:6px;width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;border-radius:10px;color:var(--ink-3);background:transparent}
+.field-eye:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink-2)}
+.auth-wrap{display:flex;flex-direction:column;min-height:100%}
+.auth-col{flex:1 1 auto;position:relative;z-index:1;background:var(--ground)}
+.auth-visual{display:none}
+@media (min-width:1024px){
+  .auth-wrap{flex-direction:row;align-items:stretch;min-height:calc(100dvh - 56px)}
+  .auth-col{flex:0 0 min(44%,480px);max-width:480px}
+  .auth-visual{display:flex;flex:1;align-items:center;justify-content:center;padding:56px;overflow:hidden;
+    border-inline-start:1px solid var(--rule);
+    background:radial-gradient(60% 55% at 50% 28%,color-mix(in srgb,var(--khz) 22%,var(--ground-2)),var(--ground-2) 72%)}
+}
 
 @media (prefers-reduced-motion:reduce){
   :root{--t1:90ms;--t2:110ms;--t3:150ms;--press-out:120ms}
@@ -594,6 +689,45 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 }
 @media (min-width:1024px) and (prefers-reduced-motion:reduce){
   .tab{transition:none}
+}
+
+/* ============================================================
+   LANDING RESPONSIVE — pre-login screens (landing, auth) never
+   reserve the with-nav sidebar (PUSHED hides the tab bar for
+   both), so they get their own wider desktop treatment instead
+   of inheriting the signed-in app's 760px reading column.
+   ============================================================ */
+@media (min-width:1024px){
+  .phone.wide-content .app{width:100%;max-width:none}
+}
+@media (min-width:768px){
+  .lp-nav-links{display:flex}
+  .lp-nav .btn{min-height:40px;padding:0 18px}
+  .lp-h1{font-size:46px;max-width:20ch}
+  .lp-sub{font-size:17px}
+  .lp-cta-row{flex-direction:row;justify-content:center}
+  .lp-cta-row .btn{min-width:190px}
+  .lp-steps{grid-template-columns:repeat(4,1fr);max-width:1000px}
+  .lp-step{flex-direction:column;text-align:center;align-items:center}
+  .lp-bento{grid-template-columns:repeat(3,1fr);max-width:1000px}
+  .lp-widgets{grid-template-columns:repeat(3,1fr);max-width:1000px}
+  .lp-ba{grid-template-columns:1fr auto 1fr;align-items:center;max-width:820px}
+  .lp-plans{grid-template-columns:repeat(3,1fr);max-width:1000px;align-items:stretch}
+  .lp-footer-grid{grid-template-columns:repeat(4,1fr);text-align:start}
+}
+@media (min-width:1024px){
+  .lp-hero{padding-top:88px}
+  .lp-h1{font-size:54px}
+  .lp-preview{max-width:420px}
+  .lp-section{padding:88px var(--pad) 8px}
+}
+@media (min-width:1440px){
+  .lp-h1{font-size:60px}
+  .lp-bento{max-width:1120px}
+  .lp-widgets{max-width:1120px}
+  .lp-plans{max-width:1120px}
+  .lp-steps{max-width:1120px}
+  .lp-footer-grid{max-width:1120px}
 }
 </style>
 
@@ -665,7 +799,8 @@ users:'<circle cx="9.3" cy="8.7" r="3.3"/><path d="M3.6 19.5a5.7 5.7 0 0 1 11.4 
 down:'<path d="M12 4.6v10.5M8.2 11.4 12 15.1l3.8-3.7"/><path d="M5.2 19.4h13.6"/>',
 archive:'<path d="M4.6 8.5h14.8V18.9a1.6 1.6 0 0 1-1.6 1.6H6.2a1.6 1.6 0 0 1-1.6-1.6z"/><rect x="3.2" y="4.2" width="17.6" height="4.3" rx="1.3"/><path d="M10.1 12.4h3.8"/>',
 eye:'<path d="M2.8 12S6.3 6 12 6s9.2 6 9.2 6-3.5 6-9.2 6-9.2-6-9.2-6Z"/><circle cx="12" cy="12" r="2.9"/>',
-x:'<path d="M6.6 6.6 17.4 17.4M17.4 6.6 6.6 17.4"/>'
+x:'<path d="M6.6 6.6 17.4 17.4M17.4 6.6 6.6 17.4"/>',
+eyeoff:'<path d="M2.8 12S6.3 6 12 6s9.2 6 9.2 6-3.5 6-9.2 6-9.2-6-9.2-6Z"/><circle cx="12" cy="12" r="2.9"/><path d="M4 20 20 4"/>'
 };
 function ic(n,s){s=s||22;return '<span class="ic" style="width:'+s+'px;height:'+s+'px"><svg viewBox="0 0 24 24">'+P[n]+'</svg></span>';}
 
@@ -792,6 +927,9 @@ var MY_COLLECTIONS=[];       /* [{id,title,books:[book_id,...]}] */
 var MY_USER_BOOKS={};        /* uuid -> {id,title,author,cover_path} — manual/rights-limited books */
 var MY_SUMMARIES={};         /* book key -> {summary_text,is_shared,...} — منارة cache */
 var PUBLIC_MENARAS=[];       /* narrow RPC: only summaries explicitly shared by their owners */
+var PLANS=[],PLANS_LOADED=false; /* public.plans — single source of truth, pre- and post-login */
+var MY_PLAN=null;            /* public.user_plans row for ME, joined against PLANS by plan_id */
+var MY_MENARA_USED=0;        /* menara_generation_log count this month, for the free-tier quota UI */
 var MY_READING_SESSIONS=[];  /* completed focus sessions, newest first */
 var READING_PREF={daily_goal_minutes:20,reminder_enabled:false,reminder_time:null,selected_book_id:null,selected_user_book_id:null,weekly_days_goal:null};
 var READING_ACTIVE=null,READING_TICK=null,READING_NOTICE=false,READING_SAVE_QUEUE=[];
@@ -991,8 +1129,130 @@ function respondInvite(inviteId,accept){
   });
 }
 function loadAll(){
-  return Promise.all([loadGenres(),loadProfile(),loadLibrary(),loadJourneyAll(),loadCollections(),loadUserBooks(),loadSharedMenaras(),loadReadingData()])
+  return Promise.all([loadGenres(),loadProfile(),loadLibrary(),loadJourneyAll(),loadCollections(),loadUserBooks(),loadSharedMenaras(),loadReadingData(),loadMyPlan(),loadMenaraUsage()])
     .then(function(){return loadInvites();});
+}
+/* plans is readable by anon and authenticated alike (plans_anon_select /
+   plans_authenticated_select) so the landing page and the post-login
+   الباقات page read the exact same rows — one source of truth for
+   prices, features, and labels. */
+function loadPlans(){
+  if(PLANS_LOADED)return Promise.resolve(PLANS);
+  return sb.from('plans').select('*').eq('status','active').order('sort_order').then(function(res){
+    if(res.error){console.error(res.error);return PLANS;}
+    PLANS=res.data||[];PLANS_LOADED=true;return PLANS;
+  }).catch(function(){return PLANS;});
+}
+function loadMyPlan(){
+  if(!ME)return Promise.resolve(null);
+  return sb.from('user_plans').select('*').eq('user_id',ME.id).maybeSingle().then(function(res){
+    MY_PLAN=res.error?null:(res.data||null);return MY_PLAN;
+  }).catch(function(){MY_PLAN=null;return null;});
+}
+function loadMenaraUsage(){
+  if(!ME)return Promise.resolve(0);
+  return sb.rpc('my_menara_usage_this_month').then(function(res){
+    MY_MENARA_USED=res.error?0:(res.data||0);return MY_MENARA_USED;
+  }).catch(function(){MY_MENARA_USED=0;return 0;});
+}
+function planIsPaidActive(p){
+  if(!p||p.plan_id==='free')return false;
+  if(p.status!=='active'&&p.status!=='trial')return false;
+  if(p.expiry_date&&new Date(p.expiry_date)<new Date())return false;
+  return true;
+}
+function fmtPrice(p){
+  if(p.price_amount==null||Number(p.price_amount)===0)return 'مجانًا';
+  var n=Number(p.price_amount);
+  return n.toLocaleString('ar-SA')+' '+(p.currency||'SAR');
+}
+function activatePlan(planId,btn){
+  if(!ME){authMode='signup';push('auth');return;}
+  if(btn){btn.disabled=true;btn.textContent='لحظة...';}
+  sb.rpc('activate_trial_plan',{target_plan_id:planId}).then(function(res){
+    if(res.error){
+      if(btn){btn.disabled=false;btn.textContent='اشترك الآن';}
+      toast('تعذّر تفعيل الباقة. حاول مرة ثانية.');
+      return;
+    }
+    MY_PLAN=res.data;
+    toast('تم تفعيل الباقة.');
+    refreshIfCurrent('plans');refreshIfCurrent('account');
+  });
+}
+var FREE_MENARA_LIMIT=3;
+/* one card renderer, two contexts — landing (pre-login) and الباقات
+   والاشتراك (post-login) always read the same PLANS rows, so a price or
+   feature can never say one thing on the homepage and another after
+   sign-in. */
+function planCardHTML(p,mode){
+  var currentId=mode==='account'?(MY_PLAN?MY_PLAN.plan_id:'free'):null;
+  var isCurrent=mode==='account'&&currentId===p.id;
+  var feats=(p.features||[]).map(function(f){return '<li>'+ic('check',15)+'<span>'+esc(f)+'</span></li>';}).join('');
+  var priceUnit=p.billing_period==='year'?' / سنويًا':p.billing_period==='month'?' / شهريًا':'';
+  var cta;
+  if(mode==='landing'){
+    cta='<button class="btn btn-fill btn-full" data-startauth="signup">ابدأ رحلتك</button>';
+  }else if(isCurrent){
+    cta='<button class="btn btn-line btn-full" disabled>باقتك الحالية</button>';
+  }else{
+    cta='<button class="btn btn-fill btn-full" data-activateplan="'+esc(p.id)+'">'+(p.price_amount?'اشترك الآن':'التحويل للمجانية')+'</button>';
+  }
+  return '<div class="plan-card'+(p.is_recommended?' recommended':'')+'">'
+    +(isCurrent?'<span class="plan-badge" style="background:var(--ink-2)">باقتك الحالية</span>'
+      :(p.is_recommended?'<span class="plan-badge">الأنسب لقارئ منتظم</span>':''))
+    +'<div class="plan-name">'+esc(p.name)+'</div>'
+    +(p.tagline?'<p class="plan-tagline">'+esc(p.tagline)+'</p>':'')
+    +'<div class="plan-price">'+fmtPrice(p)+(p.price_amount?'<span>'+priceUnit+'</span>':'')+'</div>'
+    +(p.is_trial_pricing?'<span class="plan-trial-tag">سعر تجريبي، غير نهائي</span>':'')
+    +'<ul class="plan-features">'+feats+'</ul>'
+    +cta
+    +'</div>';
+}
+function statusCardHTML(p){
+  var row=MY_PLAN;
+  var expiredByDate=row&&row.expiry_date&&new Date(row.expiry_date)<new Date();
+  var lapsed=!!(row&&(row.status==='cancelled'||row.status==='expired'||expiredByDate));
+  var label=lapsed?(row.status==='cancelled'?'ملغاة':'منتهية'):(row&&row.status==='trial'?'تجربة نشطة':'نشطة');
+  var expiryLine='';
+  if(row&&row.expiry_date){
+    expiryLine='<span class="meta" style="display:block;margin-top:6px">'
+      +(lapsed?'انتهت في ':'تتجدد أو تنتهي في ')+esc(fmtMonthYear(row.expiry_date))+'</span>';
+  }
+  var showQuota=!p||p.id==='free'||lapsed;
+  return '<div class="pad"><div class="rs-card">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'
+    +'<div class="lp-ba-lbl">باقتك الحالية</div>'
+    +'<span class="chip'+(lapsed?'':' on')+'" style="pointer-events:none">'+label+'</span>'
+    +'</div>'
+    +'<h2 class="rs-title" style="margin-top:10px">'+esc(p?p.name:'مجاني')+'</h2>'
+    +(row&&row.renewal_status==='trial_no_payment'&&!lapsed?'<span class="plan-trial-tag">تجربة بلا دفع</span>':'')
+    +expiryLine
+    +(lapsed?'<p class="meta" style="margin-top:8px">رجعت لحدود الباقة المجانية لين تفعّل باقة من جديد.</p>':'')
+    +(showQuota?'<div class="s14"></div><p class="meta">استخدمت <b class="tnum">'+MY_MENARA_USED+'</b> من <b class="tnum">'+FREE_MENARA_LIMIT+'</b> منارة هذا الشهر.</p>'
+      +bar(Math.min(100,Math.round(MY_MENARA_USED/FREE_MENARA_LIMIT*100))):'')
+    +'</div></div>';
+}
+function plansBodyHTML(){
+  if(!PLANS_LOADED)return '<div class="pad" style="padding-top:40px;text-align:center"><span class="meta">نجهّز الباقات...</span></div>';
+  if(!PLANS.length)return '<div class="empty" style="padding:40px 0">'+ic('sliders',26)+'<h3>ما قدرنا نجيب الباقات الآن.</h3><p>حاول مرة ثانية بعد شوي.</p></div>';
+  var currentId=MY_PLAN?MY_PLAN.plan_id:'free';
+  var currentPlan=PLANS.find(function(p){return p.id===currentId;})||PLANS.find(function(p){return p.id==='free';});
+  return '<div style="max-width:1000px;margin-inline:auto">'
+    +statusCardHTML(currentPlan)
+    +'<div class="s24"></div>'
+    +'<div class="pad"><div class="kick">الباقات المتاحة</div></div>'
+    +'<div class="s12"></div>'
+    +'<div class="pad"><div class="lp-plans" style="margin-inline:0;max-width:none">'+PLANS.map(function(p){return planCardHTML(p,'account');}).join('')+'</div></div>'
+    +'<div class="s24"></div></div>';
+}
+function plansHTML(){
+  loadPlans().then(function(){if(current&&current.dataset.name==='plans')document.getElementById('plansBody').innerHTML=plansBodyHTML();});
+  return ''
+    +'<div class="navbar"><button class="hdr-btn" data-back="1" aria-label="رجوع">'+ic('back',22)+'</button>'
+      +'<div class="nt">الباقات والاشتراك</div><div style="width:44px"></div></div>'
+    +'<div class="s10"></div>'
+    +'<div id="plansBody">'+plansBodyHTML()+'</div>';
 }
 
 /* Real authors derived only from the visible, verified starter catalog. */
@@ -1102,14 +1362,217 @@ function welcomeHTML(){
 /* ============================================================
    SCREEN — الدخول والتسجيل
    ============================================================ */
+/* ============================================================
+   SCREEN — الصفحة الرئيسية لغير المسجّلين (landing)
+   Reuses the exact same component language as the signed-in app
+   (.rs-card, .bar, cover(), real catalog books) rather than a
+   parallel marketing-page style system. Product widgets here show
+   illustrative sample states, never claim to be the visitor's own
+   (unauthenticated) data.
+   ============================================================ */
+function landingNavHTML(){
+  return '<nav class="lp-nav">'
+    +'<div class="wordmark" style="font-size:22px">مَــلفى</div>'
+    +'<div class="lp-nav-links">'
+      +'<button class="lp-nav-link" data-scrollto="lp-steps">كيف يعمل؟</button>'
+      +'<button class="lp-nav-link" data-scrollto="lp-bento">المزايا</button>'
+      +'<button class="lp-nav-link" data-scrollto="lp-plans">الباقات</button>'
+    +'</div>'
+    +'<div class="lp-nav-cta">'
+      +'<button class="lnk plain" data-startauth="login">تسجيل الدخول</button>'
+      +'<button class="btn btn-fill" data-startauth="signup">ابدأ رحلتك</button>'
+    +'</div>'
+    +'</nav>';
+}
+function landingHeroPreviewHTML(){
+  var b=B.ghufran;
+  return '<div class="rs-card">'
+    +'<div class="rs-book">'+cover('ghufran',54)+'<div class="rs-book-b">'
+      +'<div class="rs-kicker">مثال من داخل مَلفى</div>'
+      +'<h2 class="rs-title">'+esc(b.t)+'</h2>'
+      +'<div class="rs-meta">صفحة 210 من '+b.pages+' · 35% من الكتاب</div></div></div>'
+    +'<div class="s14"></div>'+bar(35)
+    +'<div class="s16"></div><div class="hr"></div><div class="s16"></div>'
+    +'<div class="lp-ba-lbl">آخر محطة سجّلتها</div>'
+    +'<p style="font-family:var(--f-u);font-size:13.5px;line-height:1.8;color:var(--ink-2);margin:8px 0 0">'
+      +'"رجعت لها بعد أسبوع، ولقيت وصف المكان اللي علق معي من أول مرة."</p>'
+    +'<div class="s16"></div>'
+    +'<div class="lp-ba-lbl" style="color:var(--khz-txt)">منارتك</div>'
+    +'<p style="font-family:var(--f-d);font-size:14.5px;line-height:1.85;color:var(--ink);margin:8px 0 0">'
+      +'"صرت أرجع لهذا الكتاب مو عشان أكمله، عشان أتذكر وش لقيت فيه أول مرة."</p>'
+    +'</div>';
+}
+function landingHeroHTML(){
+  return '<div class="lp-hero">'
+    +'<span class="lp-kicker">تجربة قراءة سعودية، مو منصة كتب</span>'
+    +'<h1 class="lp-h1">مَلفى، المكان الذي ترجع إليه قراءتك.</h1>'
+    +'<p class="lp-sub">احتفظ برحلاتك مع الكتب، سجّل ما بقي معك، واصنع من كل قراءة منارة ترجع لها.</p>'
+    +'<div class="lp-cta-row">'
+      +'<button class="btn btn-fill" data-startauth="signup">ابدأ رحلتك</button>'
+      +'<button class="btn btn-line" data-scrollto="lp-steps">اكتشف مَلفى</button>'
+    +'</div>'
+    +'<div class="lp-preview">'+landingHeroPreviewHTML()+'</div>'
+    +'</div>';
+}
+function landingStepsHTML(){
+  var steps=[
+    ['اقرأ بطريقتك','سجّل كتابك الورقي أو الرقمي زي ما هو، بلا شكل واحد مفروض عليك.'],
+    ['سجل رحلتك','دوّن اللي علق معك، كتابة أو صوتًا، أول ما يخطر ببالك.'],
+    ['اصنع منارتك','منارتك تتكوّن من محطاتك اللي سجّلتها — انعكاس بصوتك أنت.'],
+    ['ارجع لما بقي معك','بعد فترة، ارجع لمنارتك ولمحطاتك مع الكتاب زي ما تركتها.']
+  ];
+  return '<div class="lp-section" id="lp-steps">'
+    +'<div class="lp-section-head"><span class="lp-eyebrow">كيف تعمل مَلفى</span>'
+      +'<h2 class="lp-h2">من أول صفحة، لمنارة ترجع لها</h2></div>'
+    +'<div class="lp-steps">'+steps.map(function(s,i){
+      return '<div class="lp-step"><span class="lp-step-n">'+(i+1)+'</span>'
+        +'<div class="lp-step-b"><h3>'+s[0]+'</h3><p>'+s[1]+'</p></div></div>';
+    }).join('')+'</div></div>';
+}
+function landingBentoHTML(){
+  var items=[
+    ['archive','حفظ رحلة كل كتاب في مكان واحد','كل كتاب تقرأه له رحلة واحدة: صفحاتك، محطاتك، ومنارتك — مجتمعة، مو متفرقة بين تطبيقات.'],
+    ['mic','تسجيل الأفكار كتابةً أو صوتًا','دوّن اللي علق معك بالطريقة اللي تريحك، كتابة أو تسجيل صوتي مباشر.'],
+    ['wave','تحويل الرحلة إلى «منارة» بصوت القارئ نفسه','منارتك مو ملخص للكتاب، هي انعكاس لرحلتك أنت معه، بصوتك أنت.'],
+    ['sliders','متابعة روتين القراءة والتقدم','شوف كم قرأت هالأسبوع، وين وقفت، وهل عندك هدف يومي تحققه.'],
+    ['books','الرجوع إلى ما بقي من الكتب بدل نسيانه','الكتب اللي وقفت فيها ما تضيع — ترجع لها من نفس النقطة اللي تركتها فيها.'],
+    ['link','مزامنة التجربة بين تطبيق الجوال والويب','ابدأ من جوالك وكمّل من المتصفح، رحلتك نفسها في كل مكان.']
+  ];
+  return '<div class="lp-section" id="lp-bento">'
+    +'<div class="lp-section-head"><span class="lp-eyebrow">المزايا</span>'
+      +'<h2 class="lp-h2">مَلفى مصمم حول رحلتك، مو حول مكتبتك بس</h2></div>'
+    +'<div class="lp-bento">'+items.map(function(it){
+      return '<div class="lp-card"><div class="lp-card-ic">'+ic(it[0],20)+'</div>'
+        +'<h3>'+it[1]+'</h3><p>'+it[2]+'</p></div>';
+    }).join('')+'</div></div>';
+}
+function landingBeforeAfterHTML(){
+  return '<div class="lp-ba">'
+    +'<div class="lp-ba-col before"><span class="lp-ba-lbl">سجّلتها كذا</span>'
+      +'<p>"صفحة 140، الجزء اللي يتكلم عن الغربة. حسّيت فيه كثير."</p></div>'
+    +'<div class="lp-ba-arrow">'+ic('arrow',20)+'</div>'
+    +'<div class="lp-ba-col after"><span class="lp-ba-lbl">صارت منارة</span>'
+      +'<p>"الغربة اللي وصفها الكاتب ذكّرتني بشعور ما قدرت أوصفه من قبل — وذا اللي خلاني أكمل الكتاب."</p></div>'
+    +'</div>';
+}
+function landingWidgetsHTML(){
+  var readingCard='<div class="rs-card">'
+    +'<div class="rs-book">'+cover('maqamat',54)+'<div class="rs-book-b">'
+      +'<div class="rs-kicker">أقرأ الآن</div><h2 class="rs-title">'+esc(B.maqamat.t)+'</h2>'
+      +'<div class="rs-meta">62% من الكتاب</div></div></div>'
+    +'<div class="s14"></div>'+bar(62)+'</div>';
+  var journeyCard='<div class="rs-card">'
+    +'<div class="rs-kicker">سجل رحلتك</div>'
+    +'<h2 class="rs-title" style="font-size:16px">آخر تسجيل صوتي، أمس</h2>'
+    +'<p style="font-family:var(--f-u);font-size:13px;color:var(--ink-2);line-height:1.8;margin-top:8px">'
+      +'"الفصل هذا خلّاني أرجع أفكر في القرار اللي أخذته بنفس الموقف."</p></div>';
+  var menaraCard='<div class="rs-card">'
+    +'<div class="rs-kicker" style="color:var(--khz-txt)">منارتك</div>'
+    +'<p style="font-family:var(--f-d);font-size:15px;line-height:1.85;color:var(--ink);margin-top:8px">'
+      +'"كل ما رجعت لهذا الكتاب، صرت ألقى فيه شيء ما انتبهت له أول مرة."</p></div>';
+  var routineCard='<div class="rs-card">'
+    +'<div class="rs-kicker">روتين القراءة</div>'
+    +'<h2 class="rs-title" style="font-size:16px">4 أيام من 7 هالأسبوع</h2>'
+    +'<div class="rs-facts"><div class="rs-fact"><b>38 دقيقة</b><span>معدل الجلسة</span></div>'
+      +'<div class="rs-fact"><b>20 دقيقة</b><span>الهدف اليومي</span></div></div></div>';
+  var daysCard='<div class="rs-card">'
+    +'<div class="rs-kicker">أيام القراءة</div><div class="s10"></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">'+[1,1,0,1,1,0,1].map(function(v){
+      return '<span style="aspect-ratio:1;border-radius:8px;border:1px solid var(--rule);background:'
+        +(v?'color-mix(in srgb,var(--khz) 18%,transparent)':'transparent')+'"></span>';
+    }).join('')+'</div></div>';
+  return '<div class="lp-section" id="lp-widgets">'
+    +'<div class="lp-section-head"><span class="lp-eyebrow">تجربة داخل التطبيق</span>'
+      +'<h2 class="lp-h2">أدوات تحس إنها بُنيت لك، مو حواليك</h2></div>'
+    +'<div class="lp-widgets">'+readingCard+journeyCard+menaraCard+routineCard+daysCard+'</div>'
+    +landingBeforeAfterHTML()
+    +'</div>';
+}
+function landingPlansBodyHTML(){
+  if(!PLANS_LOADED)return '<div class="pad" style="text-align:center"><span class="meta">نجهّز الباقات...</span></div>';
+  if(!PLANS.length)return '';
+  return '<div class="lp-plans">'+PLANS.map(function(p){return planCardHTML(p,'landing');}).join('')+'</div>';
+}
+function landingPlansHTML(){
+  loadPlans().then(function(){
+    if(current&&current.dataset.name==='landing'){
+      var w=document.getElementById('lpPlansBody');if(w)w.innerHTML=landingPlansBodyHTML();
+    }
+  });
+  return '<div class="lp-section" id="lp-plans">'
+    +'<div class="lp-section-head"><span class="lp-eyebrow">الباقات</span>'
+      +'<h2 class="lp-h2">ابدأ مجانًا، وترقّى وقت ما تحتاج</h2>'
+      +'<p class="body" style="margin-top:10px;color:var(--ink-2)">القراءة وتسجيل رحلتك مجانية دائمًا. الترقية تفتح لك منارة بلا حدود.</p></div>'
+    +'<div id="lpPlansBody">'+landingPlansBodyHTML()+'</div>'
+    +'</div>';
+}
+function landingClosingHTML(){
+  return '<div class="lp-closing">'
+    +'<h2 class="lp-h2">قراءتك تستاهل مكان ترجع له</h2>'
+    +'<p class="lp-sub" style="margin:14px auto 0">ابدأ رحلتك الأولى مع مَلفى اليوم، مجانًا.</p>'
+    +'<div class="lp-cta-row"><button class="btn btn-fill" data-startauth="signup">ابدأ رحلتك</button></div>'
+    +'</div>';
+}
+function landingFooterHTML(){
+  return '<footer class="lp-footer">'
+    +'<div class="lp-footer-grid">'
+      +'<div class="lp-footer-col"><div class="wordmark" style="font-size:19px;text-align:start">مَــلفى</div>'
+        +'<p style="font-family:var(--f-u);font-size:12.5px;color:var(--ink-3);margin-top:10px;line-height:1.7;max-width:26ch">مكان ترجع له قراءتك، لا يشتتك عنها.</p></div>'
+      +'<div class="lp-footer-col"><h4>استكشف</h4>'
+        +'<button data-scrollto="lp-steps">كيف يعمل؟</button>'
+        +'<button data-scrollto="lp-bento">المزايا</button>'
+        +'<button data-scrollto="lp-plans">الباقات</button></div>'
+      +'<div class="lp-footer-col"><h4>الحساب</h4>'
+        +'<button data-startauth="login">تسجيل الدخول</button>'
+        +'<button data-startauth="signup">إنشاء حساب</button></div>'
+      +'<div class="lp-footer-col"><h4>السياسات</h4>'
+        +'<button data-privacy="1">سياسة الخصوصية</button></div>'
+    +'</div>'
+    +'<div class="lp-footer-bottom"><p>© '+new Date().getFullYear()+' مَلفى.</p></div>'
+    +'</footer>';
+}
+function landingHTML(){
+  return '<div class="lp">'
+    +landingNavHTML()
+    +landingHeroHTML()
+    +landingStepsHTML()
+    +landingBentoHTML()
+    +landingWidgetsHTML()
+    +landingPlansHTML()
+    +landingClosingHTML()
+    +landingFooterHTML()
+    +'</div>';
+}
+
 var authMode='login',PENDING_EMAIL='';
 function authHTML(){
   return ''
-    +'<div class="s48"></div><div class="s24"></div>'
-    +'<div class="pad"><div class="wordmark" style="text-align:start">مَــلفى</div></div>'
+    +'<div class="auth-wrap">'
+    +'<div class="auth-col">'
+    +'<div class="s40"></div>'
+    +'<div class="pad" style="display:flex;align-items:center;gap:12px">'
+      +'<button class="hdr-btn" data-authback="1" aria-label="رجوع لمَلفى">'+ic('back',20)+'</button>'
+      +'<div class="wordmark" style="text-align:start;flex:1">مَــلفى</div>'
+    +'</div>'
     +'<div class="s28"></div>'
     +'<div class="pad" id="authBody">'+authBodyHTML()+'</div>'
-    +'<div class="s24"></div>';
+    +'<div class="s24"></div>'
+    +'</div>'
+    +'<div class="auth-visual" aria-hidden="true">'+authVisualHTML()+'</div>'
+    +'</div>';
+}
+function authVisualHTML(){
+  return ''
+    +'<div style="max-width:340px;text-align:start;position:relative;z-index:1">'
+    +'<span class="lp-eyebrow">مَلفى</span>'
+    +'<p style="font-family:var(--f-d);font-size:26px;line-height:1.6;font-weight:700;margin:14px 0 0;color:var(--ink)">'
+      +'«مَلفى، المكان الذي ترجع إليه قراءتك.»</p>'
+    +'<div class="s24"></div>'
+    +'<div class="rs-card" style="background:color-mix(in srgb,var(--ground) 45%,transparent);backdrop-filter:blur(6px)">'
+      +'<div class="lp-ba-lbl">منارة</div>'
+      +'<p style="font-family:var(--f-d);font-size:15px;line-height:1.85;margin:8px 0 0;color:var(--ink-2)">'
+        +'"رجعت لهذا الكتاب بعد سنة، ولقيت في ملاحظاتي القديمة قارئًا كنت أعرفه."</p>'
+    +'</div></div>';
 }
 function authBodyHTML(){
   var login=authMode==='login';
@@ -1124,7 +1587,10 @@ function authBodyHTML(){
     +(reset?'':'<div class="field"><label for="authEmail">البريد الإلكتروني</label>'
       +'<input type="email" id="authEmail" placeholder="بريدك الإلكتروني" autocomplete="username"></div>')
     +'<div class="field"><label for="authPass">كلمة المرور</label>'
-      +'<input type="password" id="authPass" placeholder="كلمة المرور" autocomplete="'+(login?'current-password':'new-password')+'"></div>'
+      +'<div class="field-pass-wrap">'
+      +'<input type="password" id="authPass" placeholder="كلمة المرور" autocomplete="'+(login?'current-password':'new-password')+'">'
+      +'<button type="button" class="field-eye" data-pwtoggle="authPass" aria-label="إظهار كلمة المرور" aria-pressed="false">'+ic('eye',18)+'</button>'
+      +'</div></div>'
     +'<p class="field-err" id="authErr" role="alert" aria-live="assertive"></p>'
     +'<div class="s28"></div>'
     +'<button class="btn btn-fill btn-full" data-authsubmit="1">'+(reset?'حفظ كلمة المرور':login?'تسجيل الدخول':'إنشاء الحساب')+'</button>'
@@ -1800,6 +2266,26 @@ function discoverHTML(){
 /* ============================================================
    SCREEN — حسابي
    ============================================================ */
+function acctPlanWidgetHTML(){
+  if(!PLANS_LOADED){
+    loadPlans().then(function(){
+      if(current&&current.dataset.name==='account'){
+        var w=document.getElementById('acctPlanWidget');if(w)w.innerHTML=acctPlanWidgetHTML();
+      }
+    });
+    return '<button class="row" data-open="plans"><span style="color:var(--ink-2)">'+ic('sliders',20)+'</span>'
+      +'<span class="row-b"><span class="row-t">الباقات والاشتراك</span></span>'
+      +'<span class="ic ch" style="width:20px;height:20px"><svg viewBox="0 0 24 24">'+P.chev+'</svg></span></button>';
+  }
+  var currentId=MY_PLAN?MY_PLAN.plan_id:'free';
+  var p=PLANS.find(function(x){return x.id===currentId;});
+  var lapsed=!!(MY_PLAN&&(MY_PLAN.status==='cancelled'||MY_PLAN.status==='expired'
+    ||(MY_PLAN.expiry_date&&new Date(MY_PLAN.expiry_date)<new Date())));
+  return '<button class="row" data-open="plans"><span style="color:var(--ink-2)">'+ic('sliders',20)+'</span>'
+    +'<span class="row-b"><span class="row-t">الباقات والاشتراك</span>'
+    +'<span class="meta" style="display:block;margin-top:3px">'+(lapsed?'انتهت باقتك — رجعت للمجانية':esc(p?p.name:'مجاني'))+'</span></span>'
+    +'<span class="ic ch" style="width:20px;height:20px"><svg viewBox="0 0 24 24">'+P.chev+'</svg></span></button>';
+}
 function accountHTML(){
   var firstName=(MY_NAME||'').split(' ')[0]||'';
   var journeyCount=Object.keys(MY_JOURNEY).reduce(function(n,k){return n+MY_JOURNEY[k].length;},0);
@@ -1815,6 +2301,9 @@ function accountHTML(){
     +'<div class="count"><b class="tnum">'+myBookCount()+'</b><span>كتاب</span></div>'
     +'<div class="count"><b class="tnum">'+journeyCount+'</b><span>محطة</span></div></div>'
   +'<div class="s16"></div><div class="hr"></div>'
+  +'<div class="s20"></div>'
+  +'<div class="pad" id="acctPlanWidget">'+acctPlanWidgetHTML()+'</div>'
+  +'<div class="s20"></div><div class="hr"></div>'
 
   +'<div class="s24"></div>'
   +'<div class="pad"><div class="kick">المظهر</div></div>'
@@ -2310,9 +2799,9 @@ var TABS=[
 ];
 var VIEWS={home:homeHTML,library:libraryHTML,community:communityHTML,discover:discoverHTML,
   account:accountHTML,book:bookHTML,bookJourney:bookJourneyHTML,done:doneHTML,friend:friendHTML,topic:topicHTML,
-  welcome:welcomeHTML,auth:authHTML,onboardBook:onboardBookHTML,
+  welcome:welcomeHTML,auth:authHTML,onboardBook:onboardBookHTML,landing:landingHTML,plans:plansHTML,
   readingSession:readingSessionHTML,readingSummary:readingSummaryHTML,collection:collectionHTML};
-var PUSHED={book:1,bookJourney:1,done:1,friend:1,welcome:1,auth:1,onboardBook:1,topic:1,readingSession:1,readingSummary:1,collection:1};
+var PUSHED={book:1,bookJourney:1,done:1,friend:1,welcome:1,auth:1,onboardBook:1,topic:1,readingSession:1,readingSummary:1,collection:1,landing:1,plans:1};
 
 var app=document.getElementById('app'),tabbar=document.getElementById('tabbar'),
     sheet=document.getElementById('sheet'),backdrop=document.getElementById('backdrop'),
@@ -2382,6 +2871,7 @@ function mount(name,mode){
   tabbar.style.pointerEvents=hide?'none':'auto';
   toastEl.classList.toggle('low',hide);
   phoneEl.classList.toggle('with-nav',!hide);
+  phoneEl.classList.toggle('wide-content',name==='landing'||name==='auth'||name==='plans');
   return el;
 }
 function goTab(k){
@@ -3111,6 +3601,7 @@ document.getElementById('phone').addEventListener('click',function(e){
     if(o==='book')push('book');
     else if(o==='done'){completeBook(STATE.book).then(function(ok){if(ok)push('done');});}
     else if(o==='friend')push('friend');
+    else if(o==='plans')push('plans');
     return;
   }
   if((t=e.target.closest('[data-book]'))){STATE.book=t.dataset.book;stopPlay();push('book');return;}
@@ -3145,6 +3636,32 @@ document.getElementById('phone').addEventListener('click',function(e){
   if((t=e.target.closest('[data-authsubmit]'))){handleAuthSubmit(t);return;}
   if((t=e.target.closest('[data-forgotpassword]'))){handleForgotPassword();return;}
   if((t=e.target.closest('[data-resendverification]'))){resendVerification();return;}
+  if((t=e.target.closest('[data-pwtoggle]'))){
+    var pwInp=document.getElementById(t.dataset.pwtoggle);
+    if(pwInp){
+      var showPw=pwInp.type==='password';
+      pwInp.type=showPw?'text':'password';
+      t.setAttribute('aria-pressed',showPw?'true':'false');
+      t.setAttribute('aria-label',showPw?'إخفاء كلمة المرور':'إظهار كلمة المرور');
+      t.innerHTML=ic(showPw?'eyeoff':'eye',18);
+    }
+    return;
+  }
+  if((t=e.target.closest('[data-authback]'))){
+    if(NAV_DEPTH>0)back();else{replaceRoute('landing');mount('landing','fade');}
+    return;
+  }
+  if((t=e.target.closest('[data-startauth]'))){
+    authMode=t.dataset.startauth==='signup'?'signup':'login';
+    push('auth');
+    return;
+  }
+  if((t=e.target.closest('[data-activateplan]'))){activatePlan(t.dataset.activateplan,t);return;}
+  if((t=e.target.closest('[data-scrollto]'))){
+    var scrollTarget=document.getElementById(t.dataset.scrollto);
+    if(scrollTarget)scrollTarget.scrollIntoView({behavior:REDUCE?'auto':'smooth',block:'start'});
+    return;
+  }
   if((t=e.target.closest('[data-onboardpick]'))){
     STATE.book=t.dataset.onboardpick;STATE.page=1;
     openSheet('log',{onboard:true});
@@ -3209,7 +3726,7 @@ function finishWelcome(){
       var target=INITIAL_ROUTE||{view:'home',tab:'home'};
       if(target.view==='book'&&!myBookView(target.book))target={view:'home',tab:'home'};
       STATE.tab=target.tab||'home';STATE.book=target.book||STATE.book;renderTabs();replaceRoute(target.view);mount(target.view,'fade');
-    }else{replaceRoute('auth');mount('auth','fade');}
+    }else{replaceRoute('landing');mount('landing','fade');}
   });
 }
 function handleLogout(){
@@ -3225,6 +3742,11 @@ function handleLogout(){
   }
   if(uid)logAuthEvent(uid,'sign_out').then(finish,finish);else finish();
 }
+/* the router already restores scroll per-screen itself (navSnapshot's
+   scroll field, replayed in restoreRoute) — the browser's own native
+   scroll restoration on back/forward/reload fights with that and can
+   snap a freshly mounted screen to a stale offset, so hand it off. */
+if('scrollRestoration' in history)history.scrollRestoration='manual';
 history.replaceState({malfaGuard:true},'',location.pathname+location.search+'#guard');
 history.pushState(navSnapshot('welcome',0),'','#welcome');
 mount('welcome');
