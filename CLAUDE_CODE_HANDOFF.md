@@ -807,3 +807,286 @@ remain absent.
 live `test_edge_boundaries.py` all pass. The GitHub `main` branch and live
 Supabase function contain the verified source. The only unrelated untracked
 workspace items are `gsap-skills-main/` and its zip; they were never staged.
+
+## 21. جلسة القراءة inside مَلفى (2026-08-31)
+
+Added the complete reading-session experience inside the existing `community`
+(مَلفى) tab without adding a primary tab or restructuring its other sections.
+The compact card uses the current reading book, page/progress, today's minutes,
+reading-day streak, one primary start/continue action, and a secondary summary
+link. With no current book it shows one honest empty state and opens the existing
+book picker; the picker now prioritizes the user's own saved/manual books and can
+start a session immediately after a new manual book is created.
+
+Live session state is persisted under a user-scoped localStorage key. The timer
+tracks only visible, explicitly resumed time. `visibilitychange` and `pagehide`
+pause a running session before the app backgrounds; reload/crash recovery counts
+only through the last persisted heartbeat, then shows the exact calm recovery
+notice with `متابعة` / `إنهاء الجلسة`. Unknown background/closed time is never
+counted. The distraction-free pushed view contains the book, start page,
+prominent timer, pause/resume, and finish action only; bottom navigation is
+visually and interactively hidden by the existing pushed-view behavior.
+
+The finish sheet validates the end page, calculates actual duration/pages/speed,
+accepts one optional note, and saves locally first. Offline writes queue under a
+user-scoped key and upsert by client UUID when connectivity returns. A short
+opacity/scale success state uses accurate seconds for sub-minute sessions and no
+confetti. The reading summary has one four-value summary card, a 28-day calendar,
+recent notes, and editable/deletable session rows. Reading-day streak and goal
+achievement are separate; each session snapshots its goal so later goal changes
+cannot rewrite history. Goals support 10/20/30/custom plus an average-derived
+suggestion. Reminders are off by default, request browser permission only after
+explicit enablement, suggest the reader's usual time, and can be disabled or
+changed in the same settings sheet.
+
+Database migration `202608310002_reading_sessions.sql` is applied live and
+tracked. It adds owner-only `reading_sessions` and `reading_preferences`, forced
+RLS, owner immutability, custom-book ownership validation, server timestamps,
+server-recalculated pages/speed, and user/date/book indexes. No service-role key
+or secret was added to the browser.
+
+QA covered RTL dark/light rendering, start/pause/resume, reload recovery and the
+background-stop notice, finish sheet, sub-minute/no-page-progress save, success
+state, summary calendar, settings, and edit UI. `test_reading_session_logic.sh`
+executes the actual timer helpers extracted from the shipped HTML and verifies
+elapsed time, background exclusion, crash recovery, page/speed math, zero-page
+sessions, streaks, goal snapshots, and forced RLS. Final checks: `v4/build.sh` →
+`JS OK`; reading-session logic, security headers, content integrity, XSS, and
+live Edge boundary tests all pass. The consumer CSP hash was regenerated and a
+pre-existing typo in its Supabase connect/media host was corrected so production
+session queries are not blocked.
+
+## 22. مكتبتي / مَلفى reorganization — books vs. reading practice (2026-09-02/03)
+
+Given directly by the user: split what §21 had made a single, growing مَلفى
+tab (session card + مجموعاتي + قوائم من الناس + تجارب مع الكتب) into a clean
+division — **مكتبتي = my books and their organization**; **مَلفى = my
+reading practice, journey, and personal reading record** — with both tabs
+reading/writing the same underlying rows (`library_entries`, `journey_entries`,
+`reading_sessions`, `journey_summaries`) rather than either holding a second
+copy. No new main tab, no new frontend library.
+
+### Selected-book model (new)
+
+`reading_preferences` gained two nullable FK columns and one nullable int,
+additively:
+
+- `selected_book_id text references books(id)` / `selected_user_book_id uuid
+  references user_books(id)` — exactly one of the two (or neither), enforced
+  by `reading_preferences_one_selected_ck`. The `secure_reading_preference()`
+  trigger (already existed for `daily_goal_minutes`/`reminder_*`) was
+  extended to also validate that a `selected_user_book_id` actually belongs
+  to the row's own `user_id` — same ownership-check shape already used by
+  `secure_reading_session()`, not a new pattern.
+- `weekly_days_goal integer` (1-7, nullable) — "how many days a week", a
+  genuinely new concept distinct from the existing per-session
+  `goal_minutes_snapshot`. Left `null` until the reader explicitly picks one
+  in the settings sheet; `أيام القراءة` shows only the raw day count until
+  then, never an invented default.
+
+Client-side, `selectedBookKey()` (`v4/index.html`) implements the exact
+priority the user specified: (1) `READING_ACTIVE.bookId` if a session is
+running/restored, (2) the saved `selected_book_id`/`selected_user_book_id`
+**if it still resolves** via `myBookView()` (a stale pick — e.g. a deleted
+manual book — falls through rather than crashing the UI), (3)
+`MY_LIB.reading[0]` (already sorted `updated_at desc` from `loadLibrary()`),
+(4) `null`. `saveSelectedBook(bookId)` upserts just those two columns
+(`onConflict:'user_id'`, partial payload — Postgres's `ON CONFLICT DO UPDATE
+SET` only touches the columns actually sent, so an existing goal/reminder
+row is never clobbered). Nothing here ever changes the selection as a
+side effect of an unrelated library write — the only writers are the
+explicit "كمّل القراءة" / "تبديل الكتاب" / "افتح رحلتك في مَلفى" actions.
+
+**Real bug caught and fixed in the same pass**: the pre-existing
+`saveReadingPreferences()` fully *reassigned* `READING_PREF` on every call
+(`READING_PREF = {daily_goal_minutes:...}`), silently dropping whatever
+selected-book/weekly-goal fields were already loaded into it client-side
+until the next full reload. Changed it to mutate the existing object's
+fields instead of replacing it, and made the new `weeklyGoal` parameter
+optional (`arguments.length>3`) so the two pre-existing call sites (goal-only
+and reminder-only updates) keep working unchanged.
+
+### «مكتبتي» — books and organization only
+
+- Primary segments reduced to the three the user asked for: **أقرأ الآن /
+  أبي أقرأ / قرأتها** (`next`/`finished` renamed in `SEGS`, `dropped`
+  removed from the pill row). Dropped books are **not deleted or
+  reclassified** — `dropped` is still a real `library_entries.status` value
+  — they're reachable through a secondary "كتب متوقفة" link that just sets
+  `libSeg='dropped'` and re-renders; no separate screen, no data loss.
+- The "أقرأ الآن" segment gets a real detail row per book instead of the
+  generic 3-up grid: cover, title, current page/progress with a bar, a
+  **calm text-and-color** "تقرأه الآن" indicator (a dot *and* a label —
+  never color alone), the count of unique local-calendar reading days for
+  *that* book (`readingDaysForBook(id)`, counts only sessions with
+  `duration_sec>0`, never leaks another book's sessions), and one primary
+  **«كمّل القراءة»** button.
+- `chooseAndGoToMalfa(bookId)` is what "كمّل القراءة" (and the simplified
+  book screen's "افتح رحلتك في مَلفى" link) actually calls: if a *different*
+  book's session is currently running it refuses and toasts instead of
+  silently switching (the same running-session guard as `startReadingSession`
+  already used, applied here too), otherwise it calls `saveSelectedBook`
+  then `goTab('community')` — a real `pushRoute`, so back-navigation behaves
+  normally, and the book is never re-asked-for on the other tab.
+- **Book detail screen split in two**, to stop مكتبتي from carrying an
+  independent reading-session/journey/منارة experience while reusing every
+  underlying row: `bookHTML()` (still reached from مكتبتي's grid) is now
+  info/organization only — cover, title, progress, facts, "أنهيت الكتاب.",
+  and the one link into مَلفى. The old tab-switcher body (التسجيل الكامل /
+  منارة, "سجّل رحلتك", the facts footer) moved verbatim into a new
+  `bookJourneyHTML()` (`VIEWS.bookJourney`, pushed), reached only from
+  مَلفى's "عرض الرحلة"/"عرض المنارة" links — same render functions
+  (`fullJourneyHTML`, `menaraHTML`, `journeyHTML`), same `MY_JOURNEY`/
+  `MY_SUMMARIES`, nothing duplicated.
+- **Collections** ("Can be opened. Support adding and removing..." — they
+  couldn't be opened at all before this): `myCollHTML()` is now a real
+  button (`data-collection`) into a new `collectionHTML()` screen
+  (`VIEWS.collection`, pushed, `STATE.collection`), listing the collection's
+  books with a per-book remove (`data-collectionremove`) and an add entry
+  point (`data-collectionadd`) opening a new `collectionpick` sheet — every
+  one of the user's own catalog *and* manual books, toggle-able, never
+  another user's data (RLS was already private-only; unaffected). Migration
+  `collection_books_support_user_books`: dropped and re-added the PK as a
+  surrogate `id` (existing rows kept, nothing deleted), added a nullable
+  `user_book_id`, made `book_id` nullable, added the same one-of check
+  pattern already used elsewhere, two partial unique indexes, and an
+  `enforce_collection_book_owner()` trigger (execute revoked from
+  `anon`/`authenticated` — it's insert/update-trigger-only, matching the
+  project's existing lockdown convention for functions like it).
+
+### «مَلفى» — exactly four sections, in this order
+
+`communityHTML()` rewritten to just: **روتين القراءة → منارة → سجّل رحلتك →
+أيام القراءة**. مجموعاتي (duplicate of مكتبتي's), قوائم من الناس, and
+تجارب مع الكتب are gone from this screen (their tables/loaders are
+untouched — `loadSharedMenaras()`/`PUBLIC_MENARAS` still load, simply
+nothing here renders them anymore; no rows were deleted).
+
+1. **روتين القراءة** (`readingRoutineCardHTML()`, renamed from
+   `readingSessionCardHTML`): selected book + cover, page/progress, the
+   daily goal in minutes, the reminder time *only when enabled*, one primary
+   button — "ابدأ القراءة" or "كمّل القراءة" depending on whether a session
+   is running for *this* book — and two secondary actions, "تبديل الكتاب"
+   and "تعديل الروتين" (opens the pre-existing `reading-settings` sheet).
+   A finished selected book shows a clear "خلّصت هذا الكتاب" state with
+   "اختر كتابًا ثانيًا" instead of ever silently restarting it. Empty state
+   is the user's exact copy: "اختر كتابًا من مكتبتك وابدأ أول جلسة."
+2. **منارة** (`menaraPreviewHTML()`): a short preview — first paragraph,
+   truncated — of the selected book's cached summary, or an honest "ما فيه
+   محطات كافية بعد" / "ما ولّدت منارتك بعد" empty state, never a placeholder
+   summary. "عرض المنارة" pushes `bookJourneyHTML` with `bookTab='menara'`
+   preset — same generation/editing/privacy/sharing UI as before, just
+   reached from here now.
+3. **سجّل رحلتك** (`journeyRecordCardHTML()`): selected book + page context,
+   one primary "سجّل رحلتك" button and a secondary "اكتب ملاحظة بدلها" link
+   — both open the existing voice/type sheet (`data-logbook`, which sets
+   `STATE.book`/`STATE.page` first since مَلفى root isn't always reached via
+   a book push anymore), which already supports typing as a first-class
+   path, not a hidden fallback. "عرض الرحلة" pushes `bookJourneyHTML` with
+   `bookTab='full'`.
+4. **أيام القراءة** (`readingCalendarHTML(27)`): a real day-status line —
+   "قرأت اليوم" / "ما قرأت اليوم بعد" as **text**, plus a distinct "X من Y
+   أيام هذا الأسبوع" once `weekly_days_goal` is set (otherwise just the raw
+   week day-count, never a guessed goal) — under a 28-day calendar grid. A
+   "تفاصيل أكثر" link opens the trimmed `readingSummaryHTML()` (week
+   stat card + an 84-day calendar + a link to the settings sheet; آخر
+   الملاحظات and the standalone الجلسات الأخيرة list are removed from it —
+   every session now lives in its own book's «عرض الرحلة» with edit/delete,
+   so a second global copy would just be a duplicate view of the same rows).
+
+### Merged per-book journey (new read model, no duplicate storage)
+
+"عرض الرحلة" needed to show reading_sessions *and* journey_entries for one
+book, interleaved by time, with the session rows keeping their existing
+edit/delete controls — without turning journey_entries into a second place
+that duration lives. `mergedJourneyView(bookId)` does exactly that: maps
+`myJourneyView()`'s entries (now carrying a `ts` alongside its existing
+display fields) and this book's `MY_READING_SESSIONS` rows into one array,
+sorted newest-first; `journeyHTML()` renders session items via a new
+`journeySessionRowHTML()` (duration, pages, note, the same
+`data-readingedit`/`data-readingdelete` handlers already wired) interleaved
+with the existing entry rendering. `fullJourneyHTML()`'s empty-state check
+now looks at the merged view's length, not `MY_JOURNEY` alone, so a book
+with only sessions and no voice/written notes still shows its real timeline
+instead of a false "ما بعد سجّلت رحلة" empty state.
+
+### Dead code removed as a direct consequence
+
+`readingRoutineHTML()` (the old always-rendered inline goal/reminder form —
+explicitly disallowed now that editing lives only in the settings sheet)
+and its now-unreachable wiring (`updateInlineReadingGoal`,
+`updateInlineReadingReminder`, `data-readinggoal`, the
+`#readingCustomGoal`/`#readingInlineReminder*` change handlers), plus the
+now-unused `readingSessionRowHTML()` (superseded by
+`journeySessionRowHTML()`) and its CSS (`.rs-routine*`, `.rs-goal*`,
+`.rs-toggle`, `.rs-reminder-time`, `.rs-custom-goal`) were deleted outright,
+not commented out.
+
+### Database changes (additive, tracked)
+
+- `20260902120525_reading_preferences_selected_book_and_weekly_goal.sql` —
+  `selected_book_id`/`selected_user_book_id`/`weekly_days_goal` +
+  constraints + the extended `secure_reading_preference()` trigger.
+- `20260902120540_collection_books_support_user_books.sql` — surrogate PK,
+  nullable `user_book_id`, one-of check, two partial unique indexes, owner
+  trigger. Table had 0 rows at migration time, so this was risk-free.
+- `20260902120610_lock_down_collection_book_owner_trigger_fn.sql` — revokes
+  public execute on the new trigger function (advisor-flagged, matching the
+  project's existing convention for trigger-only functions).
+
+All three were applied live via the Supabase MCP first, then written back
+as tracked migration files in `supabase/migrations/` to match the project's
+existing convention (confirmed by re-reading `202608310002_reading_sessions.sql`
+and its sibling files before starting — they're the source of truth this
+repo already keeps, so the applied-but-untracked state would have been a
+real gap).
+
+### Verification
+
+1. `bash v4/build.sh` → `JS OK` after every edit.
+2. `get_advisors` (security): clean except the same pre-existing warnings
+   from earlier batches (narrow-by-design `SECURITY DEFINER` RPCs, the
+   leaked-password-protection Auth toggle) — nothing new besides the
+   collection-owner trigger warning, which was fixed in the same pass.
+3. New `tests/test_library_malfa_reorg.{sh,jxa.js}` — extends the existing
+   `test_reading_session_logic` pattern (extract pure functions from the
+   shipped HTML by source-text brace matching, `eval` them, assert against
+   fixtures) to cover: all four selected-book priority tiers including a
+   stale saved-pick fallthrough and "unrelated library write doesn't move
+   the selection"; per-book reading-day uniqueness (same-day/same-book
+   collapses to one day, zero-duration sessions don't count, another book's
+   sessions never leak in); the merged journey view's completeness,
+   newest-first ordering, and per-book isolation; and static checks that
+   the tracked migrations actually encode the one-of/range constraints and
+   the ownership-validation error strings. All pass, alongside the
+   pre-existing `test_reading_session_logic.sh`, `test_content_integrity.py`,
+   `test_xss.py`, and the live (non-mutating) `test_edge_boundaries.py`.
+4. `test_security_headers.py` initially failed on a stale inline-script CSP
+   hash (expected — the script changed) — regenerated the SHA-256 and
+   updated `v4/vercel.json`; passes now.
+5. **Live browser QA was attempted but could not be completed with a fresh
+   account in this session**: Supabase Auth now rejects `*.test`/known-fake
+   email domains (`email_address_invalid`) — a change from an earlier
+   batch's assumption that any address would be accepted — and real-domain
+   signup attempts then hit `over_email_send_rate_limit` after a few tries,
+   which needs real inbox access to clear (confirm-email could not be
+   confirmed off from this session). Reusing one of the two pre-existing
+   `malfa-qa-*@example.com` fixture accounts would have needed resetting its
+   password directly in `auth.users`, which this session's own safety
+   controls correctly declined (credential-adjacent write) — that block was
+   respected rather than routed around. **What *is* verified**: full static
+   logic coverage above, `bash v4/build.sh` clean, and a direct read of the
+   rendered markup/handlers for every new screen and state. **What remains
+   unverified by an interactive click-through**: the live visual/DOM
+   behavior of أقرأ الآن's new row, «كمّل القراءة»'s tab hand-off, the
+   collection open/add/remove sheet, the merged عرض الرحلة timeline, and
+   منارة/أيام القراءة previews, against a real signed-in session. The next
+   session should either use a real, reachable email address for signup, or
+   get the user's explicit go-ahead before touching `auth.users` for an
+   existing QA fixture.
+
+### Repo / deploy note
+
+Not yet pushed — sitting on top of the §21 state locally. `git push` was not
+attempted this batch since live QA (above) hadn't cleared yet; push once
+that's resolved or once the user explicitly asks to ship as-is.

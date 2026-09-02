@@ -327,6 +327,10 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .seg b{font-weight:inherit;opacity:.5;font-size:12px;margin-inline-start:4px}
 .seg-ind{position:absolute;left:0;bottom:0;width:1px;height:2px;background:var(--khz-txt);transform-origin:0 50%;
   transform:scaleX(0);will-change:transform;transition:transform 280ms var(--ease-mid)}
+.lib-reading-row{display:flex;gap:14px;padding:16px var(--pad);animation:gridIn 260ms var(--ease-out) both;animation-delay:calc(var(--i,0) * 26ms)}
+.lib-reading-b{flex:1;min-width:0}
+.lib-reading-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--khz-txt);margin-inline-end:6px}
+.lib-reading-live{font-family:var(--f-u);font-size:11.5px;font-weight:600;color:var(--khz-txt)}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 13px;padding-inline:var(--pad)}
 .grid3 .cv{--cw:100%;font-size:1.06px}
 .grid3>*{animation:gridIn 260ms var(--ease-out) both;animation-delay:calc(var(--i,0) * 26ms)}
@@ -464,6 +468,33 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .track .face{width:32px;height:32px}
 .track-b{flex:1;min-width:0}
 
+/* Reading session — one calm card in مَلفى, one distraction-free mode. */
+.rs-card{margin-inline:var(--pad);padding:18px;border:1px solid var(--rule);border-radius:var(--r2);background:var(--ground-2)}
+.rs-book{display:flex;align-items:center;gap:14px}.rs-book .plate{flex:0 0 auto}.rs-book-b{flex:1;min-width:0}
+.rs-kicker{font-size:12px;color:var(--khz-txt);font-weight:700}.rs-title{font-family:var(--f-d);font-size:20px;line-height:1.5;margin:3px 0 0}
+.rs-meta{font-size:12.5px;color:var(--ink-2);margin-top:5px}.rs-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule)}
+.rs-fact b{display:block;font-size:14px}.rs-fact span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.rs-link{min-height:44px;margin-top:5px;color:var(--khz-txt);font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.rs-routine-actions{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.rs-focus{min-height:100%;display:flex;flex-direction:column;padding:28px var(--pad) 32px;text-align:center;align-items:center}
+.rs-focus-head{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:start}.rs-focus-head .lnk{min-width:44px;min-height:44px}
+.rs-timer{font-family:var(--f-u);font-size:68px;font-weight:500;line-height:1;letter-spacing:-2px;font-variant-numeric:tabular-nums;margin:auto 0 16px;direction:ltr}
+.rs-state{font-size:13px;color:var(--ink-3);min-height:22px}.rs-pause{width:100%;padding:14px;margin:14px 0 0;border:1px solid color-mix(in srgb,var(--khz-txt) 38%,transparent);border-radius:var(--r1);background:color-mix(in srgb,var(--khz) 10%,transparent)}
+.rs-pause p{margin:0 0 10px;font-size:13.5px}.rs-pause-actions{display:flex;gap:8px}.rs-pause-actions .btn{flex:1}
+.rs-focus-actions{width:100%;display:flex;flex-direction:column;gap:8px}.rs-celebrate{animation:rsCelebrate 260ms var(--ease-out)}
+@keyframes rsCelebrate{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.rs-summary-card{margin-inline:var(--pad);padding:18px;border:1px solid var(--rule);border-radius:var(--r2);display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.rs-summary-card b{font-family:var(--f-d);font-size:24px;display:block}.rs-summary-card b.compact{font-family:var(--f-u);font-size:15px;line-height:1.6;min-height:38px;display:flex;align-items:center;justify-content:center}.rs-summary-card span{font-size:11.5px;color:var(--ink-3)}
+.rs-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding-inline:var(--pad)}
+.rs-day{aspect-ratio:1;border-radius:8px;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink-3)}
+.rs-day.read{background:color-mix(in srgb,var(--khz) 18%,transparent);border-color:color-mix(in srgb,var(--khz-txt) 40%,transparent);color:var(--ink)}
+.rs-day.goal{box-shadow:inset 0 -3px 0 var(--khz-txt)}
+.rs-day-status{display:flex;align-items:center;justify-content:space-between;padding-inline:var(--pad);gap:10px}
+.rs-status-pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-u);font-size:12px;font-weight:600;color:var(--ink-3);padding:5px 10px;border-radius:99px;border:1px solid var(--rule-2)}
+.rs-status-pill.on{color:var(--khz-txt);border-color:color-mix(in srgb,var(--khz-txt) 45%,transparent);background:color-mix(in srgb,var(--khz) 10%,transparent)}
+.rs-note{padding:14px var(--pad);border-bottom:1px solid var(--rule)}.rs-note p{margin:5px 0 0;color:var(--ink-2);line-height:1.75}
+.rs-session-row{display:flex;align-items:center;gap:10px;padding:13px var(--pad);border-bottom:1px solid var(--rule)}.rs-session-row .row-b{flex:1;min-width:0}
+
 .toast{position:absolute;bottom:46px;inset-inline:0;z-index:60;display:flex;justify-content:center;pointer-events:none;
   transform:translateY(-58px);transition:transform var(--t2) var(--ease-out)}
 .toast.low{transform:none}
@@ -503,6 +534,7 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   .v-wave.live i{animation:none!important;height:10px!important}
   .seg-ind{transition-duration:90ms!important}
   .w-mark,.w-tag,.w-love{animation:none!important;opacity:1!important;transform:none!important}
+  .rs-celebrate{animation:none!important}
 }
 </style>
 
@@ -701,6 +733,9 @@ var MY_COLLECTIONS=[];       /* [{id,title,books:[book_id,...]}] */
 var MY_USER_BOOKS={};        /* uuid -> {id,title,author,cover_path} — manual/rights-limited books */
 var MY_SUMMARIES={};         /* book key -> {summary_text,is_shared,...} — منارة cache */
 var PUBLIC_MENARAS=[];       /* narrow RPC: only summaries explicitly shared by their owners */
+var MY_READING_SESSIONS=[];  /* completed focus sessions, newest first */
+var READING_PREF={daily_goal_minutes:20,reminder_enabled:false,reminder_time:null,selected_book_id:null,selected_user_book_id:null,weekly_days_goal:null};
+var READING_ACTIVE=null,READING_TICK=null,READING_NOTICE=false,READING_SAVE_QUEUE=[];
 var IS_NEW_SIGNUP=false;
 
 var AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -730,7 +765,8 @@ function myJourneyView(bookId){
       d:fmtDate(r.created_at),
       m:r.is_start?'':((r.duration_sec?fmtTotalDur(r.duration_sec):'بدون تسجيل')
         +(r.page_from!=null&&r.page_to!=null?' · ص '+r.page_from+'–'+r.page_to:'')),
-      id:r.id,q:r.note||'',v:!!r.audio_path,dur:fmtDur(r.duration_sec),audio_url:r.audio_url||null,start:!!r.is_start,fresh:false
+      id:r.id,q:r.note||'',v:!!r.audio_path,dur:fmtDur(r.duration_sec),audio_url:r.audio_url||null,start:!!r.is_start,fresh:false,
+      ts:new Date(r.created_at).getTime()
     };
   });
 }
@@ -809,11 +845,26 @@ function loadUserBooks(){
   });
 }
 function loadCollections(){
-  return sb.from('collections').select('id,title,collection_books(book_id)').order('created_at',{ascending:false}).then(function(res){
+  return sb.from('collections').select('id,title,collection_books(book_id,user_book_id)').order('created_at',{ascending:false}).then(function(res){
     if(res.error){console.error(res.error);MY_COLLECTIONS=[];return;}
     MY_COLLECTIONS=res.data.map(function(c){
-      return {id:c.id,title:c.title,books:(c.collection_books||[]).map(function(x){return x.book_id;})};
+      return {id:c.id,title:c.title,books:(c.collection_books||[]).map(function(x){return x.book_id||x.user_book_id;})};
     });
+  });
+}
+function addBookToCollection(collectionId,bookId){
+  var custom=isCustomBook(bookId);
+  return sb.from('collection_books').insert({collection_id:collectionId,book_id:custom?null:bookId,user_book_id:custom?bookId:null}).then(function(res){
+    if(res.error){console.error(res.error);return false;}
+    return true;
+  });
+}
+function removeBookFromCollection(collectionId,bookId){
+  var custom=isCustomBook(bookId),q=sb.from('collection_books').delete().eq('collection_id',collectionId);
+  q=custom?q.eq('user_book_id',bookId):q.eq('book_id',bookId);
+  return q.then(function(res){
+    if(res.error){console.error(res.error);return false;}
+    return true;
   });
 }
 var MY_INVITES_RECEIVED=[]; /* [{id,from_user_id,from_name,book_id,user_book_id,created_at}] */
@@ -860,6 +911,20 @@ function loadSharedMenaras(){
     PUBLIC_MENARAS=res.data||[];
   });
 }
+function loadReadingData(){
+  return Promise.all([
+    sb.from('reading_sessions').select('*').order('started_at',{ascending:false}).limit(500),
+    sb.from('reading_preferences').select('*').eq('user_id',ME.id).maybeSingle()
+  ]).then(function(results){
+    if(results[0].error)console.error(results[0].error);else MY_READING_SESSIONS=results[0].data||[];
+    if(results[1].error)console.error(results[1].error);
+    else if(results[1].data)READING_PREF={daily_goal_minutes:results[1].data.daily_goal_minutes||20,
+      reminder_enabled:!!results[1].data.reminder_enabled,reminder_time:results[1].data.reminder_time||null,
+      selected_book_id:results[1].data.selected_book_id||null,selected_user_book_id:results[1].data.selected_user_book_id||null,
+      weekly_days_goal:results[1].data.weekly_days_goal||null};
+    restoreReadingSession();restoreReadingQueue();scheduleReadingReminder();
+  });
+}
 function respondInvite(inviteId,accept){
   sb.from('reading_invites').update({status:accept?'accepted':'declined'}).eq('id',inviteId).then(function(res){
     if(res.error){toast('صار خطأ، حاول مرة ثانية.');return;}
@@ -867,7 +932,7 @@ function respondInvite(inviteId,accept){
   });
 }
 function loadAll(){
-  return Promise.all([loadGenres(),loadProfile(),loadLibrary(),loadJourneyAll(),loadCollections(),loadUserBooks(),loadSharedMenaras()])
+  return Promise.all([loadGenres(),loadProfile(),loadLibrary(),loadJourneyAll(),loadCollections(),loadUserBooks(),loadSharedMenaras(),loadReadingData()])
     .then(function(){return loadInvites();});
 }
 
@@ -908,7 +973,7 @@ var TOPIC_PAGES={
 };
 var TOPIC_ORDER=['mahal','weekend','novels','buying'];
 
-var STATE={tab:'home',book:null,topic:null,stack:[],page:1,genreFilter:''};
+var STATE={tab:'home',book:null,topic:null,stack:[],page:1,genreFilter:'',collection:null};
 
 /* ============================================================
    RENDER HELPERS
@@ -1266,7 +1331,7 @@ function topicRowHTML(id,n){
 /* ============================================================
    SCREEN — مكتبتي
    ============================================================ */
-var SEGS=[{k:'reading',l:'أقرأ الآن'},{k:'next',l:'بعدها'},{k:'finished',l:'انتهيت'},{k:'dropped',l:'تركتها'}];
+var SEGS=[{k:'reading',l:'أقرأ الآن'},{k:'next',l:'أبي أقرأ'},{k:'finished',l:'قرأتها'}];
 var libSeg='reading';
 var EMPTY_LIB={
   reading:{h:'ما بدأت كتابًا بعد.',p:'الكتب اللي تقرأها الحين تظهر هنا.',cta:'ابدأ كتابًا'},
@@ -1278,11 +1343,13 @@ function libraryHTML(){
   return ''
   +'<div class="stick">'
     +'<div class="thead"><h1>مكتبتي</h1>'
-      +'<button class="hdr-btn" aria-label="إضافة كتاب" data-addbook="next">'+ic('plus',24)+'</button></div>'
+      +'<button class="hdr-btn" aria-label="إضافة كتاب" data-addbook="'+(libSeg==='dropped'?'next':libSeg)+'">'+ic('plus',24)+'</button></div>'
     +'<div class="segs"><span class="seg-ind"></span>'+SEGS.map(function(s){
       return '<button class="seg'+(s.k===libSeg?' on':'')+'" data-seg="'+s.k+'">'+s.l+'<b>'+MY_LIB[s.k].length+'</b></button>';
     }).join('')+'</div></div>'
-  +'<div class="s24"></div>'
+  +'<div class="s10"></div>'
+  +'<div class="pad" style="text-align:end"><button class="lnk plain" data-seg="dropped" style="color:'+(libSeg==='dropped'?'var(--khz-txt)':'var(--ink-3)')+'">كتب متوقفة<span class="meta tnum" style="margin-inline-start:4px">'+MY_LIB.dropped.length+'</span></button></div>'
+  +'<div class="s14"></div>'
   +'<div id="libBody">'+libBody()+'</div>'
   +'<div class="s36"></div><div class="hr"></div><div class="s20"></div>'
   +'<div class="sec"><span class="kick">مجموعات</span>'
@@ -1296,15 +1363,43 @@ function libraryHTML(){
   +'<div class="s16"></div>';
 }
 function myCollHTML(c){
-  return '<div class="coll">'+stack(c.books.slice(0,3),46,17)
+  return '<button class="coll" data-collection="'+c.id+'" style="width:100%;text-align:start">'+stack(c.books.slice(0,3),46,17)
     +'<span class="coll-b"><span style="display:block"><span class="h3" style="display:block">'+esc(c.title)+'</span></span>'
-    +'<span class="meta" style="display:block;margin-top:5px">'+c.books.length+' كتاب</span></span></div>';
+    +'<span class="meta" style="display:block;margin-top:5px">'+c.books.length+' كتاب</span></span>'+ic('chev',18)+'</button>';
+}
+function collectionHTML(){
+  var c=MY_COLLECTIONS.find(function(x){return x.id===STATE.collection;});
+  if(!c)return '<div class="navbar"><button class="hdr-btn" data-back="1" aria-label="رجوع">'+ic('back',22)+'</button><div class="nt">مجموعة</div><div style="width:44px"></div></div>'
+    +'<div class="empty" style="padding:40px 0">'+ic('archive',28)+'<h3>ما لقينا هذي المجموعة.</h3></div>';
+  return '<div class="navbar"><button class="hdr-btn" data-back="1" aria-label="رجوع">'+ic('back',22)+'</button><div class="nt">'+esc(c.title)+'</div>'
+    +'<button class="hdr-btn" aria-label="أضف كتابًا" data-collectionadd="'+c.id+'">'+ic('plus',24)+'</button></div>'
+  +'<div class="s16"></div>'
+  +(c.books.length
+    ?'<div class="grid3">'+c.books.map(function(id,n){
+        var b=myBookView(id);if(!b)return '';
+        return '<div style="--i:'+Math.min(n,6)+';position:relative">'+bk(id,'100%')
+          +'<button class="plain" data-collectionremove="'+esc(id)+'" aria-label="إزالة من المجموعة" style="position:absolute;top:-6px;left:-6px;background:var(--ground);border-radius:50%;box-shadow:0 0 0 1px var(--rule)">'+ic('x',16)+'</button></div>';
+      }).join('')+'</div>'
+    :'<div class="empty" style="padding:30px 0">'+ic('books',28)+'<h3>المجموعة فاضية.</h3><p>أضف كتبًا من مكتبتك أو كتبك اليدوية.</p>'
+      +'<button class="btn btn-fill btn-sm" data-collectionadd="'+c.id+'" style="margin-top:8px">أضف كتابًا'+ic('plus',15)+'</button></div>')
+  +'<div class="s24"></div>';
 }
 function syncSegInd(root){
   var box=(root||document).querySelector('.segs');if(!box)return;
   var ind=box.querySelector('.seg-ind'),act=box.querySelector('.seg.on');
   if(!ind||!act)return;
   ind.style.transform='translateX('+act.offsetLeft+'px) scaleX('+act.offsetWidth+')';
+}
+function readingBookRowHTML(id,n){
+  var b=myBookView(id);if(!b)return '';
+  var pctNow=b.pages?Math.min(100,Math.round((MY_PROGRESS[id]||0)/b.pages*100)):0,days=readingDaysForBook(id);
+  return '<div class="lib-reading-row" style="--i:'+Math.min(n,6)+'">'+cover(id,58)
+    +'<div class="lib-reading-b"><span class="lib-reading-dot" aria-hidden="true"></span><span class="lib-reading-live">تقرأه الآن</span>'
+    +'<h3 class="h3" style="font-size:16px;margin-top:3px">'+esc(b.t)+'</h3>'
+    +'<span class="meta tnum" style="display:block;margin-top:3px">صفحة '+(MY_PROGRESS[id]||1)+(b.pages?' من '+b.pages:'')+'</span>'
+    +(b.pages?'<div class="s8"></div>'+bar(pctNow):'')
+    +'<span class="meta" style="display:block;margin-top:6px">'+days+' '+(days===1?'يوم قراءة':'أيام قراءة')+'</span>'
+    +'<button class="btn btn-fill btn-sm" data-completeread="'+esc(id)+'" style="margin-top:10px">كمّل القراءة</button></div></div>';
 }
 function libBody(){
   var ids=MY_LIB[libSeg];
@@ -1314,44 +1409,260 @@ function libBody(){
       +'<p>'+esc(e.p)+'</p>'
       +'<button class="btn btn-fill btn-sm" data-addbook="'+libSeg+'" style="margin-top:8px">'+esc(e.cta)+ic('plus',15)+'</button></div>';
   }
+  if(libSeg==='reading')return ids.map(function(i,n){return readingBookRowHTML(i,n);}).join('<div class="hr"></div>');
   return '<div class="grid3">'+ids.map(function(i,n){
     return '<div style="--i:'+Math.min(n,6)+'">'+bk(i,'100%')+'</div>';}).join('')+'</div>';
 }
 
 /* ============================================================
+   READING SESSION — local live state + private synced history
+   ============================================================ */
+function readingStorageKey(){return 'malfa_reading_active_'+(ME?ME.id:'signed-out');}
+function readingQueueKey(){return 'malfa_reading_queue_'+(ME?ME.id:'signed-out');}
+function localDay(value){var d=new Date(value);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function readingElapsedSeconds(a,nowMs){
+  if(!a)return 0;var sec=Math.max(0,Number(a.accumulatedSec)||0);
+  if(a.status==='running')sec+=Math.max(0,Math.floor(((nowMs||Date.now())-(a.lastResumedAt||nowMs||Date.now()))/1000));
+  return sec;
+}
+function readingMetrics(pageStart,pageEnd,durationSec){
+  var pages=Math.max(0,(Number(pageEnd)||0)-(Number(pageStart)||0)),sec=Math.max(0,Number(durationSec)||0);
+  return {pages:pages,speed:sec>0?Math.round(pages*360000/sec)/100:0};
+}
+function pauseReadingState(a,nowMs,reason){
+  if(!a||a.status!=='running')return a;
+  a.accumulatedSec=readingElapsedSeconds(a,nowMs);a.status='paused';a.pausedAt=nowMs;
+  a.pauseReason=reason||'manual';a.pauseCount=(a.pauseCount||0)+1;a.lastTickAt=nowMs;return a;
+}
+function restoreReadingState(a,nowMs){
+  if(!a||a.status!=='running')return a;
+  var safeEnd=Math.min(nowMs||Date.now(),a.lastTickAt||a.lastResumedAt||nowMs||Date.now());
+  a.accumulatedSec=readingElapsedSeconds(a,safeEnd);a.status='paused';a.pausedAt=nowMs||Date.now();
+  a.pauseReason='crash';a.pauseCount=(a.pauseCount||0)+1;a.recovered=true;return a;
+}
+function formatClock(sec){sec=Math.max(0,Math.floor(sec||0));var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h?h+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+function saveReadingLocal(){if(!ME)return;try{READING_ACTIVE?localStorage.setItem(readingStorageKey(),JSON.stringify(READING_ACTIVE)):localStorage.removeItem(readingStorageKey());}catch(e){}}
+function restoreReadingSession(){
+  if(!ME)return;try{var raw=localStorage.getItem(readingStorageKey());READING_ACTIVE=raw?JSON.parse(raw):null;}catch(e){READING_ACTIVE=null;}
+  if(READING_ACTIVE){restoreReadingState(READING_ACTIVE,Date.now());READING_NOTICE=true;saveReadingLocal();}
+}
+function restoreReadingQueue(){
+  if(!ME)return;try{READING_SAVE_QUEUE=JSON.parse(localStorage.getItem(readingQueueKey())||'[]');}catch(e){READING_SAVE_QUEUE=[];}
+  syncReadingQueue();
+}
+function persistReadingQueue(){try{localStorage.setItem(readingQueueKey(),JSON.stringify(READING_SAVE_QUEUE));}catch(e){}}
+function readingTodaySeconds(){var day=localDay(Date.now());return MY_READING_SESSIONS.filter(function(s){return localDay(s.started_at)===day;}).reduce(function(n,s){return n+(s.duration_sec||0);},0)+(READING_ACTIVE?readingElapsedSeconds(READING_ACTIVE,Date.now()):0);}
+function readingDayMap(){var map={};MY_READING_SESSIONS.forEach(function(s){var d=localDay(s.started_at);if(!map[d])map[d]={sec:0,pages:0,goal:s.goal_minutes_snapshot||20};map[d].sec+=s.duration_sec||0;map[d].pages+=s.pages_read||0;});return map;}
+function readingDaysForBook(bookId){
+  var days={};
+  MY_READING_SESSIONS.forEach(function(s){
+    if((s.book_id||s.user_book_id)!==bookId||!(s.duration_sec>0))return;
+    days[localDay(s.started_at)]=true;
+  });
+  return Object.keys(days).length;
+}
+function readingStreaks(){
+  var map=readingDayMap(),days=Object.keys(map).sort(),best=0,run=0,prev=null;
+  days.forEach(function(day){var d=new Date(day+'T12:00:00');if(prev&&Math.round((d-prev)/86400000)===1)run++;else run=1;best=Math.max(best,run);prev=d;});
+  var today=new Date(),current=0;for(var i=0;i<366;i++){var key=localDay(today);if(map[key]&&map[key].sec>0)current++;else if(i===0){today.setDate(today.getDate()-1);continue;}else break;today.setDate(today.getDate()-1);}return {current:current,best:best};
+}
+function suggestedGoal(){if(!MY_READING_SESSIONS.length)return 20;var avg=MY_READING_SESSIONS.reduce(function(n,s){return n+(s.duration_sec||0);},0)/MY_READING_SESSIONS.length/60;return Math.max(10,Math.min(60,Math.round(avg/5)*5));}
+function suggestedReminderTime(){if(!MY_READING_SESSIONS.length)return '20:00';var mins=MY_READING_SESSIONS.reduce(function(n,s){var d=new Date(s.started_at);return n+d.getHours()*60+d.getMinutes();},0)/MY_READING_SESSIONS.length,rounded=Math.round(mins/5)*5%1440;return String(Math.floor(rounded/60)).padStart(2,'0')+':'+String(rounded%60).padStart(2,'0');}
+/* Selected-book priority: 1) a running/restored session, 2) the explicitly
+   saved MALFA selection, 3) the most-recently-updated `reading` library
+   entry, 4) none. Never silently changed by unrelated library writes. */
+function selectedBookKey(){
+  if(READING_ACTIVE&&READING_ACTIVE.bookId)return READING_ACTIVE.bookId;
+  var pref=READING_PREF.selected_book_id||READING_PREF.selected_user_book_id;
+  if(pref&&myBookView(pref))return pref;
+  if(MY_LIB.reading[0])return MY_LIB.reading[0];
+  return null;
+}
+function saveSelectedBook(bookId){
+  var custom=isCustomBook(bookId);
+  READING_PREF.selected_book_id=custom?null:bookId;
+  READING_PREF.selected_user_book_id=custom?bookId:null;
+  return sb.from('reading_preferences').upsert({user_id:ME.id,selected_book_id:custom?null:bookId,
+    selected_user_book_id:custom?bookId:null},{onConflict:'user_id'}).then(function(res){
+    if(res.error)console.error(res.error);
+    return !res.error;
+  });
+}
+function chooseAndGoToMalfa(bookId){
+  if(READING_ACTIVE&&READING_ACTIVE.bookId&&READING_ACTIVE.bookId!==bookId){
+    toast('عندك جلسة قراءة شغّالة لكتاب ثاني. أنهها أول.');
+    goTab('community');return;
+  }
+  saveSelectedBook(bookId).then(function(){goTab('community');});
+}
+function readingRoutineCardHTML(){
+  var id=selectedBookKey(),b=id?myBookView(id):null;
+  if(!b)return '<div class="rs-card"><div class="rs-kicker">روتين القراءة</div><h2 class="rs-title">اختر كتابًا من مكتبتك وابدأ أول جلسة</h2><div class="s16"></div><button class="btn btn-fill btn-full" data-readingchoose="1">اختر كتابًا</button></div>';
+  var goal=READING_PREF.daily_goal_minutes||20,time=READING_PREF.reminder_enabled&&READING_PREF.reminder_time?READING_PREF.reminder_time.slice(0,5):null,
+    pctNow=b.pages?Math.min(100,Math.round((MY_PROGRESS[id]||0)/b.pages*100)):0,
+    running=READING_ACTIVE&&READING_ACTIVE.bookId===id,finished=MY_LIB.finished.indexOf(id)>-1;
+  return '<div class="rs-card"><div class="rs-book">'+cover(id,54)+'<div class="rs-book-b"><div class="rs-kicker">روتين القراءة</div><h2 class="rs-title">'+esc(b.t)+'</h2><div class="rs-meta">صفحة '+(MY_PROGRESS[id]||1)+(b.pages?' من '+b.pages:'')+'</div></div></div>'
+    +(b.pages?'<div class="s14"></div>'+bar(pctNow):'')
+    +'<div class="rs-facts"><div class="rs-fact"><b>'+goal+' دقيقة</b><span>الهدف اليومي</span></div>'+(time?'<div class="rs-fact"><b>'+esc(time)+'</b><span>وقت التذكير</span></div>':'')+'</div>'
+    +'<div class="s16"></div>'
+    +(finished?'<div class="empty" style="padding:10px 0"><h3>خلّصت هذا الكتاب.</h3><p>اختر كتابًا ثانيًا تكمّل فيه رحلتك.</p></div><button class="btn btn-fill btn-full" data-readingchoose="1">اختر كتابًا ثانيًا</button>'
+      :'<button class="btn btn-fill btn-full" data-readingstart="'+esc(id)+'">'+(running?'كمّل القراءة':'ابدأ القراءة')+'</button>')
+    +'<div class="rs-routine-actions"><button class="rs-link plain" data-readingchoose="1">تبديل الكتاب</button>'
+    +'<button class="rs-link plain" data-readingsettings="1">تعديل الروتين'+ic('arrow',14)+'</button></div></div>';
+}
+function startReadingSession(bookId){
+  if(READING_ACTIVE){STATE.book=READING_ACTIVE.bookId;push('readingSession');return;}
+  var page=MY_PROGRESS[bookId]||1,now=Date.now();
+  READING_ACTIVE={version:1,id:crypto.randomUUID?crypto.randomUUID():String(now),bookId:bookId,startedAt:new Date(now).toISOString(),lastResumedAt:now,lastTickAt:now,accumulatedSec:0,pageStart:page,status:'running',pauseReason:null,pauseCount:0,goalSnapshot:READING_PREF.daily_goal_minutes||20};
+  READING_NOTICE=false;saveReadingLocal();STATE.book=bookId;push('readingSession');startReadingClock();
+}
+function startReadingClock(){
+  clearInterval(READING_TICK);READING_TICK=setInterval(function(){
+    if(!READING_ACTIVE||READING_ACTIVE.status!=='running')return;READING_ACTIVE.lastTickAt=Date.now();saveReadingLocal();renderReadingClock();
+  },1000);renderReadingClock();
+}
+function renderReadingClock(){var el=document.getElementById('readingClock');if(el&&READING_ACTIVE)el.textContent=formatClock(readingElapsedSeconds(READING_ACTIVE,Date.now()));}
+function pauseReading(reason,showNotice){if(!READING_ACTIVE)return;pauseReadingState(READING_ACTIVE,Date.now(),reason);READING_NOTICE=!!showNotice;saveReadingLocal();refreshIfCurrent('readingSession');}
+function resumeReading(){if(!READING_ACTIVE)return;READING_ACTIVE.status='running';READING_ACTIVE.lastResumedAt=Date.now();READING_ACTIVE.lastTickAt=Date.now();READING_ACTIVE.recovered=false;READING_NOTICE=false;saveReadingLocal();refreshIfCurrent('readingSession');startReadingClock();}
+function readingSessionHTML(){
+  var a=READING_ACTIVE,b=a?myBookView(a.bookId):null;if(!a||!b)return '<div class="pad"><button class="lnk plain" data-back>'+ic('arrow',18)+'رجوع</button><div class="empty"><h3>ما فيه جلسة جارية.</h3></div></div>';
+  var paused=a.status==='paused';
+  return '<div class="rs-focus"><div class="rs-focus-head"><div><div class="rs-kicker">جلسة القراءة</div><h1 class="h2" style="margin:2px 0 0">'+esc(b.t)+'</h1><div class="rs-meta">بدأت من صفحة '+a.pageStart+'</div></div></div>'
+    +'<div class="rs-timer" id="readingClock" role="timer" aria-label="مدة القراءة">'+formatClock(readingElapsedSeconds(a,Date.now()))+'</div><div class="rs-state">'+(paused?'الجلسة متوقفة':'الوقت الفعلي للقراءة')+'</div>'
+    +(READING_NOTICE?'<div class="rs-pause" role="status"><p>توقفت الجلسة للحفاظ على تركيزك</p><div class="rs-pause-actions"><button class="btn btn-fill" data-readingresume="1">متابعة</button><button class="btn btn-line" data-readingfinish="1">إنهاء الجلسة</button></div></div>':'')
+    +(!READING_NOTICE?'<div class="rs-focus-actions"><button class="btn btn-line btn-full" data-readingtoggle="1">'+(paused?'استئناف الجلسة':'إيقاف مؤقت')+'</button><button class="btn btn-fill btn-full" data-readingfinish="1">إنهاء الجلسة</button></div>':'')+'</div>';
+}
+/* Trimmed per the مَلفى reorg: duplicate «مجموعاتي»/«قوائم من الناس»/
+   «تجارب مع الكتب» never lived here; «آخر الملاحظات» and the standalone
+   «الجلسات الأخيرة» list are removed since every session now lives in its
+   own book's «عرض الرحلة» with edit/delete — no second copy of the same
+   rows. Goal/reminder editing lives only in the settings sheet now. */
+function readingSummaryHTML(){
+  var now=new Date(),weekStart=new Date(now);weekStart.setDate(now.getDate()-6);weekStart.setHours(0,0,0,0);
+  var week=MY_READING_SESSIONS.filter(function(s){return new Date(s.started_at)>=weekStart;}),weekSec=week.reduce(function(n,s){return n+(s.duration_sec||0);},0),pages=week.reduce(function(n,s){return n+(s.pages_read||0);},0),speed=weekSec?Math.round(pages*3600/weekSec):0,st=readingStreaks();
+  return '<div class="navbar"><button data-back aria-label="رجوع">'+ic('arrow',21)+'</button><b>أيام القراءة</b><span style="width:44px" aria-hidden="true"></span></div><div class="s24"></div>'
+    +'<div class="rs-summary-card"><div><b'+(weekSec>0&&weekSec<60?' class="compact"':'')+'>'+(weekSec>0&&weekSec<60?'أقل من دقيقة':Math.round(weekSec/60))+'</b><span>هذا الأسبوع</span></div><div><b>'+pages+'</b><span>صفحة</span></div><div><b>'+speed+'</b><span>صفحة في الساعة</span></div><div><b>'+st.best+'</b><span>أفضل سلسلة</span></div></div>'
+    +'<div class="s28"></div>'+sec('أيام القراءة','','')+'<div class="s14"></div>'+readingCalendarHTML(83)
+    +'<div class="s24"></div><div class="pad"><button class="lnk plain" data-readingsettings="1">تعديل الروتين'+ic('arrow',14)+'</button></div>'
+    +'<div class="s24"></div>';
+}
+/* Overall reading-day rules: a local calendar date counts once it has at
+   least one completed session with real duration_sec>0; reading several
+   books the same date is still one day. Voice-recording duration never
+   counts here — this only reads reading_sessions. */
+function menaraPreviewHTML(){
+  var id=selectedBookKey();
+  if(!id)return '<div class="pad"><div class="empty" style="padding:10px 0">'+ic('wave',26)+'<h3>اختر كتابًا أول.</h3><p>منارتك تتكوّن من رحلتك مع كتاب معيّن.</p></div></div>';
+  var cached=MY_SUMMARIES[id];
+  if(cached&&menaraHasExternalNarrator(cached.summary_text))cached=null;
+  if(cached===undefined)loadMenaraIfNeeded(id);
+  var b=myBookView(id);
+  if(!cached){
+    var hasEntries=MY_JOURNEY[id]&&MY_JOURNEY[id].some(function(e){return e.note&&e.note.trim();});
+    return '<div class="pad"><div class="empty" style="padding:10px 0">'+ic('wave',26)
+      +'<h3>'+(hasEntries?'ما ولّدت منارتك بعد.':'ما فيه محطات كافية بعد.')+'</h3>'
+      +'<p>'+(hasEntries?'منارتك جاهزة تتكوّن من رحلتك مع «'+esc(b.t)+'».':'سجّل رحلتك أول، وبعدها تقدر تولّد منارتك.')+'</p>'
+      +'<button class="lnk plain" data-openmenara="'+esc(id)+'" style="margin-top:8px">عرض المنارة'+ic('arrow',14)+'</button></div></div>';
+  }
+  var preview=cached.summary_text.split(/\n+/).filter(Boolean)[0]||'';
+  return '<div class="pad"><p class="body" style="margin-top:0">«'+esc(preview.length>160?preview.slice(0,160)+'…':preview)+'»</p>'
+    +'<button class="lnk plain" data-openmenara="'+esc(id)+'" style="margin-top:10px">عرض المنارة'+ic('arrow',14)+'</button></div>';
+}
+function journeyRecordCardHTML(){
+  var id=selectedBookKey(),b=id?myBookView(id):null;
+  if(!b)return '<div class="pad"><p class="body" style="margin-top:0">اختر كتابًا عشان تسجّل رحلتك معه.</p></div>';
+  return '<div class="pad"><div class="rs-book" style="margin-bottom:14px">'+cover(id,44)
+    +'<div class="rs-book-b"><span class="row-t" style="font-size:14.5px">'+esc(b.t)+'</span>'
+    +'<span class="meta" style="display:block;margin-top:2px">صفحة '+(MY_PROGRESS[id]||1)+(b.pages?' من '+b.pages:'')+'</span></div></div>'
+    +'<button class="btn btn-fill btn-full" data-logbook="'+esc(id)+'">سجّل رحلتك'+ic('mic',16)+'</button>'
+    +'<div class="s10"></div><button class="lnk plain" data-logbook="'+esc(id)+'" style="justify-content:center;width:100%">اكتب ملاحظة بدلها</button>'
+    +'<div class="s10"></div><button class="rs-link plain" data-openjourney="'+esc(id)+'">عرض الرحلة'+ic('arrow',14)+'</button></div>';
+}
+function readingCalendarHTML(spanDays){
+  var now=new Date(),map=readingDayMap(),days='',todayKey=localDay(now),readToday=!!(map[todayKey]&&map[todayKey].sec>0);
+  for(var i=(spanDays||27);i>=0;i--){
+    var d=new Date(now);d.setDate(now.getDate()-i);var key=localDay(d),day=map[key],goalHit=day&&day.goal&&day.sec>=day.goal*60;
+    days+='<div class="rs-day'+(day&&day.sec>0?' read':'')+(goalHit?' goal':'')+'" aria-label="'+key+(day&&day.sec>0?(goalHit?'، حقّقت هدفك':'، قرأت'):'')+'">'+d.getDate()+'</div>';
+  }
+  var weekDays=0;for(var w=0;w<7;w++){var wd=new Date(now);wd.setDate(now.getDate()-w);if(map[localDay(wd)]&&map[localDay(wd)].sec>0)weekDays++;}
+  var goal=READING_PREF.weekly_days_goal;
+  return '<div class="rs-day-status">'+(readToday?'<span class="rs-status-pill on">قرأت اليوم'+ic('check',13)+'</span>':'<span class="rs-status-pill">ما قرأت اليوم بعد</span>')
+    +(goal?'<span class="meta tnum">'+Math.min(weekDays,goal)+' من '+goal+' أيام هذا الأسبوع</span>':'<span class="meta tnum">'+weekDays+' أيام هذا الأسبوع</span>')+'</div>'
+    +'<div class="s12"></div><div class="rs-calendar">'+days+'</div>';
+}
+function readingPayload(a,pageEnd,note){
+  var duration=readingElapsedSeconds(a,Date.now()),metrics=readingMetrics(a.pageStart,pageEnd,duration),custom=isCustomBook(a.bookId);
+  return {id:a.id,user_id:ME.id,book_id:custom?null:a.bookId,user_book_id:custom?a.bookId:null,started_at:a.startedAt,ended_at:new Date().toISOString(),duration_sec:duration,page_start:a.pageStart,page_end:pageEnd,pages_read:metrics.pages,speed_pages_per_hour:metrics.speed,note:note||null,pause_reason:a.pauseReason||null,pause_count:a.pauseCount||0,completed:true,goal_minutes_snapshot:a.goalSnapshot||20};
+}
+function syncReadingQueue(){
+  if(!ME||!navigator.onLine||!READING_SAVE_QUEUE.length)return Promise.resolve();var row=READING_SAVE_QUEUE[0];
+  return sb.from('reading_sessions').upsert(row,{onConflict:'id'}).then(function(res){
+    if(res.error){console.error(res.error);return;}
+    var bookId=row.book_id||row.user_book_id,b=myBookView(bookId),status=b&&b.pages&&row.page_end>=b.pages?'finished':'reading';
+    return upsertLibraryEntry(bookId,status,row.page_end).then(function(ok){
+      if(!ok)return;READING_SAVE_QUEUE.shift();persistReadingQueue();if(READING_SAVE_QUEUE.length)return syncReadingQueue();
+    });
+  });
+}
+function finishReadingSession(pageEnd,note){
+  var a=READING_ACTIVE;if(!a)return;pauseReadingState(a,Date.now(),a.pauseReason||'manual');var row=readingPayload(a,pageEnd,note);
+  MY_READING_SESSIONS.unshift(row);READING_ACTIVE=null;READING_NOTICE=false;clearInterval(READING_TICK);saveReadingLocal();
+  MY_PROGRESS[a.bookId]=pageEnd;READING_SAVE_QUEUE.push(row);persistReadingQueue();syncReadingQueue();
+  upsertLibraryEntry(a.bookId,'reading',pageEnd).then(function(){
+    var b=myBookView(a.bookId);if(b&&b.pages&&pageEnd>=b.pages)completeBook(a.bookId);
+  });
+  closeSheet();var timeCopy=row.duration_sec<60?row.duration_sec+' ثانية':Math.round(row.duration_sec/60)+' دقيقة';
+  var html='<div class="rs-focus rs-celebrate" style="justify-content:center"><div class="rs-kicker">جلسة محفوظة</div><h1 class="done-h" style="margin-top:14px">قرأت '+timeCopy+(row.pages_read?' وتقدمت '+row.pages_read+' صفحة':'')+'.</h1></div>';
+  var el=document.createElement('section');el.className='screen instant on';el.dataset.name='readingCelebration';el.innerHTML=html;if(current)current.remove();app.appendChild(el);current=el;
+  setTimeout(function(){STATE.tab='community';renderTabs();replaceRoute('community');mount('community','fade');},REDUCE?500:1300);
+}
+function updateReadingSession(id,pageEnd,note){
+  var s=MY_READING_SESSIONS.find(function(x){return x.id===id;});if(!s)return;
+  var m=readingMetrics(s.page_start,pageEnd,s.duration_sec);s.page_end=pageEnd;s.pages_read=m.pages;s.speed_pages_per_hour=m.speed;s.note=note||null;
+  sb.from('reading_sessions').update({page_end:pageEnd,note:note||null}).eq('id',id).then(function(res){if(res.error)toast('تعذّر حفظ التعديل.');else{toast('انحفظ التعديل.');refreshIfCurrent('readingSummary');refreshIfCurrent('bookJourney');}});
+}
+function deleteReadingSession(id){MY_READING_SESSIONS=MY_READING_SESSIONS.filter(function(s){return s.id!==id;});sb.from('reading_sessions').delete().eq('id',id).then(function(res){if(res.error){toast('تعذّر حذف الجلسة.');loadReadingData();}else{toast('انحذفت الجلسة.');refreshIfCurrent('readingSummary');refreshIfCurrent('bookJourney');}});}
+function saveReadingPreferences(goal,enabled,time,weeklyGoal){
+  var hasWeekly=arguments.length>3;
+  READING_PREF.daily_goal_minutes=goal;READING_PREF.reminder_enabled=enabled;READING_PREF.reminder_time=enabled?time:null;
+  if(hasWeekly)READING_PREF.weekly_days_goal=weeklyGoal||null;
+  var row={user_id:ME.id,daily_goal_minutes:goal,reminder_enabled:enabled,reminder_time:enabled?time:null};
+  if(hasWeekly)row.weekly_days_goal=weeklyGoal||null;
+  return sb.from('reading_preferences').upsert(row,{onConflict:'user_id'});
+}
+function scheduleReadingReminder(){
+  if(!('Notification' in window)||!READING_PREF.reminder_enabled||Notification.permission!=='granted'||!READING_PREF.reminder_time)return;
+  var p=READING_PREF.reminder_time.split(':'),at=new Date();at.setHours(Number(p[0]),Number(p[1]),0,0);if(at<=new Date())at.setDate(at.getDate()+1);
+  setTimeout(function(){if(document.visibilityState==='visible')new Notification('مَلفى',{body:'لديك عشر دقائق لكتابك؟'});},Math.min(at-Date.now(),2147483647));
+}
+
+/* ============================================================
    SCREEN — مَلفى (community)
    ============================================================ */
+/* مَلفى = reading practice, journey, and personal reading record — exactly
+   four sections, in this order, sharing STATE/selectedBookKey() with مكتبتي
+   rather than holding any separate copy of progress/sessions/recordings. */
 function communityHTML(){
   return ''
   +'<div class="thead"><h1>مَلفى</h1></div>'
-  +'<div class="pad"><p class="body" style="max-width:32ch">مجتمع قرّاء مَلفى — مجموعاتك، والقوائم والتجارب اللي يختار أصحابها مشاركتها.</p></div>'
-  +'<div class="s20"></div><div class="hr"></div><div class="s24"></div>'
-
-  /* مجموعاتي — real, already backed by the database */
-  +sec('مجموعاتي','مكتبتي','')
-  +'<div class="s10"></div>'
-  +(MY_COLLECTIONS.length
-    ?MY_COLLECTIONS.map(myCollHTML).join('<div class="hr"></div>')
-    :'<div class="empty" style="padding:26px 0">'+ic('archive',28)+'<h3>ما سويت مجموعة بعد.</h3>'
-      +'<p>اجمع كتبك المفضلة في مجموعات تناسبك.</p>'
-      +'<button class="btn btn-fill btn-sm" data-newcollection="1" style="margin-top:6px">أنشئ مجموعة'+ic('plus',15)+'</button></div>')
-
-  +'<div class="s32"></div>'
-  +sec('قوائم من الناس','','')
-  +'<div class="s10"></div>'
-  +'<div class="empty" style="padding:26px 0">'+ic('users',28)+'<h3>ما فيه قوائم من قرّاء ثانين بعد.</h3>'
-    +'<p>لما قرّاء ثانون ينشئون مجموعات عامة، تظهر هنا.</p></div>'
-
-  +'<div class="s32"></div>'
-  +sec('تجارب مع الكتب','','')
   +'<div class="s16"></div>'
-  +(PUBLIC_MENARAS.length?PUBLIC_MENARAS.map(function(item){
-      return '<article class="essay" style="margin-bottom:12px"><div class="kick">'+esc(item.book_title)+'</div>'
-        +item.summary_text.split(/\n+/).filter(Boolean).map(function(p){return '<p>'+esc(p)+'</p>';}).join('')
-        +'<p class="meta" style="margin-top:12px">'+esc(item.display_name)+' · '+esc(fmtDate(item.updated_at))+'</p></article>';
-    }).join(''):'<div class="empty" style="padding:26px 0">'+ic('wave',28)+'<h3>ما فيه تجارب مشتركة بعد.</h3>'
-      +'<p>تجارب القرّاء الآخرين مع كتبهم تظهر هنا أول ما يشاركونها.</p></div>')
-  +'<div class="s16"></div>';
+
+  +sec('روتين القراءة','','')
+  +'<div class="s10"></div>'+readingRoutineCardHTML()
+  +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
+
+  +sec('منارة','','')
+  +'<div class="s10"></div>'+menaraPreviewHTML()
+  +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
+
+  +sec('سجّل رحلتك','','')
+  +'<div class="s10"></div>'+journeyRecordCardHTML()
+  +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
+
+  +sec('أيام القراءة','','')
+  +'<div class="s14"></div>'+readingCalendarHTML(27)
+  +'<div class="s16"></div><div class="pad"><button class="rs-link plain" data-readingsummary="1">تفاصيل أكثر'+ic('arrow',14)+'</button></div>'
+  +'<div class="s24"></div>';
 }
 /* ============================================================
    SCREEN — اكتشف
@@ -1504,12 +1815,14 @@ function loadMenaraIfNeeded(bookId){
     MY_SUMMARIES[bookId]=res.data||null;
     var body=document.getElementById('bookTabBody');
     if(body&&bookTab==='menara'&&STATE.book===bookId)body.innerHTML=menaraHTML(bookId);
+    if(bookId===selectedBookKey())refreshIfCurrent('community');
   });
 }
+/* مكتبتي's book screen — info and organization only. Reading sessions,
+   journey recording, and منارة live in مَلفى (bookJourneyHTML) so both tabs
+   read/write the same rows without a second, independent experience here. */
 function bookHTML(){
   var b=myBookView(STATE.book),st=stock(b.st);
-  var jcount=MY_JOURNEY[b.id]?MY_JOURNEY[b.id].length:0;
-  if(bookTab==='menara')loadMenaraIfNeeded(b.id);
   return ''
   +'<div class="navbar"><button class="hdr-btn" data-back="1" aria-label="رجوع">'+ic('back',22)+'</button>'
     +'<div class="nt">'+esc(b.t)+'</div><div style="width:44px"></div></div>'
@@ -1520,9 +1833,26 @@ function bookHTML(){
   +(b.pages?'<div class="pad"><p class="meta2 tnum">ص '+b.page+' من '+b.pages+' · <span class="pc">'+pct(b)+'%</span></p>'
     +bar(pct(b))+'</div>':'')
   +'<div class="s24"></div>'
-  +'<div class="pad"><button class="btn btn-fill btn-full" data-sheet="1">سجّل رحلتك</button></div>'
+  +'<div class="pad"><button class="btn btn-fill btn-full" data-opengoto="'+esc(b.id)+'">افتح رحلتك في مَلفى'+ic('arrow',15)+'</button></div>'
   +'<div class="s10"></div>'
   +'<div class="pad" style="text-align:center"><button class="lnk plain" data-open="done" style="width:100%;justify-content:center">أنهيت الكتاب.</button></div>'
+  +'<div class="s24"></div><div class="hr"></div><div class="s20"></div>'
+  +'<div class="facts"><span class="fact">الناشر <b>'+esc(b.pub||'—')+'</b></span>'
+    +(b.pages?'<span class="fact tnum">الصفحات <b>'+b.pages+'</b></span>':'')
+    +(b.year?'<span class="fact tnum">سنة النشر <b>'+esc(b.year)+'</b></span>':'')
+    +'<span class="fact">المصدر <b>'+(b.custom?'كتابك':'ورقي')+'</b></span></div><div class="s16"></div>';
+}
+function bookJourneyHTML(){
+  var b=myBookView(STATE.book),jcount=MY_JOURNEY[b.id]?MY_JOURNEY[b.id].length:0;
+  if(bookTab==='menara')loadMenaraIfNeeded(b.id);
+  return ''
+  +'<div class="navbar"><button class="hdr-btn" data-back="1" aria-label="رجوع">'+ic('back',22)+'</button>'
+    +'<div class="nt">'+esc(b.t)+'</div><div style="width:44px"></div></div>'
+  +'<div class="pad" style="display:flex;align-items:center;gap:14px">'+cover(b.id,54)
+    +'<div style="flex:1;min-width:0"><h2 class="h3">'+esc(b.t)+'</h2>'
+    +(b.pages?'<span class="meta tnum" style="display:block;margin-top:3px">ص '+b.page+' من '+b.pages+' · '+pct(b)+'%</span>':'')+'</div></div>'
+  +'<div class="s20"></div>'
+  +'<div class="pad"><button class="btn btn-fill btn-full" data-sheet="1">سجّل رحلتك</button></div>'
   +'<div class="s16"></div><div class="hr"></div><div class="s24"></div>'
   +'<div class="pad"><div class="segs" style="position:relative;max-width:280px">'
     +'<span class="seg-ind"></span>'
@@ -1531,16 +1861,12 @@ function bookHTML(){
     +'</div></div>'
   +'<div class="s18" style="height:18px"></div>'
   +'<div id="bookTabBody">'+(bookTab==='menara'?menaraHTML(b.id):fullJourneyHTML(b))+'</div>'
-  +'<div class="s28"></div><div class="hr"></div><div class="s20"></div>'
-  +'<div class="facts"><span class="fact">الناشر <b>'+esc(b.pub||'—')+'</b></span>'
-    +(b.pages?'<span class="fact tnum">الصفحات <b>'+b.pages+'</b></span>':'')
-    +(b.year?'<span class="fact tnum">سنة النشر <b>'+esc(b.year)+'</b></span>':'')
-    +'<span class="fact">المصدر <b>'+(b.custom?'كتابك':'ورقي')+'</b></span></div><div class="s16"></div>';
+  +'<div class="s24"></div>';
 }
 function fullJourneyHTML(b){
   return '<div class="sec" style="padding-inline:var(--pad)"><h2 class="h2">التسجيل الكامل</h2></div>'
     +'<div class="s10"></div>'
-    +(MY_JOURNEY[b.id]&&MY_JOURNEY[b.id].length
+    +(mergedJourneyView(b.id).length
       ?'<div class="tl" id="timeline"><div class="tl-line"></div>'+journeyHTML()+'</div>'
       :'<div class="empty" style="padding:8px 0 26px">'+ic('wave',26)+'<h3>ما بعد سجّلت رحلة مع هذا الكتاب.</h3>'
         +'<p>سجّل أول محطة بصوتك عشان تبدأ رحلتك معه.</p></div>');
@@ -1571,8 +1897,28 @@ function menaraHTML(bookId){
     +'<div class="pad"><button class="lnk plain" data-genmenara="'+esc(bookId)+'">ولّد منارة جديدة'+ic('arrow',15)+'</button></div>'
     +'<div class="s16"></div>';
 }
+/* Merges journey_entries (voice/written notes) with reading_sessions for
+   the same book into one chronological timeline — an additive read model,
+   not a duplicate copy: each source row is rendered once, from its own
+   table, joined only by book key + timestamp for display order. */
+function mergedJourneyView(bookId){
+  var items=myJourneyView(bookId).map(function(e){return {type:'entry',ts:e.ts,e:e};});
+  MY_READING_SESSIONS.filter(function(s){return (s.book_id||s.user_book_id)===bookId;}).forEach(function(s){
+    items.push({type:'session',ts:new Date(s.started_at).getTime(),s:s});
+  });
+  return items.sort(function(a,b){return b.ts-a.ts;});
+}
+function journeySessionRowHTML(s){
+  return '<div class="tl-i"><span class="tl-d"></span><p class="tl-date">'+esc(fmtDate(s.started_at))+'</p>'
+    +'<p class="meta tnum" style="margin-top:4px">جلسة قراءة · '+fmtTotalDur(s.duration_sec)+(s.pages_read?' · '+s.pages_read+' صفحة':'')+'</p>'
+    +(s.note?'<p class="tl-q">'+esc(s.note)+'</p>':'')
+    +'<span class="tl-v" style="gap:12px"><button class="plain" data-readingedit="'+s.id+'" aria-label="تعديل الجلسة">'+ic('pencil',15)+' تعديل</button>'
+    +'<button class="plain" data-readingdelete="'+s.id+'" aria-label="حذف الجلسة">'+ic('x',15)+' حذف</button></span></div>';
+}
 function journeyHTML(){
-  return myJourneyView(STATE.book).map(function(e,i){
+  return mergedJourneyView(STATE.book).map(function(it,i){
+    if(it.type==='session')return journeySessionRowHTML(it.s);
+    var e=it.e;
     return '<div class="tl-i'+(e.start||i===0?' mk':'')+(e.fresh?' fresh':'')+'"><span class="tl-d"></span>'
       +'<p class="tl-date">'+esc(e.d)+'</p>'
       +'<p class="meta tnum" style="margin-top:4px">'+esc(e.start?'بدأت الكتاب':e.m)+'</p>'
@@ -1707,6 +2053,7 @@ function friendHTML(){
    ============================================================ */
 function sheetHTML(mode){
   if(mode==='addbook')return addBookSheetHTML();
+  if(mode==='collectionpick')return collectionPickSheetHTML();
   if(mode==='newcollection')return newCollectionSheetHTML();
   if(mode==='menara-review')return menaraReviewSheetHTML();
   if(mode==='contribute')return contributeSheetHTML();
@@ -1714,6 +2061,10 @@ function sheetHTML(mode){
   if(mode==='invitefriend')return inviteFriendSheetHTML();
   if(mode==='privacy')return privacySheetHTML();
   if(mode==='deleteaccount')return deleteAccountSheetHTML();
+  if(mode==='reading-finish')return readingFinishSheetHTML();
+  if(mode==='reading-settings')return readingSettingsSheetHTML();
+  if(mode==='reading-edit')return readingEditSheetHTML();
+  if(mode==='reading-delete')return readingDeleteSheetHTML();
   var bars='';
   for(var i=0;i<38;i++){bars+='<i style="--h:'+(6+((i*7)%18))+'px;animation-delay:'+((i%11)*60)+'ms"></i>';}
   return '<div class="grab"></div><div class="sh-in">'
@@ -1760,8 +2111,23 @@ function addBookSheetHTML(){
     +'<button class="lnk plain" data-manualbook="1" style="width:100%;justify-content:center">ما لقيت الكتاب؟'+ic('arrow',15)+'</button>'
     +'</div>';
 }
+/* Collections are private to Library: only the user's own catalog/manual
+   books can be added, never public lists or other readers' books. */
+function collectionPickSheetHTML(){
+  var c=MY_COLLECTIONS.find(function(x){return x.id===SHEET_CTX.collectionId;}),inColl=c?c.books:[];
+  var ids=[];MY_LIB.reading.concat(MY_LIB.next,MY_LIB.finished,MY_LIB.dropped,Object.keys(MY_USER_BOOKS)).forEach(function(id){if(ids.indexOf(id)===-1)ids.push(id);});
+  return '<div class="grab"></div><div class="sh-in" style="align-items:stretch;text-align:start">'
+    +'<h2 class="v-ask" style="text-align:center">أضف إلى'+' «'+esc(c?c.title:'')+'»</h2><div class="s16"></div>'
+    +'<div id="collectionPickResults" style="max-height:50vh;overflow-y:auto">'
+    +(ids.length?ids.map(function(id){
+        var b=myBookView(id);if(!b)return '';var on=inColl.indexOf(id)>-1;
+        return '<button class="row" data-collectiontoggle="'+esc(id)+'" style="width:100%">'+cover(id,40)
+          +'<span class="row-b"><span class="row-t">'+esc(b.t)+'</span></span>'+ic(on?'check':'plus',20)+'</button>';
+      }).join(''):'<div class="empty" style="padding:26px 0">'+ic('books',26)+'<h3>ما عندك كتب بعد.</h3><p>أضف كتابًا لمكتبتك أول.</p></div>')
+    +'</div><div class="s10"></div><button class="lnk plain" data-closesheet="1" style="width:100%;justify-content:center">تم</button></div>';
+}
 function addBookRowHTML(id){
-  var b=B[id];
+  var b=myBookView(id);if(!b)return '';
   return '<button class="row" data-pickbook="'+id+'" style="width:100%">'+cover(id,40)
     +'<span class="row-b"><span class="row-t">'+esc(b.t)+'</span>'
     +'<span class="meta" style="display:block;margin-top:3px">'+esc(b.a)+'</span></span>'
@@ -1831,6 +2197,31 @@ function inviteFriendSheetHTML(){
     +'<div id="friendSearchResults" style="max-height:40vh;overflow-y:auto"></div>'
     +'</div>';
 }
+function readingFinishSheetHTML(){
+  var a=READING_ACTIVE,b=a?myBookView(a.bookId):null,page=a?Math.max(a.pageStart,MY_PROGRESS[a.bookId]||a.pageStart):1,metrics=readingMetrics(a?a.pageStart:0,page,a?readingElapsedSeconds(a,Date.now()):0);
+  return '<div class="grab"></div><div class="sh-in" style="align-items:stretch;text-align:start"><h2 class="v-ask" style="text-align:center">إنهاء الجلسة</h2>'
+    +'<p class="v-sub" style="text-align:center">'+fmtTotalDur(a?readingElapsedSeconds(a,Date.now()):0)+' · '+metrics.pages+' صفحة</p><div class="s16"></div>'
+    +'<div class="field"><label for="readingEndPage">وصلت إلى صفحة</label><input type="number" id="readingEndPage" inputmode="numeric" min="'+(a?a.pageStart:0)+'" max="'+(b&&b.pages?b.pages:10000)+'" value="'+page+'"></div>'
+    +'<div class="field"><label for="readingNote">فكرة أو اقتباس تريد تذكره؟ (اختياري)</label><textarea id="readingNote" maxlength="2000" style="min-height:100px"></textarea></div>'
+    +'<p class="field-err" id="readingFinishErr" role="alert"></p><button class="btn btn-fill btn-full" id="readingSaveBtn">حفظ الجلسة</button><div class="s10"></div><button class="lnk plain" data-closesheet="1" style="justify-content:center">رجوع</button></div>';
+}
+function readingSettingsSheetHTML(){
+  var g=READING_PREF.daily_goal_minutes||20,sug=suggestedGoal(),time=(READING_PREF.reminder_time||suggestedReminderTime()).slice(0,5);
+  return '<div class="grab"></div><div class="sh-in" style="align-items:stretch;text-align:start"><h2 class="v-ask" style="text-align:center">إعدادات جلسة القراءة</h2><div class="s16"></div>'
+    +'<label class="meta">هدفك اليومي بالدقائق</label><div class="chips" style="padding:10px 0">'+[10,20,30].map(function(n){return '<button class="chip'+(g===n?' on':'')+'" data-goalpick="'+n+'">'+n+'</button>';}).join('')+'<button class="chip'+([10,20,30].indexOf(g)<0?' on':'')+'" data-goalpick="custom">مخصص</button></div>'
+    +'<div class="field" id="customGoalWrap" style="'+([10,20,30].indexOf(g)<0?'':'display:none')+'"><label for="customGoal">دقائق مخصصة</label><input id="customGoal" type="number" min="1" max="480" value="'+g+'"></div>'
+    +(sug!==g?'<p class="v-sub">اقتراح يناسب متوسط جلساتك: '+sug+' دقيقة. ما نغيّر هدفك إلا بموافقتك.</p>':'')
+    +'<div class="s16"></div><label class="row" style="padding-inline:0"><span class="row-b"><b>تذكير هادئ</b><span class="meta" style="display:block">«لديك عشر دقائق لكتابك؟»</span></span><input type="checkbox" id="readingReminder" '+(READING_PREF.reminder_enabled?'checked':'')+'></label>'
+    +'<div class="field"><label for="readingReminderTime">وقت التذكير</label><input id="readingReminderTime" type="time" value="'+time+'"><span class="meta">وقت مقترح قريب من وقت قراءتك المعتاد.</span></div>'
+    +'<div class="s16"></div><label class="meta">كم يوم بالأسبوع تبي تقرأ؟ (اختياري)</label><div class="chips" style="padding:10px 0" id="weeklyGoalChips">'
+    +[1,2,3,4,5,6,7].map(function(n){return '<button class="chip'+(READING_PREF.weekly_days_goal===n?' on':'')+'" data-weeklygoalpick="'+n+'">'+n+'</button>';}).join('')
+    +'<button class="chip'+(!READING_PREF.weekly_days_goal?' on':'')+'" data-weeklygoalpick="0">بدون</button></div>'
+    +'<p class="field-err" id="readingSettingsErr"></p><button class="btn btn-fill btn-full" id="readingSettingsSave">حفظ الإعدادات</button></div>';
+}
+function readingEditSheetHTML(){var s=SHEET_CTX.session||{};return '<div class="grab"></div><div class="sh-in" style="align-items:stretch;text-align:start"><h2 class="v-ask" style="text-align:center">تعديل الجلسة</h2><div class="s16"></div>'
+  +'<div class="field"><label for="readingEditPage">وصلت إلى صفحة</label><input id="readingEditPage" type="number" min="'+(s.page_start||0)+'" max="10000" value="'+(s.page_end||0)+'"></div>'
+  +'<div class="field"><label for="readingEditNote">الملاحظة</label><textarea id="readingEditNote" maxlength="2000" style="min-height:100px">'+esc(s.note||'')+'</textarea></div><p class="field-err" id="readingEditErr"></p><button class="btn btn-fill btn-full" id="readingEditSave">حفظ التعديل</button></div>';}
+function readingDeleteSheetHTML(){return '<div class="grab"></div><div class="sh-in"><h2 class="v-ask">حذف الجلسة؟</h2><p class="v-sub">تنحذف من سجل القراءة، وما يتغير سجل الجلسات الثانية.</p><div class="v-act"><button class="lnk plain" data-closesheet="1">إلغاء</button><button class="btn btn-fill" id="readingDeleteConfirm" style="background:var(--coral)">حذف</button></div></div>';}
 /* ============================================================
    ROUTER
    ============================================================ */
@@ -1842,9 +2233,10 @@ var TABS=[
  {k:'account',i:'person',l:'حسابي'}
 ];
 var VIEWS={home:homeHTML,library:libraryHTML,community:communityHTML,discover:discoverHTML,
-  account:accountHTML,book:bookHTML,done:doneHTML,friend:friendHTML,topic:topicHTML,
-  welcome:welcomeHTML,auth:authHTML,onboardBook:onboardBookHTML};
-var PUSHED={book:1,done:1,friend:1,welcome:1,auth:1,onboardBook:1,topic:1};
+  account:accountHTML,book:bookHTML,bookJourney:bookJourneyHTML,done:doneHTML,friend:friendHTML,topic:topicHTML,
+  welcome:welcomeHTML,auth:authHTML,onboardBook:onboardBookHTML,
+  readingSession:readingSessionHTML,readingSummary:readingSummaryHTML,collection:collectionHTML};
+var PUSHED={book:1,bookJourney:1,done:1,friend:1,welcome:1,auth:1,onboardBook:1,topic:1,readingSession:1,readingSummary:1,collection:1};
 
 var app=document.getElementById('app'),tabbar=document.getElementById('tabbar'),
     sheet=document.getElementById('sheet'),backdrop=document.getElementById('backdrop'),
@@ -1860,7 +2252,7 @@ function viewFromHash(hash){
 }
 var INITIAL_ROUTE=viewFromHash(INITIAL_HASH);
 function navSnapshot(view,scroll){return {malfa:true,view:view,tab:STATE.tab,book:STATE.book,topic:STATE.topic,
-  bookTab:bookTab,genreFilter:STATE.genreFilter,scroll:scroll||0,depth:NAV_DEPTH};}
+  bookTab:bookTab,genreFilter:STATE.genreFilter,collection:STATE.collection,scroll:scroll||0,depth:NAV_DEPTH};}
 function routeHash(view){return view==='book'&&STATE.book?'#book/'+encodeURIComponent(STATE.book):'#'+view;}
 function rememberScroll(){
   if(!history.state||!history.state.malfa||!current)return;
@@ -1871,7 +2263,7 @@ function pushRoute(view){rememberScroll();NAV_DEPTH++;history.pushState(navSnaps
 function replaceRoute(view){history.replaceState(navSnapshot(view,0),'',routeHash(view));}
 function restoreRoute(s,mode){
   if(!s||!s.malfa)return;NAV_DEPTH=s.depth||0;STATE.tab=s.tab||'home';STATE.book=s.book||null;STATE.topic=s.topic||null;
-  STATE.genreFilter=s.genreFilter||'';bookTab=s.bookTab||'full';renderTabs();var el=mount(s.view||STATE.tab,mode||'pop');
+  STATE.genreFilter=s.genreFilter||'';STATE.collection=s.collection||null;bookTab=s.bookTab||'full';renderTabs();var el=mount(s.view||STATE.tab,mode||'pop');
   requestAnimationFrame(function(){el.scrollTop=s.scroll||0;});
 }
 
@@ -1891,6 +2283,7 @@ function mount(name,mode){
   if(name==='onboardBook')wireOnboardSearch(el);
   app.appendChild(el);
   if(name==='home')wireHomeReflection(el);
+  if(name==='readingSession')startReadingClock();
   el.addEventListener('scroll',function(){el.classList.toggle('scrolled',el.scrollTop>6);},{passive:true});
   if(!mode){
     el.classList.add('on');
@@ -2157,6 +2550,10 @@ function openSheet(mode,ctx){
     var q=document.getElementById('addBookQ'),results=document.getElementById('addBookResults');
     function renderResults(query){
       var list=searchBooks(query);
+      if(SHEET_CTX.startReading||SHEET_CTX.selectOnly){
+        var norm=normalizeAr(query),own=MY_LIB.reading.concat(MY_LIB.next,MY_LIB.finished,MY_LIB.dropped).filter(function(id){var b=myBookView(id);return b&&(!norm||normalizeAr(b.t+' '+b.a).indexOf(norm)>-1);});
+        list=own.map(function(id){return myBookView(id);}).concat(list.filter(function(b){return own.indexOf(b.id)===-1;}));
+      }
       results.innerHTML=list.length?list.map(function(b){return addBookRowHTML(b.id);}).join('')
         :'<div class="empty" style="padding:30px 0">'+ic('search',26)+'<h3>ولا كتاب طابق بحثك.</h3>'
           +'<p>جرّب اسمًا ثانيًا أو اسم الكاتب.</p></div>';
@@ -2165,10 +2562,30 @@ function openSheet(mode,ctx){
     q.addEventListener('input',function(){renderResults(q.value);});
     sheet.addEventListener('click',function(e){
       var t=e.target.closest('[data-pickbook]');if(!t)return;
-      var bookId=t.dataset.pickbook,status=SHEET_CTX.status||'next';
+      var bookId=t.dataset.pickbook,status=SHEET_CTX.status||'next',startAfter=!!SHEET_CTX.startReading,selectOnly=!!SHEET_CTX.selectOnly;
       closeSheet();
-      upsertLibraryEntry(bookId,status,status==='reading'?1:0).then(function(ok){
-        if(ok){toast('انضاف إلى مكتبتك.');refreshIfCurrent('library');refreshIfCurrent('home');}
+      upsertLibraryEntry(bookId,status,status==='reading'?Math.max(1,MY_PROGRESS[bookId]||0):(MY_PROGRESS[bookId]||0)).then(function(ok){
+        if(!ok)return;
+        refreshIfCurrent('library');refreshIfCurrent('home');
+        if(startAfter)startReadingSession(bookId);
+        else if(selectOnly)saveSelectedBook(bookId).then(function(){toast('اخترت «'+esc(myBookView(bookId).t)+'».');refreshIfCurrent('community');});
+        else{toast('انضاف إلى مكتبتك.');refreshIfCurrent('community');}
+      });
+    });
+    return;
+  }
+  if(SHEET_MODE==='collectionpick'){
+    var collectionId=SHEET_CTX.collectionId;
+    sheet.addEventListener('click',function(e){
+      var t=e.target.closest('[data-collectiontoggle]');if(!t)return;
+      var bookId=t.dataset.collectiontoggle,c=MY_COLLECTIONS.find(function(x){return x.id===collectionId;});if(!c)return;
+      var on=c.books.indexOf(bookId)>-1;
+      t.disabled=true;
+      (on?removeBookFromCollection(collectionId,bookId):addBookToCollection(collectionId,bookId)).then(function(ok){
+        t.disabled=false;if(!ok){toast('صار خطأ، حاول مرة ثانية.');return;}
+        if(on)c.books=c.books.filter(function(x){return x!==bookId;});else c.books.push(bookId);
+        t.querySelector('.ic').outerHTML=ic(on?'plus':'check',20);
+        refreshIfCurrent('collection');
       });
     });
     return;
@@ -2180,7 +2597,7 @@ function openSheet(mode,ctx){
       var title=titleInput.value.trim();if(!title)return;
       closeSheet();
       insertCollection(title).then(function(row){
-        if(row){toast('انعملت مجموعة «'+esc(title)+'».');refreshIfCurrent('library');refreshIfCurrent('community');}
+        if(row){toast('انعملت مجموعة «'+esc(title)+'».');refreshIfCurrent('library');}
       });
     });
     return;
@@ -2227,6 +2644,7 @@ function openSheet(mode,ctx){
         if(!row)return;
         var chain=Promise.resolve();
         if(mCoverFile)chain=uploadBookCover(row.id,mCoverFile);
+        var startAfter=!!SHEET_CTX.startReading,selectOnly=!!SHEET_CTX.selectOnly;
         chain.then(function(){
           return upsertLibraryEntry(row.id,'reading',1);
         }).then(function(ok){
@@ -2234,7 +2652,9 @@ function openSheet(mode,ctx){
           closeSheet();
           toast('انضاف كتابك، وابدأ رحلتك.');
           refreshIfCurrent('library');refreshIfCurrent('home');
-          STATE.book=row.id;push('book');
+          if(startAfter)startReadingSession(row.id);
+          else if(selectOnly)saveSelectedBook(row.id).then(function(){refreshIfCurrent('community');});
+          else{STATE.book=row.id;push('book');}
         }).catch(function(err){
           console.error(err);mSave.disabled=false;mSave.textContent='ابدأ رحلتك';
           mErr.textContent=err&&err.message==='cover_size'?'حجم الغلاف أكبر من 5 ميجابايت.':
@@ -2280,6 +2700,38 @@ function openSheet(mode,ctx){
       });
     });
     return;
+  }
+  if(SHEET_MODE==='reading-finish'){
+    var endPage=document.getElementById('readingEndPage'),finishNote=document.getElementById('readingNote'),finishSave=document.getElementById('readingSaveBtn'),finishErr=document.getElementById('readingFinishErr');
+    finishSave.addEventListener('click',function(){
+      var a=READING_ACTIVE,page=Number(endPage.value),b=a&&myBookView(a.bookId);finishErr.textContent='';
+      if(!a)return;if(!Number.isInteger(page)||page<a.pageStart||(b&&b.pages&&page>b.pages)){finishErr.textContent='اكتب صفحة صحيحة من '+a.pageStart+(b&&b.pages?' إلى '+b.pages:'')+'.';return;}
+      finishSave.disabled=true;finishReadingSession(page,(finishNote.value||'').trim());
+    });return;
+  }
+  if(SHEET_MODE==='reading-settings'){
+    var selectedGoal=READING_PREF.daily_goal_minutes||20,customWrap=document.getElementById('customGoalWrap'),customGoal=document.getElementById('customGoal'),settingsErr=document.getElementById('readingSettingsErr');
+    var selectedWeekly=READING_PREF.weekly_days_goal||0;
+    sheet.addEventListener('click',function(e){
+      var pick=e.target.closest('[data-goalpick]');
+      if(pick){selectedGoal=pick.dataset.goalpick==='custom'?'custom':Number(pick.dataset.goalpick);customWrap.style.display=selectedGoal==='custom'?'block':'none';sheet.querySelectorAll('[data-goalpick]').forEach(function(x){x.classList.toggle('on',x===pick);});return;}
+      var wpick=e.target.closest('[data-weeklygoalpick]');
+      if(wpick){selectedWeekly=Number(wpick.dataset.weeklygoalpick);document.getElementById('weeklyGoalChips').querySelectorAll('[data-weeklygoalpick]').forEach(function(x){x.classList.toggle('on',x===wpick);});return;}
+    });
+    document.getElementById('readingSettingsSave').addEventListener('click',function(){
+      var goal=selectedGoal==='custom'?Number(customGoal.value):selectedGoal,rem=document.getElementById('readingReminder'),time=document.getElementById('readingReminderTime').value||'20:00';settingsErr.textContent='';
+      if(!Number.isInteger(goal)||goal<1||goal>480){settingsErr.textContent='اختر هدفًا بين دقيقة و480 دقيقة.';return;}
+      var permission=Promise.resolve('granted');if(rem.checked&&'Notification' in window&&Notification.permission==='default')permission=Notification.requestPermission();
+      else if(rem.checked&&(!('Notification' in window)||Notification.permission==='denied'))permission=Promise.resolve('denied');
+      permission.then(function(result){var enabled=rem.checked&&result==='granted';if(rem.checked&&!enabled)toast('التذكير بقي متوقفًا لأن الإذن غير متاح.');saveReadingPreferences(goal,enabled,time,selectedWeekly||null).then(function(res){if(res.error){settingsErr.textContent='تعذّر حفظ الإعدادات.';return;}closeSheet();scheduleReadingReminder();refreshIfCurrent('readingSummary');refreshIfCurrent('community');toast('انحفظت الإعدادات.');});});
+    });return;
+  }
+  if(SHEET_MODE==='reading-edit'){
+    var editSession=SHEET_CTX.session,editPage=document.getElementById('readingEditPage'),editNote=document.getElementById('readingEditNote'),editErr=document.getElementById('readingEditErr');
+    document.getElementById('readingEditSave').addEventListener('click',function(){var page=Number(editPage.value);if(!Number.isInteger(page)||page<editSession.page_start){editErr.textContent='صفحة الوصول لازم تكون بعد صفحة البداية.';return;}closeSheet();updateReadingSession(editSession.id,page,(editNote.value||'').trim());});return;
+  }
+  if(SHEET_MODE==='reading-delete'){
+    document.getElementById('readingDeleteConfirm').addEventListener('click',function(){var id=SHEET_CTX.sessionId;closeSheet();deleteReadingSession(id);});return;
   }
   if(SHEET_MODE==='privacy')return;
   if(SHEET_MODE==='deleteaccount'){
@@ -2390,12 +2842,12 @@ function openSheet(mode,ctx){
     .then(function(){return insertJourneyEntry(bookId,line,dur,onboard?null:from,to,onboard,audioInfo&&audioInfo.path,audioInfo&&audioInfo.mime);})
     .then(function(entry){if(!entry)throw new Error('entry_save');return upsertLibraryEntry(bookId,'reading',to);})
     .then(function(ok){if(!ok)throw new Error('progress_save');closeSheet();
-      if(current&&current.dataset.name==='book'){
+      if(current&&current.dataset.name==='bookJourney'&&bookTab==='full'){
         var tl=document.getElementById('timeline');
         if(tl)tl.innerHTML='<div class="tl-line"></div>'+journeyHTML();
       }
       if(onboard){finishOnboarding();}
-      else{toast('انحفظت في رحلتك.');refreshIfCurrent('home');}
+      else{toast('انحفظت في رحلتك.');refreshIfCurrent('home');refreshIfCurrent('community');refreshIfCurrent('library');}
     }).catch(function(err){
       console.error(err);status.textContent='ما اكتمل الحفظ. ما اعتبرنا العملية ناجحة؛ جرّب مرة ثانية.';save.disabled=false;save.textContent='احفظها';
       if(uploadedPath)sb.storage.from('journey-audio').remove([uploadedPath]);
@@ -2508,8 +2960,41 @@ document.getElementById('phone').addEventListener('click',function(e){
   if((t=e.target.closest('[data-sheet]'))){STATE.page=MY_PROGRESS[STATE.book]||1;openSheet('log');return;}
   if((t=e.target.closest('[data-addbook]'))){openSheet('addbook',{status:t.dataset.addbook});return;}
   if((t=e.target.closest('[data-newcollection]'))){openSheet('newcollection');return;}
+  if((t=e.target.closest('[data-collection]'))){STATE.collection=t.dataset.collection;push('collection');return;}
+  if((t=e.target.closest('[data-collectionadd]'))){openSheet('collectionpick',{collectionId:t.dataset.collectionadd});return;}
+  if((t=e.target.closest('[data-collectionremove]'))){
+    var cid=STATE.collection,bid=t.dataset.collectionremove;
+    removeBookFromCollection(cid,bid).then(function(ok){
+      if(!ok){toast('صار خطأ، حاول مرة ثانية.');return;}
+      var c=MY_COLLECTIONS.find(function(x){return x.id===cid;});if(c)c.books=c.books.filter(function(x){return x!==bid;});
+      refreshIfCurrent('collection');refreshIfCurrent('library');
+    });
+    return;
+  }
+  if((t=e.target.closest('[data-completeread]'))){chooseAndGoToMalfa(t.dataset.completeread);return;}
+  if((t=e.target.closest('[data-opengoto]'))){chooseAndGoToMalfa(t.dataset.opengoto);return;}
+  if((t=e.target.closest('[data-openmenara]'))){STATE.book=t.dataset.openmenara;bookTab='menara';push('bookJourney');return;}
+  if((t=e.target.closest('[data-openjourney]'))){STATE.book=t.dataset.openjourney;bookTab='full';push('bookJourney');return;}
+  if((t=e.target.closest('[data-logbook]'))){STATE.book=t.dataset.logbook;STATE.page=MY_PROGRESS[STATE.book]||1;openSheet('log');return;}
+  if((t=e.target.closest('[data-readingchoose]'))){
+    if(READING_ACTIVE&&READING_ACTIVE.status==='running'){toast('عندك جلسة قراءة شغّالة. أنهها أول عشان تبدّل الكتاب.');return;}
+    openSheet('addbook',{status:'reading',selectOnly:true});
+    return;
+  }
+  if((t=e.target.closest('[data-readingstart]'))){startReadingSession(t.dataset.readingstart);return;}
+  if((t=e.target.closest('[data-readingsummary]'))){push('readingSummary');return;}
+  if((t=e.target.closest('[data-readingtoggle]'))){if(READING_ACTIVE&&READING_ACTIVE.status==='running')pauseReading('manual',false);else resumeReading();return;}
+  if((t=e.target.closest('[data-readingresume]'))){resumeReading();return;}
+  if((t=e.target.closest('[data-readingfinish]'))){if(READING_ACTIVE&&READING_ACTIVE.status==='running')pauseReading('manual',false);openSheet('reading-finish');return;}
+  if((t=e.target.closest('[data-readingsettings]'))){openSheet('reading-settings');return;}
+  if((t=e.target.closest('[data-readingedit]'))){var editRow=MY_READING_SESSIONS.find(function(s){return s.id===t.dataset.readingedit;});if(editRow)openSheet('reading-edit',{session:editRow});return;}
+  if((t=e.target.closest('[data-readingdelete]'))){openSheet('reading-delete',{sessionId:t.dataset.readingdelete});return;}
   if((t=e.target.closest('[data-contribute]'))){openSheet('contribute');return;}
-  if((t=e.target.closest('[data-manualbook]'))){openSheet('manualbook');return;}
+  if((t=e.target.closest('[data-manualbook]'))){
+    var fromAddbook=SHEET_MODE==='addbook';
+    openSheet('manualbook',{startReading:fromAddbook&&!!SHEET_CTX.startReading,selectOnly:fromAddbook&&!!SHEET_CTX.selectOnly});
+    return;
+  }
   if((t=e.target.closest('[data-invitefriend]'))){openSheet('invitefriend',{bookId:t.dataset.invitefriend});return;}
   if((t=e.target.closest('[data-togglepublic]'))){togglePublicAccount();return;}
   if((t=e.target.closest('[data-inviteaccept]'))){respondInvite(t.dataset.inviteaccept,true);return;}
@@ -2550,9 +3035,7 @@ document.getElementById('phone').addEventListener('click',function(e){
   if((t=e.target.closest('[data-seg]'))){
     if(t.dataset.seg===libSeg)return;
     libSeg=t.dataset.seg;
-    Array.prototype.forEach.call(current.querySelectorAll('.seg'),function(s){s.classList.toggle('on',s.dataset.seg===libSeg);});
-    syncSegInd(current);
-    document.getElementById('libBody').innerHTML=libBody();
+    refreshIfCurrent('library');
     return;
   }
   if((t=e.target.closest('[data-playaudio]'))){
@@ -2594,11 +3077,8 @@ document.getElementById('phone').addEventListener('click',function(e){
   if((t=e.target.closest('[data-toast]'))){toast(t.dataset.toast);return;}
 });
 document.getElementById('phone').addEventListener('change',function(e){
-  var t=e.target.closest('#menaraShare');
-  if(t){
-    if(t.checked)openMenaraShare(t.dataset.bookid);
-    else setMenaraUnshared(t.dataset.bookid);
-  }
+  var t=e.target;
+  if(t.matches('#menaraShare')){if(t.checked)openMenaraShare(t.dataset.bookid);else setMenaraUnshared(t.dataset.bookid);return;}
 });
 
 /* ---------- font verification: real width comparison, not fonts.check ---------- */
@@ -2646,7 +3126,7 @@ function handleLogout(){
   function finish(){
     sb.auth.signOut().then(function(){
       ME=null;MY_NAME='';MY_HANDLE='';MY_CREATED_AT=null;
-      MY_LIB={reading:[],next:[],finished:[],dropped:[]};MY_PROGRESS={};MY_JOURNEY={};MY_COLLECTIONS=[];
+      MY_LIB={reading:[],next:[],finished:[],dropped:[]};MY_PROGRESS={};MY_JOURNEY={};MY_COLLECTIONS=[];MY_READING_SESSIONS=[];READING_ACTIVE=null;clearInterval(READING_TICK);
       STATE={tab:'home',book:null,topic:null,stack:[],page:1,genreFilter:''};
       authMode='login';
       replaceRoute('auth');mount('auth','fade');
@@ -2675,7 +3155,19 @@ BOOT_READY=sb.auth.getSession().then(function(res){
 });
 bootTimer=setTimeout(finishWelcome,3200);
 setInterval(function(){if(ME&&document.visibilityState==='visible')touchLastSeen();},4*60000);
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&ME)touchLastSeen();});
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden'){
+    if(READING_ACTIVE&&READING_ACTIVE.status==='running')pauseReadingState(READING_ACTIVE,Date.now(),'background');
+    if(READING_ACTIVE){READING_NOTICE=true;saveReadingLocal();}
+    return;
+  }
+  if(ME)touchLastSeen();
+  if(READING_ACTIVE&&(READING_ACTIVE.pauseReason==='background'||READING_ACTIVE.pauseReason==='crash')){
+    READING_NOTICE=true;saveReadingLocal();if(current&&current.dataset.name==='readingSession')refreshIfCurrent('readingSession');
+  }
+});
+window.addEventListener('pagehide',function(){if(READING_ACTIVE&&READING_ACTIVE.status==='running'){pauseReadingState(READING_ACTIVE,Date.now(),'background');READING_NOTICE=true;saveReadingLocal();}});
+window.addEventListener('online',syncReadingQueue);
 })();
 </script>
 </body>
