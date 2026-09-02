@@ -77,6 +77,12 @@ body[data-theme="light"]{background:#F0EADC}
 :root[data-theme="light"] .open-q{color:var(--khz-txt)}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* one consistent keyboard-focus ring for every interactive element — visible
+   only for keyboard/non-pointer focus, so touch and mouse taps stay quiet */
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
+[contenteditable="true"]:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--khz-txt);outline-offset:2px;border-radius:6px}
+.cv:focus-visible{outline:2px solid var(--khz-txt);outline-offset:3px}
 body{margin:0;background:#050406;font-family:var(--f-u);color:var(--ink)}
 
 .stage{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:36px 16px;
@@ -535,6 +541,59 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   .seg-ind{transition-duration:90ms!important}
   .w-mark,.w-tag,.w-love{animation:none!important;opacity:1!important;transform:none!important}
   .rs-celebrate{animation:none!important}
+}
+
+/* ============================================================
+   WIDER SCREENS — the same single app, thoughtfully laid out.
+   Real mobile (<=520px) already goes edge-to-edge (see the .stage/
+   .phone rule near the top). Two more tiers, kept last in the
+   cascade so they win over every base component rule they touch:
+   a wide-but-still-single-column reading frame for tablet portrait
+   / narrow windows, then a persistent side rail once there is real
+   desktop width to work with. Nothing here forks the markup,
+   screens, router, or data layer — same VIEWS, same click
+   delegation, same backend, just different chrome around it.
+   ============================================================ */
+@media (min-width:521px) and (max-width:1023px){
+  .stage{padding:28px 16px}
+  .phone{width:min(100%,640px);height:min(852px,calc(100dvh - 56px));border-radius:32px}
+}
+@media (min-width:1024px){
+  .stage{padding:0;background:var(--ground)}
+  body:not([data-theme="light"]) .stage{background:var(--ground)}
+  .phone{width:100%;height:100dvh;max-width:none;border-radius:0;box-shadow:none;
+    display:flex;justify-content:center}
+  .statusbar{display:none}
+  .app{position:relative;top:0;height:100dvh;overflow:hidden;width:min(100%,760px)}
+  .screen{padding-bottom:56px}
+  .tabbar{display:none}
+  .home-ind{display:none}
+  /* bottom sheets become centered dialogs; same slide-up transform, no JS changes */
+  .sheet{max-width:480px;margin-inline:auto;border-radius:var(--r4)}
+  .backdrop{cursor:pointer}
+  /* three-across grids get real breathing room instead of stretching three tiles wide */
+  .grid3{grid-template-columns:repeat(4,1fr)}
+
+  /* the side rail only reserves space once a screen actually wants the tab
+     bar shown (mount() toggles this the same way it already toggles the
+     bar's own opacity) — so welcome/auth/onboarding/pushed screens stay a
+     single centered column instead of leaving a blank reserved sidebar. */
+  .phone.with-nav{display:grid;grid-template-columns:264px minmax(0,760px) 1fr;align-items:stretch}
+  .phone.with-nav .app{grid-column:2;width:auto}
+  .phone.with-nav .tabbar{display:flex;position:relative;grid-column:1;grid-row:1;bottom:auto;inset-inline:auto;
+    height:100dvh;flex-direction:column;align-items:stretch;gap:2px;padding:30px 16px;
+    background:var(--ground-2);border-top:0;border-inline-end:1px solid var(--rule);
+    backdrop-filter:none;-webkit-backdrop-filter:none}
+  .phone.with-nav .tabbar::before{content:'مَــلفى';display:block;font-family:var(--f-d);font-size:21px;font-weight:700;
+    padding:6px 12px 26px;color:var(--ink)}
+  .phone.with-nav .tab{flex-direction:row;justify-content:flex-start;gap:14px;padding:11px 12px;border-radius:var(--r1);
+    min-height:46px;transition:background var(--press-out) ease,color var(--t1) ease}
+  .phone.with-nav .tab:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+  .phone.with-nav .tab.on{background:color-mix(in srgb,var(--khz) 12%,transparent)}
+  .phone.with-nav .tab span{font-size:14.5px}
+}
+@media (min-width:1024px) and (prefers-reduced-motion:reduce){
+  .tab{transition:none}
 }
 </style>
 
@@ -1003,7 +1062,11 @@ function cover(id,cw,mini){
   return '<div class="cv l-'+b.l+(mini?' mini':'')+'" style="--cw:'+w(cw)+';--p:'+st.p+';--a:'+st.a+';--b:'+st.b+'">'
     +art+scrim+plate+'</div>';
 }
-function bk(id,cw){return '<div data-book="'+esc(id)+'" style="flex:none">'+cover(id,cw)+'</div>';}
+function bk(id,cw){
+  var ub=MY_USER_BOOKS[id],b=B[id]||ub&&{t:ub.title,a:ub.author||'كتابك'};
+  var label=b?esc(b.t)+(b.a?'، '+esc(b.a):''):'كتاب';
+  return '<div data-book="'+esc(id)+'" tabindex="0" role="button" aria-label="'+label+'" style="flex:none">'+cover(id,cw)+'</div>';
+}
 function stack(ids,cw,off){
   cw=cw||46;off=off||17;
   return '<div class="stack" style="width:'+(cw+off*2)+'px;height:'+(cw*1.5)+'px">'
@@ -1261,7 +1324,7 @@ function homeHTML(){
   +(b?(
     '<div class="pad"><div class="kick">كمل من وين وقفت</div></div>'
     +'<div class="s16"></div>'
-    +'<div class="now" data-book="'+esc(b.id)+'">'+cover(b.id,112)
+    +'<div class="now" data-book="'+esc(b.id)+'" tabindex="0" role="button">'+cover(b.id,112)
       +'<div class="now-b">'
         +'<h3 class="now-t">'+esc(b.t)+'</h3>'
         +'<p class="meta" style="margin-top:6px">'+esc(b.a)+'</p>'
@@ -1651,12 +1714,12 @@ function communityHTML(){
   +'<div class="s10"></div>'+readingRoutineCardHTML()
   +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
 
-  +sec('منارة','','')
-  +'<div class="s10"></div>'+menaraPreviewHTML()
-  +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
-
   +sec('سجّل رحلتك','','')
   +'<div class="s10"></div>'+journeyRecordCardHTML()
+  +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
+
+  +sec('منارة','','')
+  +'<div class="s10"></div>'+menaraPreviewHTML()
   +'<div class="s28"></div><div class="hr"></div><div class="s24"></div>'
 
   +sec('أيام القراءة','','')
@@ -2008,7 +2071,7 @@ function friendHTML(){
   +(b?(
     '<div class="pad"><div class="kick">الكتاب</div></div>'
     +'<div class="s14"></div>'
-    +'<div class="now" data-book="'+esc(b.id)+'">'+cover(b.id,96)
+    +'<div class="now" data-book="'+esc(b.id)+'" tabindex="0" role="button">'+cover(b.id,96)
       +'<div class="now-b"><h3 class="now-t" style="font-size:19px">'+esc(b.t)+'</h3>'
       +'<p class="meta" style="margin-top:6px">'+esc(b.a)+'</p>'
       +(b.pages?'<p class="meta tnum" style="margin-top:12px">'+b.pages+' صفحة</p>':'')+'</div></div>'
@@ -2065,6 +2128,7 @@ function sheetHTML(mode){
   if(mode==='reading-settings')return readingSettingsSheetHTML();
   if(mode==='reading-edit')return readingEditSheetHTML();
   if(mode==='reading-delete')return readingDeleteSheetHTML();
+  if(mode==='menara-nudge')return menaraNudgeSheetHTML();
   var bars='';
   for(var i=0;i<38;i++){bars+='<i style="--h:'+(6+((i*7)%18))+'px;animation-delay:'+((i%11)*60)+'ms"></i>';}
   return '<div class="grab"></div><div class="sh-in">'
@@ -2140,6 +2204,18 @@ function newCollectionSheetHTML(){
       +'<input type="text" id="collTitle" placeholder="اسم المجموعة" maxlength="60"></div>'
     +'<div class="v-act" style="margin-top:22px"><button class="lnk plain" data-closesheet="1">إلغاء</button>'
       +'<button class="btn btn-fill" id="collSave" disabled>إنشاء</button></div></div>';
+}
+/* The gentle transition from سجّل رحلتك to منارة — منارة is built from what
+   was just recorded, so this only ever appears right after a save, never
+   before the reader has recorded anything. Skippable, never forced. */
+function menaraNudgeSheetHTML(){
+  return '<div class="grab"></div><div class="sh-in" style="text-align:center">'
+    +'<h2 class="v-ask">سجّلت رحلتك.</h2>'
+    +'<p class="v-sub">منارتك تتكوّن من كل اللي سجّلته عن الكتاب. تبي تشوفها الحين؟</p>'
+    +'<div class="s20"></div>'
+    +'<button class="btn btn-fill btn-full" data-menaranudgego="'+esc(SHEET_CTX.bookId||'')+'">أنشئ منارتك</button>'
+    +'<div class="s10"></div>'
+    +'<button class="lnk plain" data-closesheet="1" style="width:100%;justify-content:center">لاحقًا</button></div>';
 }
 function menaraReviewSheetHTML(){
   return '<div class="grab"></div><div class="sh-in" style="align-items:stretch;text-align:start">'
@@ -2240,7 +2316,8 @@ var PUSHED={book:1,bookJourney:1,done:1,friend:1,welcome:1,auth:1,onboardBook:1,
 
 var app=document.getElementById('app'),tabbar=document.getElementById('tabbar'),
     sheet=document.getElementById('sheet'),backdrop=document.getElementById('backdrop'),
-    toastEl=document.getElementById('toast'),toastMsg=document.getElementById('toastMsg'),current=null,toastT;
+    toastEl=document.getElementById('toast'),toastMsg=document.getElementById('toastMsg'),current=null,toastT,
+    phoneEl=document.querySelector('.phone');
 var INITIAL_HASH=location.hash, NAV_DEPTH=0;
 function viewFromHash(hash){
   var value=String(hash||'').replace(/^#/,'');if(!value)return null;
@@ -2304,6 +2381,7 @@ function mount(name,mode){
   tabbar.style.opacity=hide?'0':'1';
   tabbar.style.pointerEvents=hide?'none':'auto';
   toastEl.classList.toggle('low',hide);
+  phoneEl.classList.toggle('with-nav',!hide);
   return el;
 }
 function goTab(k){
@@ -2847,7 +2925,10 @@ function openSheet(mode,ctx){
         if(tl)tl.innerHTML='<div class="tl-line"></div>'+journeyHTML();
       }
       if(onboard){finishOnboarding();}
-      else{toast('انحفظت في رحلتك.');refreshIfCurrent('home');refreshIfCurrent('community');refreshIfCurrent('library');}
+      else{
+        toast('انحفظت في رحلتك.');refreshIfCurrent('home');refreshIfCurrent('community');refreshIfCurrent('library');
+        setTimeout(function(){openSheet('menara-nudge',{bookId:bookId});},260);
+      }
     }).catch(function(err){
       console.error(err);status.textContent='ما اكتمل الحفظ. ما اعتبرنا العملية ناجحة؛ جرّب مرة ثانية.';save.disabled=false;save.textContent='احفظها';
       if(uploadedPath)sb.storage.from('journey-audio').remove([uploadedPath]);
@@ -2974,6 +3055,7 @@ document.getElementById('phone').addEventListener('click',function(e){
   if((t=e.target.closest('[data-completeread]'))){chooseAndGoToMalfa(t.dataset.completeread);return;}
   if((t=e.target.closest('[data-opengoto]'))){chooseAndGoToMalfa(t.dataset.opengoto);return;}
   if((t=e.target.closest('[data-openmenara]'))){STATE.book=t.dataset.openmenara;bookTab='menara';push('bookJourney');return;}
+  if((t=e.target.closest('[data-menaranudgego]'))){closeSheet();STATE.book=t.dataset.menaranudgego;bookTab='menara';push('bookJourney');return;}
   if((t=e.target.closest('[data-openjourney]'))){STATE.book=t.dataset.openjourney;bookTab='full';push('bookJourney');return;}
   if((t=e.target.closest('[data-logbook]'))){STATE.book=t.dataset.logbook;STATE.page=MY_PROGRESS[STATE.book]||1;openSheet('log');return;}
   if((t=e.target.closest('[data-readingchoose]'))){
@@ -3079,6 +3161,15 @@ document.getElementById('phone').addEventListener('click',function(e){
 document.getElementById('phone').addEventListener('change',function(e){
   var t=e.target;
   if(t.matches('#menaraShare')){if(t.checked)openMenaraShare(t.dataset.bookid);else setMenaraUnshared(t.dataset.bookid);return;}
+});
+/* keyboard bridge for the one non-native-button interactive element (book
+   covers): Enter/Space activates it exactly like a click, reusing the
+   existing click delegation rather than a second copy of the routing. */
+document.getElementById('phone').addEventListener('keydown',function(e){
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  var t=e.target.closest('[data-book]');
+  if(!t)return;
+  e.preventDefault();t.click();
 });
 
 /* ---------- font verification: real width comparison, not fonts.check ---------- */

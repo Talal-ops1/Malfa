@@ -1087,6 +1087,124 @@ real gap).
 
 ### Repo / deploy note
 
-Not yet pushed — sitting on top of the §21 state locally. `git push` was not
-attempted this batch since live QA (above) hadn't cleared yet; push once
-that's resolved or once the user explicitly asks to ship as-is.
+Pushed and live (commit `4bbd660`, right after this section was first
+written) at the user's explicit request, once live QA above had already
+established what could and couldn't be verified in this environment.
+`malfaapp.vercel.app` confirmed serving the new مَلفى order post-deploy.
+
+## 23. سجّل رحلتك → منارة activity order + a real responsive web layout (2026-09-03)
+
+Given directly by the user, two changes on top of §22, both to `v4/index.html`
+only — no new files, no separate "web" build.
+
+**Activity order.** منارة is *derived from* سجّل رحلتك, so the interface must
+never suggest the reverse. `communityHTML()`'s section order changed from
+(روتين القراءة، منارة، سجّل رحلتك، أيام القراءة) to **(روتين القراءة، سجّل
+رحلتك، منارة، أيام القراءة)** — سجّل رحلتك now comes first. The book-detail
+tab order (التسجيل الكامل before منارة) was already correct and untouched.
+Added the actual connective tissue the user asked for: a new skippable
+`menara-nudge` sheet — "سجّلت رحلتك... تبي تشوفها الحين؟" / **«أنشئ
+منارتك»** primary, "لاحقًا" to dismiss — that opens automatically ~260ms
+after a non-onboarding journey entry saves successfully (voice or written;
+onboarding's first entry is excluded, since a منارة prompt on someone's very
+first recording, before they've even reached Home, would be premature). Every
+existing "not enough recorded yet" empty state in منارة (already honest from
+earlier batches) was reviewed and left as-is — none of them implied the
+reverse order.
+
+**A real responsive web layout — not a second app.** This codebase never had
+a separate native app; `v4/index.html` *is* the web product, so "build a
+complete web version" means making this one file actually adapt to desktop
+and tablet instead of floating a fixed 393px phone-simulator in empty space
+above ~520px. Confirmed this is the right reading of the request precisely
+because the alternative — a second HTML file/build — would recreate the
+"duplicate copy of the same experience" problem this project has spent
+several batches actively removing (§22 alone was about collapsing exactly
+that kind of duplication). Reusing the one file also means every requirement
+about shared auth/database/sync between "app and website" is true by
+construction, not by extra plumbing: same `VIEWS`, same Supabase project,
+same rows, same session — a reader who resizes their browser mid-session
+never leaves the page.
+
+Three tiers, purely CSS + one small class toggle, kept last in the cascade
+(moved into the file's final `<style>` block specifically so these rules
+reliably win over every base component rule they touch — a real bug caught
+during this pass, see below):
+- `<=520px` (unchanged): edge-to-edge mobile, exactly as before.
+- `521–1023px` (tablet/narrow window): the phone frame becomes fluid up to
+  640px instead of a fixed 393px, still a single reading column with the
+  bottom tab bar — deliberately *not* given a sidebar, since a 264px rail
+  would leave an uncomfortably narrow remainder at tablet-portrait widths.
+- `>=1024px` (desktop): the bottom tab bar is replaced by a persistent side
+  rail (`.phone.with-nav .tabbar`) built from the exact same `TABS` data and
+  `data-tab` click delegation — no router or state changes, only where the
+  same markup renders. Content sits in a `minmax(0,760px)` column, centered
+  in the remaining space next to the rail, instead of stretching edge to
+  edge. Bottom sheets become centered ~480px dialogs (`margin-inline:auto`,
+  chosen specifically because the sheet's existing drag-to-dismiss code sets
+  `sheet.style.transform` directly for the vertical offset — a `transform`
+  based centering trick would have been silently overwritten by that same
+  code on the first drag). `.grid3` book grids go to 4 columns since there's
+  real width to use. The fake iOS status bar (`9:41`, signal/battery icons)
+  is hidden outright above 1024px — it's phone-simulator chrome, meaningless
+  in an actual desktop browser tab.
+
+**Real bug caught and fixed while verifying this, not left as a demo-only
+approximation**: the side-rail grid was initially applied unconditionally at
+the desktop breakpoint, which reserved the full 264px sidebar column even on
+screens where the tab bar is deliberately hidden (`PUSHED[name]` — welcome,
+auth, onboarding, and other pushed/modal-style screens) — leaving a dead, empty
+264px gap and off-center content on exactly the first screen every new
+visitor sees. Fixed by having `mount()` toggle a `.with-nav` class on
+`.phone` using the same `hide`/`PUSHED[name]` signal it already computes for
+the tab bar's own opacity (no new state, no duplicated logic), and scoping
+the entire sidebar/grid-column CSS under `.phone.with-nav`; a plain,
+un-classed `.phone` at desktop width now just centers its single content
+column with no reserved sidebar space. Confirmed via direct `getBoundingClientRect()`
+checks at 1440px: before the fix, `.app` sat off-center (416px left margin
+vs 264px right); after, it's centered to the pixel.
+
+**Accessibility, addressed rather than assumed**: this was a touch-only
+interface before — the only existing `:focus` style anywhere in the file was
+on text inputs. Added one global `:focus-visible` ring (keyboard/non-pointer
+focus only, so touch and mouse stay quiet) covering every button/link/input/
+`[tabindex]` element, plus `.cv` (book covers). Book covers themselves were
+the one interactive element in the whole app that was a plain, non-focusable
+`<div data-book>` — not a `<button>` — so they were entirely unreachable by
+keyboard; added `tabindex="0" role="button"` (with a real `aria-label`
+combining title+author on the grid/rail cover, relying on the "now reading"
+card's own visible title text for the other two spots) plus one small
+`keydown` bridge on the existing `#phone` delegation root that turns Enter/
+Space on any `[data-book]` into the same synthetic click already handled —
+reusing the routing instead of adding a second copy of it.
+
+### Verification
+
+1. `bash v4/build.sh` → `JS OK` after every edit.
+2. Full existing suite still passes: `test_library_malfa_reorg.sh`,
+   `test_reading_session_logic.sh`, `test_content_integrity.py`,
+   `test_xss.py`, `test_edge_boundaries.py` (live, non-mutating).
+   `test_security_headers.py` failed twice on a stale CSP hash (expected —
+   the script changed twice during this pass) and passed both times after
+   regenerating it.
+3. Live browser verification at three real widths (375px, 820px, 1440px)
+   against a local static server: mobile confirmed pixel-identical to
+   before; tablet confirmed the fluid 640px frame with the status bar and
+   bottom tab bar intact; desktop confirmed via both screenshots and direct
+   `getBoundingClientRect()` reads — the sidebar (mock-populated the same
+   way `renderTabs()` would, since a real login still couldn't be completed
+   in this session, see §22) sits flush to the inline-end edge in RTL, a
+   `.grid3` mock renders 4 equal `170px` columns, and an injected `.sheet`
+   centers to `480/480/480` in a 1440px viewport.
+4. **Still not verified**: an actual authenticated click-through of the new
+   سجّل رحلتك → منارة nudge, or of every real screen at desktop width —
+   same signup-rate-limit blocker as §22, unchanged since then. Everything
+   above was verified either statically (source-level, build/tests) or via
+   direct DOM/CSS inspection of the real shipped markup and mock data
+   standing in for a live session, not by guessing.
+
+### Repo / deploy note
+
+Pushed and live at the user's request — `malfaapp.vercel.app` serves this
+version. `v4/vercel.json`'s CSP hash was regenerated to match the final
+script content.
