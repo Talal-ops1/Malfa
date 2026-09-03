@@ -1781,3 +1781,70 @@ data.
 Not yet pushed — awaiting the user's go-ahead. No Supabase/Edge Function
 changes this batch (pure client-side layout). `v4/vercel.json`'s CSP hash
 was regenerated to match the final script content.
+
+## 28. Fix the empty desktop void, HUMAIN icon vibrancy/closeness (2026-09-03)
+
+Direct follow-up to §27, from the user pointing at a real screenshot of a
+post-login screen (not a mock) plus HUMAIN's actual "Data Platform /
+Infrastructure" rows side by side.
+
+**The real bug**: at common desktop widths (1440px was the one shown),
+`.phone.with-nav`'s three-track grid (`264px minmax(0,860px) 1fr`) left the
+whole *third* track — up to ~200px — as flat, undifferentiated empty space
+on one side only, because the sidebar (track 1) sits flush against its own
+edge while the content column (track 2) has a small fixed cap, dumping all
+the slack into a single unstyled void rather than distributing it. Verified
+this by reproducing it live (mock harness, see §27) and reading
+`.app`'s `getBoundingClientRect()` directly: at 1440px, content spanned only
+x:156–1016, leaving x:0–156 dead. Not a "generous margin" — genuinely
+unbalanced and looked unfinished, exactly as reported.
+
+Fix: widened the content track so it fills the viewport with zero slack at
+the breakpoint's own reference width — `1024–1439px` tier now
+`minmax(0,1000px)`, `1440px+` tier now `280px + minmax(0,1160px)` (sums to
+exactly 1440, so *at* 1440px specifically there's no leftover void at all;
+wider screens still get a reasonable, now much smaller, margin rather than
+a jarring 200px gap). Re-verified the same way: `.app` now spans
+x:0–1160 at 1440px, sidebar 1160–1440, no gap.
+
+**المزايا row styling**, per the HUMAIN screenshot comparison: two real
+gaps from what was shipped in §26 versus the actual reference —
+1. Icon color was a pale, transparency-mixed tint (`color-mix(...26%,
+   transparent)`) — nothing like HUMAIN's fully-saturated gradient boxes.
+   Changed `.lp-row-ic` to a solid `linear-gradient(155deg,var(--khz-lift),
+   var(--khz))` fill with a white icon and a soft matching drop shadow —
+   vibrant, still مَلفى's own lavender rather than HUMAIN's teal/green.
+2. Desktop rows used `justify-content:space-between`, stretching the icon
+   and text to the row's two extremes — HUMAIN's actual composition keeps
+   icon and text close together as one visual unit (with the *row* only
+   using as much width as that unit needs, not the full container).
+   Changed to `justify-content:flex-start` with a tighter `28px` gap; the
+   existing `.rev` row-reverse class still produces the alternating-side
+   effect, just with icon+text grouped instead of pulled apart.
+
+Gave `.share-cta` (شارك بإثراء مَلفى) the same vibrant icon treatment
+(`.share-cta-ic`, 52px, same gradient) instead of the old pale
+`.lp-card-ic`, for visual consistency with the newly-vibrant المزايا rows
+— the user re-supplied its exact copy as confirmation of what to keep; it
+was already correct, this batch only improved the icon/spacing around it.
+
+Also removed the rolling-books section's small eyebrow line ("مكتبة تكبر
+معك") per explicit "احذف" instruction — kept the section's actual
+headline ("كتب سعودية وعربية وعالمية، كلها في مَلفى") since only the
+eyebrow was named.
+
+### Verification
+
+Same mock-session technique as §27 (temporarily reinstated, fully removed
+before this commit — `git diff` on the boot section confirmed empty).
+Checked at 1440px (the width the user's screenshot was taken at) and
+390px: void confirmed gone via direct `getBoundingClientRect()` reads (not
+just a screenshot), rows confirmed grouped via the same, `bash
+v4/build.sh`, full test suite, and `test_security_headers.py` after
+regenerating the CSP hash — all pass.
+
+### Repo / deploy note
+
+Not yet pushed — awaiting the user's go-ahead. Pure client-side CSS/copy
+change, no Supabase/Edge Function changes. `v4/vercel.json`'s CSP hash
+regenerated to match the final script content.

@@ -303,13 +303,14 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   border-top:1px solid var(--rule);text-align:center}
 .lp-row:first-child{border-top:0;padding-top:0}
 .lp-row-ic{flex:none;width:76px;height:76px;border-radius:20px;display:flex;align-items:center;justify-content:center;
-  color:var(--khz-txt);background:linear-gradient(155deg,color-mix(in srgb,var(--khz) 26%,transparent),color-mix(in srgb,var(--khz) 6%,transparent))}
+  color:#fff;background:linear-gradient(155deg,var(--khz-lift),var(--khz));
+  box-shadow:0 8px 20px -8px color-mix(in srgb,var(--khz) 65%,transparent)}
 .lp-row-b{max-width:52ch}
 .lp-row-b .lp-eyebrow{display:block;margin-bottom:8px}
 .lp-row-b h3{font-family:var(--f-d);font-size:21px;font-weight:700;margin:0;line-height:1.4}
 .lp-row-b p{font-family:var(--f-u);font-size:14.5px;color:var(--ink-2);line-height:1.8;margin:10px auto 0}
 @media (min-width:768px){
-  .lp-row{flex-direction:row;justify-content:space-between;text-align:start;gap:44px}
+  .lp-row{flex-direction:row;justify-content:flex-start;text-align:start;gap:28px;align-items:center}
   .lp-row.rev{flex-direction:row-reverse}
   .lp-row-b{max-width:44ch}
 }
@@ -472,12 +473,15 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .topic-card .ic{position:absolute;bottom:18px;inset-inline-end:18px;color:var(--ink-3)}
 @media (min-width:521px){.topic-grid{grid-template-columns:1fr 1fr}}
 /* «شارك بإثراء مَلفى» — inviting, not an ad: one restrained accent tint. */
-.share-cta{padding:22px;border-radius:var(--r2);text-align:start;
+.share-cta{padding:24px;border-radius:var(--r2);text-align:start;
   background:linear-gradient(155deg,color-mix(in srgb,var(--khz) 14%,var(--ground-2)),var(--ground-2));
   border:1px solid color-mix(in srgb,var(--khz-txt) 28%,transparent)}
-.share-cta h3{font-family:var(--f-d);font-size:18px;font-weight:700;margin:0}
+.share-cta-ic{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+  color:#fff;background:linear-gradient(155deg,var(--khz-lift),var(--khz));
+  box-shadow:0 8px 20px -8px color-mix(in srgb,var(--khz) 65%,transparent);margin-bottom:16px}
+.share-cta h3{font-family:var(--f-d);font-size:19px;font-weight:700;margin:0}
 .share-cta p{font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.75;margin:8px 0 0;max-width:38ch}
-.share-cta .btn{margin-top:16px}
+.share-cta .btn{margin-top:18px}
 
 /* ---------- reader feature ---------- */
 .who{padding-inline:var(--pad)}
@@ -781,7 +785,7 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
      bar shown (mount() toggles this the same way it already toggles the
      bar's own opacity) — so welcome/auth/onboarding/pushed screens stay a
      single centered column instead of leaving a blank reserved sidebar. */
-  .phone.with-nav{display:grid;grid-template-columns:264px minmax(0,860px) 1fr;align-items:stretch}
+  .phone.with-nav{display:grid;grid-template-columns:264px minmax(0,1000px) 1fr;align-items:stretch}
   .phone.with-nav .app{grid-column:2;width:auto}
   .phone.with-nav .tabbar{display:flex;position:relative;grid-column:1;grid-row:1;bottom:auto;inset-inline:auto;
     height:100dvh;flex-direction:column;align-items:stretch;gap:2px;padding:30px 16px;
@@ -799,7 +803,7 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   .tab{transition:none}
 }
 @media (min-width:1440px){
-  .phone.with-nav{grid-template-columns:280px minmax(0,960px) 1fr}
+  .phone.with-nav{grid-template-columns:280px minmax(0,1160px) 1fr}
 }
 
 /* ============================================================
@@ -1591,8 +1595,7 @@ function landingRollingBooksHTML(){
       +'</div>';
   }
   return '<div class="lp-section lp-rolling">'
-    +'<div class="lp-section-head"><span class="lp-eyebrow">مكتبة تكبر معك</span>'
-      +'<h2 class="lp-h2">كتب سعودية وعربية وعالمية، كلها في مَلفى</h2></div>'
+    +'<div class="lp-section-head"><h2 class="lp-h2">كتب سعودية وعربية وعالمية، كلها في مَلفى</h2></div>'
     +'<div class="s10"></div>'
     +'<div class="rb-wrap">'
       +trackHTML(row1,0,false)
@@ -2072,7 +2075,7 @@ function homeHTML(){
   +'<div class="topic-grid">'+TOPIC_ORDER.map(function(id,i){return topicCardHTML(id,i+1);}).join('')+'</div>'
   +'<div class="s20"></div>'
   +'<div class="pad"><div class="share-cta">'
-    +'<div class="lp-card-ic" style="margin-bottom:12px">'+ic('pencil',18)+'</div>'
+    +'<div class="share-cta-ic">'+ic('pencil',20)+'</div>'
     +'<h3>شارك بإثراء مَلفى</h3>'
     +'<p>عندك كتابة أو فكرة عن القراءة تبي تشاركها؟ ساهم في محتوى مَلفى التحريري.</p>'
     +'<button class="btn btn-fill" data-contribute="1">شارك كتاباتك'+ic('arrow',15)+'</button>'
