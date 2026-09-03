@@ -91,12 +91,16 @@ body{margin:0;background:#050406;font-family:var(--f-u);color:var(--ink)}
   box-shadow:0 0 0 10px #1e1c22,0 0 0 11px rgba(255,255,255,.06),0 44px 100px -30px rgba(0,0,0,.9)}
 @media (max-width:520px){ .stage{padding:0} .phone{width:100%;height:100dvh;border-radius:0;box-shadow:none} }
 
-.statusbar{position:absolute;top:0;inset-inline:0;height:52px;display:flex;align-items:flex-end;justify-content:space-between;
+.statusbar{position:absolute;top:0;inset-inline:0;height:max(52px,env(safe-area-inset-top));display:flex;align-items:flex-end;justify-content:space-between;
   padding:0 30px 8px;z-index:60;pointer-events:none;direction:ltr;color:#fff;transition:color 200ms ease}
 .sb-time{font-size:15px;font-weight:600;letter-spacing:.2px}
 .sb-right{display:flex;align-items:center;gap:5px}
 
-.app{position:absolute;top:52px;inset-inline:0;bottom:0;overflow:hidden}
+/* real notches/Dynamic Island report a larger safe-area-inset-top than the
+   simulated 52px status bar; grow to match so app content never starts
+   under the real notch. env() resolves to 0 on non-notched/desktop, so
+   max(52px,0)=52px there — unchanged. Never shrinks below current. */
+.app{position:absolute;top:max(52px,env(safe-area-inset-top));inset-inline:0;bottom:0;overflow:hidden}
 .screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--ground);
   opacity:0;visibility:hidden;padding-bottom:112px;scrollbar-width:none;
   transition:opacity 240ms ease,transform 240ms var(--ease-out),visibility 0s linear 240ms}
@@ -227,8 +231,6 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   transition:background var(--press-out) ease}
 .hdr-btn:active{transition-duration:0ms;background:color-mix(in srgb,var(--ink) 8%,transparent)}
 .wordmark{font-family:var(--f-d);font-size:21px;font-weight:700;text-align:center;line-height:1}
-.badge{position:absolute;top:9px;inset-inline-end:8px;width:7px;height:7px;border-radius:50%;background:var(--coral);
-  box-shadow:0 0 0 2px var(--ground)}
 .hdr-wrap{position:relative;width:44px;height:44px}
 .avatar{width:31px;height:31px;border-radius:50%;overflow:hidden}
 .avatar svg{display:block;width:100%;height:100%}
@@ -245,7 +247,13 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   max-width:58%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .screen.scrolled .navbar .nt{opacity:1}
 
-.tabbar{position:absolute;bottom:0;inset-inline:0;z-index:40;height:84px;padding:6px 2px 0;
+/* 84px already approximates icon/label content (~50px) plus the standard
+   34pt home-indicator reservation on every current notched iPhone — so
+   max() with the real env() value is a no-op today (max(84px,84px)=84px)
+   and only grows the bar if a future device reports a taller inset,
+   keeping the tap targets clear of the real home-indicator gesture zone
+   without regressing today's carefully-tuned layout. */
+.tabbar{position:absolute;bottom:0;inset-inline:0;z-index:40;height:max(84px,calc(50px + env(safe-area-inset-bottom)));padding:6px 2px 0;
   display:grid;grid-template-columns:repeat(5,1fr);
   background:var(--chrome-9);backdrop-filter:saturate(160%) blur(22px);-webkit-backdrop-filter:saturate(160%) blur(22px);
   border-top:1px solid var(--rule)}
@@ -602,7 +610,7 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .backdrop.on{opacity:1;visibility:visible;transition-delay:0s}
 .backdrop.dragging{transition:none}
 .sheet{position:absolute;inset-inline:0;bottom:0;z-index:51;background:var(--ground-2);border-radius:var(--r4) var(--r4) 0 0;
-  transform:translateY(101%);transition:transform 320ms var(--e);padding:10px 24px 34px;touch-action:none;
+  transform:translateY(101%);transition:transform 320ms var(--e);padding:10px 24px max(34px,env(safe-area-inset-bottom));touch-action:none;
   will-change:transform;box-shadow:0 -1px 0 rgba(255,255,255,.08)}
 .sheet.on{transform:none}
 .sheet.dragging{transition:none}
@@ -1994,7 +2002,7 @@ function homeHTML(){
   var firstName=(MY_NAME||'').split(' ')[0]||'';
   return ''
   +'<header class="hdr">'
-    +'<div class="hdr-wrap"><button class="hdr-btn" aria-label="التنبيهات" data-toast="ما فيه تنبيهات جديدة">'+ic('bell',22)+'</button><span class="badge"></span></div>'
+    +'<div class="hdr-wrap"><button class="hdr-btn" aria-label="التنبيهات" data-toast="ما فيه تنبيهات جديدة">'+ic('bell',22)+'</button></div>'
     +'<div class="wordmark">مَــلفى</div>'
     +'<button class="hdr-btn" aria-label="حسابي" data-tab="account"><span class="avatar">'+mono(firstName||'؟',stock(3))+'</span></button>'
   +'</header>'
@@ -2915,7 +2923,7 @@ function sheetHTML(mode){
   if(mode==='upgrade')return upgradeSheetHTML();
   var bars='';
   for(var i=0;i<38;i++){bars+='<i style="--h:'+(6+((i*7)%18))+'px;animation-delay:'+((i%11)*60)+'ms"></i>';}
-  return '<div class="grab"></div><div class="sh-in">'
+  return '<div class="grab"></div><div class="sh-in" id="logForm">'
     +'<h2 class="v-ask">وش علق معك؟</h2><p class="v-sub" id="vSub">قلها مثل ما هي.</p>'
     +'<button class="mic" id="mic" aria-label="ابدأ التسجيل">'+ic('mic',34)+'</button>'
     +'<button class="lnk plain" id="vStop" style="display:none;margin-top:8px">إنهاء التسجيل</button>'
@@ -2928,7 +2936,17 @@ function sheetHTML(mode){
       +'<span class="val tnum" id="pgVal">'+STATE.page+'</span>'
       +'<button data-step="1" aria-label="أكثر">'+ic('plus',18)+'</button></span></div>'
     +'<div class="v-act"><button class="lnk plain" data-closesheet="1">'+(SHEET_CTX.onboard?'تجاوز':'مو الحين')+'</button>'
-      +'<button class="btn btn-fill" id="vSave" disabled>احفظها</button></div></div>';
+      +'<button class="btn btn-fill" id="vSave" disabled>احفظها</button></div></div>'
+    /* hidden by default, shown in place of the form when attemptCloseSheet()
+       finds unsaved text/recording — kept as sibling markup (not swapped
+       into .sh-in via innerHTML) so the form's own DOM nodes and their
+       already-attached mic/save listeners are never destroyed and never
+       need re-wiring. */
+    +'<div class="sh-in" id="discardConfirm" style="display:none">'
+      +'<h2 class="v-ask">تتجاهل اللي سجّلته؟</h2>'
+      +'<p class="v-sub">النص أو التسجيل اللي سويته ما انحفظ بعد.</p>'
+      +'<div class="v-act"><button class="lnk plain" data-keepdraft="1">أكمل الكتابة</button>'
+        +'<button class="btn btn-fill" data-discarddraft="1" style="background:var(--coral)">تجاهل</button></div></div>';
 }
 function privacySheetHTML(){
   return '<div class="grab"></div><div class="sh-in" style="align-items:stretch;text-align:start">'
@@ -3178,6 +3196,7 @@ function back(){if(NAV_DEPTH>0)history.back();else{STATE.tab='home';renderTabs()
 function toast(m){toastMsg.textContent=m;toastEl.classList.add('on');
   clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('on');},1900);}
 window.addEventListener('popstate',function(e){
+  if(SHEET_MODE&&sheet.classList.contains('on')){if(!SHEET_CTX.onboard)closeSheet();}
   if(e.state&&e.state.malfa){restoreRoute(e.state,'pop');return;}
   history.go(1);
 });
@@ -3410,6 +3429,8 @@ function openSheet(mode,ctx){
   sheet.style.transform='';backdrop.style.opacity='';sheetY=0;
   sheet.innerHTML=sheetHTML(SHEET_MODE);
   sheet.setAttribute('aria-hidden','false');
+  app.setAttribute('inert','');app.setAttribute('aria-hidden','true');
+  tabbar.setAttribute('inert','');tabbar.setAttribute('aria-hidden','true');
   backdrop.classList.add('on');sheet.classList.add('on');
   recSecs=0;recordedBlob=null;audioChunks=[];recordState='idle';
   requestAnimationFrame(function(){var first=sheet.querySelector('input,textarea,[contenteditable="true"],button');if(first)first.focus();});
@@ -3730,6 +3751,29 @@ function skipOnboardingVoice(){
   closeSheet();
   upsertLibraryEntry(bookId,'reading',1).then(function(){finishOnboarding();});
 }
+/* an unsaved voice recording or typed reflection is real work — closing the
+   sheet (button, backdrop tap, swipe-dismiss, or Escape) must not silently
+   discard it. Every dismiss path below calls attemptCloseSheet() instead of
+   closeSheet() directly. */
+function logSheetHasDraft(){
+  if(SHEET_MODE!=='log'||SHEET_CTX.onboard)return false;
+  var txt=document.getElementById('vTxt');
+  return !!(recordedBlob||(txt&&(txt.textContent||'').trim()));
+}
+function attemptCloseSheet(){
+  if(logSheetHasDraft()&&!SHEET_CTX.confirmingDiscard){
+    SHEET_CTX.confirmingDiscard=true;
+    if(cancelSpring){cancelSpring();cancelSpring=null;}
+    sheet.style.transform='';backdrop.style.opacity='';sheetY=0;
+    var form=document.getElementById('logForm'),confirmEl=document.getElementById('discardConfirm');
+    if(form&&confirmEl){
+      form.style.display='none';confirmEl.style.display='flex';
+      var fb=confirmEl.querySelector('button');if(fb)fb.focus();
+    }
+    return;
+  }
+  closeSheet();
+}
 function closeSheet(){
   if(recTimer){clearInterval(recTimer);recTimer=null;}
   if(micPermissionTimer){clearTimeout(micPermissionTimer);micPermissionTimer=null;}
@@ -3744,6 +3788,8 @@ function closeSheet(){
   sheet.classList.remove('dragging');backdrop.classList.remove('dragging');
   backdrop.classList.remove('on');sheet.classList.remove('on');
   sheet.setAttribute('aria-hidden','true');
+  app.removeAttribute('inert');app.removeAttribute('aria-hidden');
+  tabbar.removeAttribute('inert');tabbar.removeAttribute('aria-hidden');
   if(lastSheetFocus&&document.contains(lastSheetFocus))lastSheetFocus.focus();lastSheetFocus=null;
 }
 
@@ -3783,7 +3829,7 @@ function endDrag(e){
   var h=sheet.offsetHeight||1;
   if(sheetY+project(vel)>h*0.32||vel>620){
     cancelSpring=springTo(sheetY,h,vel,{response:0.3},setSheetY,function(){
-      cancelSpring=null;closeSheet();
+      cancelSpring=null;attemptCloseSheet();
     });
   }else{
     /* bounce only because a flick preceded it */
@@ -3795,7 +3841,7 @@ function endDrag(e){
 sheet.addEventListener('pointerup',endDrag);
 sheet.addEventListener('pointercancel',endDrag);
 sheet.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){if(!SHEET_CTX.onboard)closeSheet();return;}
+  if(e.key==='Escape'){if(!SHEET_CTX.onboard)attemptCloseSheet();return;}
   if(e.key!=='Tab')return;
   var focusable=Array.prototype.filter.call(sheet.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[contenteditable="true"]'),function(x){return x.offsetParent!==null;});
   if(!focusable.length)return;var first=focusable[0],last=focusable[focusable.length-1];
@@ -3817,17 +3863,24 @@ function stopPlay(){
 }
 document.getElementById('phone').addEventListener('click',function(e){
   var t;
+  if((t=e.target.closest('[data-keepdraft]'))){
+    SHEET_CTX.confirmingDiscard=false;
+    var lf=document.getElementById('logForm'),dc=document.getElementById('discardConfirm');
+    if(lf&&dc){dc.style.display='none';lf.style.display='';var vt=document.getElementById('vTxt');if(vt)vt.focus();}
+    return;
+  }
+  if((t=e.target.closest('[data-discarddraft]'))){closeSheet();return;}
   if((t=e.target.closest('[data-closesheet]'))){
     if(SHEET_CTX.onboard)skipOnboardingVoice();
     else{
       if(SHEET_MODE==='menara-review'){
         var chk=document.getElementById('menaraShare');if(chk)chk.checked=false;
       }
-      closeSheet();
+      attemptCloseSheet();
     }
     return;
   }
-  if(e.target===backdrop){if(!SHEET_CTX.onboard)closeSheet();return;}
+  if(e.target===backdrop){if(!SHEET_CTX.onboard)attemptCloseSheet();return;}
   if((t=e.target.closest('[data-sheet]'))){STATE.page=MY_PROGRESS[STATE.book]||1;openSheet('log');return;}
   if((t=e.target.closest('[data-addbook]'))){openSheet('addbook',{status:t.dataset.addbook});return;}
   if((t=e.target.closest('[data-newcollection]'))){openSheet('newcollection');return;}

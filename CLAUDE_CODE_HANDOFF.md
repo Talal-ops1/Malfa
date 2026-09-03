@@ -1848,3 +1848,156 @@ regenerating the CSP hash — all pass.
 Not yet pushed — awaiting the user's go-ahead. Pure client-side CSS/copy
 change, no Supabase/Edge Function changes. `v4/vercel.json`'s CSP hash
 regenerated to match the final script content.
+
+## 29. Full product audit — architecture, navigation, security, legal, a11y, QA (2026-09-03)
+
+### Scope
+
+A five-hat audit request (architect / iOS+UX consultant / legal-compliance
+reviewer / QA manager / Saudi product strategist), asking for a genuine
+inspect-then-fix pass across the whole product rather than a redesign. Given
+this is a single-file client with no native iOS binary, framed every
+iOS-native requirement (Sign in with Apple, App Store review, native
+haptics/gesture handoff) as "translate to the nearest correct web
+equivalent, flag what only a native wrapper can actually satisfy" rather
+than pretending to build a native app inside a browser tab. Loaded and
+applied `emil-design-eng` and `apple-design` skills throughout, as required.
+
+Delegated the full Supabase security/RLS audit (every table's policies,
+every `SECURITY DEFINER` function's grants, all 6 Edge Functions' CORS/JWT
+handling, a cross-user data-leak trace) to a background agent so the deep
+`information_schema`/advisor querying didn't bloat the main session — its
+report is what surfaced both real findings below. Did NOT trust the report
+blind: independently re-verified the CORS "mismatch" it flagged and found
+it was a non-issue (`malfaapp.vercel.app`/`malfaappl.vercel.app` are two
+real separate deployments — consumer app vs. admin dashboard — confirmed
+via `CLAUDE_CODE_HANDOFF.md` §17's own record of connecting Vercel Git
+integration for both), which the sub-agent had no way to know from SQL
+alone. Worth remembering: a sub-agent's DB-level findings can still need a
+repo-history cross-check before acting on them.
+
+### Findings fixed this batch
+
+**Security (4th recurrence of a known bug class)**: `enforce_collection_book_owner()`
+had `EXECUTE` revoked from `anon`/`authenticated` but never from the
+Postgres `PUBLIC` pseudo-role — the exact "revoke from anon ≠ revoke from
+PUBLIC" gotcha this project has now hit four times (§22, §24, §25 all
+document earlier occurrences on other functions). Fixed:
+`revoke execute on function public.enforce_collection_book_owner() from public;`.
+Also closed a related, narrower gap the audit surfaced:
+`has_active_paid_plan(uuid)` was correctly `authenticated`-only but had no
+relationship check, so any signed-in user could probe an arbitrary user's
+paid-plan status. Rewrote it to return `false` unless the target is the
+caller or an existing `reading_invites` counterpart — checked all three
+real call sites (invite-send, invite-accept, `shared_reading_progress()`)
+first to confirm none of them needed the removed access.
+
+**Safe areas**: the viewport meta tag already had `viewport-fit=cover`
+(opting into edge-to-edge layout) but nothing ever read
+`env(safe-area-inset-*)`. The existing hardcoded values (`.tabbar`'s 84px,
+`.sheet`'s 34px bottom padding) turned out to already match the standard
+home-indicator inset on every current notched iPhone — someone had tuned
+these by hand correctly at some point — so this wasn't visibly broken
+today, but silently wasted ~34px on an iPhone SE and would clip on any
+future device with a taller inset. Fixed with `max(existing-px,
+env(safe-area-inset-*))` on `.statusbar`, `.app`'s top offset, `.tabbar`,
+and `.sheet` — mathematically a no-op on today's devices
+(`max(84px,50+34px)=84px`, verified), only ever grows beyond what's
+already correct, never shrinks it.
+
+**VoiceOver could reach content behind an open sheet**: `openSheet()`
+already did focus-save/restore and set `aria-hidden` on the sheet itself
+correctly (good prior work), but never hid `#app`/`#tabbar` behind it.
+Added `inert` + `aria-hidden="true"` on both for the sheet's lifetime,
+removed on every close path.
+
+**Real data-loss bug, the most consequential fix this batch**: the سجّل
+رحلتك voice/text sheet had four independent dismiss paths — the "مو
+الحين" button, a backdrop tap, Escape, and swipe-down — and none of them
+checked for an unsaved recording or typed draft first. Built one guard,
+`attemptCloseSheet()`, that all four now route through: if there's an
+unsaved recording (`recordedBlob`) or non-empty `#vTxt` text, it shows
+"تتجاهل اللي سجّلته؟" instead of closing. The confirm UI is a hidden
+*sibling* panel inside the same sheet markup (`#discardConfirm`), toggled
+via `display`, deliberately never an `innerHTML` swap of the live form —
+swapping would destroy and need to re-wire the mic/save button listeners
+that `openSheet()`'s big if-block only attaches once. Verified live: typed
+text survives a full close→confirm→"أكمل الكتابة" round trip byte-for-byte,
+and `inert` is correctly toggled throughout (on while confirming, off after
+either resolution).
+
+**Fake metric removed**: the notification bell's red unread-dot (`.badge`)
+had no conditional logic anywhere in the file — it rendered unconditionally
+for every user regardless of whether anything had happened, since there is
+no notifications table or generator behind it at all. The bell's own tap
+handler was already honest (a static "no new notifications" toast); the
+badge wasn't. Removed the element and its now-dead CSS.
+
+### Findings traced and confirmed correct, not changed
+
+Single source of truth for reading progress (`MY_PROGRESS`) verified
+directly used, unduplicated, by all three surfaces that show it
+(الرئيسية's continue card, مَلفى's روتين card, مكتبتي's "تقرأه الآن"
+row) — traced each render function rather than assuming. Zero dead
+buttons found across all 68 distinct `data-*` actions in the file (2
+apparent non-matches were confirmed to be non-click attributes: a CSS
+`content:attr()` hook and a form-value carrier read via `.dataset` in a
+`change` listener, not orphaned click targets). Button press feedback,
+swipe-dismiss momentum projection, and `prefers-reduced-motion` coverage
+all independently checked against the Emil Kowalski / Apple
+fluid-interfaces references loaded for this task and found already
+correct — noted explicitly in the handoff artifact so this existing
+quality isn't mistaken for something newly added.
+
+### Findings flagged, not fixed (documented reasoning, not silent gaps)
+
+Dynamic Type / rem migration (every font-size in the file is hardcoded
+px) — mechanical but touches hundreds of declarations across a 4,100-line
+file; belongs in its own pass with dedicated visual QA, not bundled into
+an audit. Deep-link coverage for pushed non-tab screens (`topic`,
+`plans`, `collection`, `readingSummary` all silently drop the destination
+on a cold hash-load, since `viewFromHash()` only recognizes tabs +
+`#book/:id` + `#friend`) — needs a product decision on which pushed
+screens should be publicly linkable before writing the fix. Terms of
+Use/community guidelines are entirely absent from the repo — flagged as
+the top legal-priority gap given `contributions` and shareable منارة
+already exist in production. Leaked-password protection is off in
+Supabase Auth — a dashboard toggle, not a tool this session has access to.
+
+### Verification
+
+`bash v4/build.sh` after every edit; full existing suite
+(`test_library_malfa_reorg.sh`, `test_reading_session_logic.sh`,
+`test_content_integrity.py`, `test_xss.py`, `test_edge_boundaries.py`,
+`test_security_headers.py` after CSP hash regen) all pass unchanged.
+`get_advisors` (security) re-run before/after the DB fix, plus a direct
+`information_schema.routine_privileges` query (not just the advisor
+cache) confirming zero `anon`/`PUBLIC` grant rows post-fix. Live
+verification via a temporary mock-session boot harness (same technique as
+§27, fully removed before commit — `git diff` on the boot section
+confirmed byte-identical to before) at 390×844, 393×852, and 430×932,
+dark and light mode: no horizontal overflow on any tab, the discard-guard
+round trip verified working exactly as designed, `inert` toggling
+confirmed correct via direct attribute inspection. **Not testable in this
+environment**: a real authenticated signup (same standing constraint as
+every prior batch), real VoiceOver on an actual device, and real
+notched-iPhone safe-area rendering (`mcp__Claude_Code_iOS_Simulator`
+requires a full Xcode install this machine doesn't have — confirmed via
+the tool's own error, not assumed) — the safe-area fix is verified by CSS
+math instead (`max()` provably a no-op at every currently-known inset
+value), not an on-device screenshot.
+
+A full audit artifact (executive summary, health score, navigation maps,
+screen inventory, the full findings register, legal/compliance risk
+register, subscription review, accessibility results, and the complete QA
+test matrix with honest pass/fail/not-testable status per row) was
+published for the user rather than left in chat scrollback, per this
+project's evidence-based handoff practice.
+
+### Repo / deploy note
+
+Not yet pushed — awaiting the user's go-ahead. One new migration
+(`20260903090000_close_4th_public_grant_recurrence_and_scope_plan_check.sql`)
+already applied live against the Supabase project (DB changes there don't
+have a separate "staged" state to hold back). `v4/vercel.json`'s CSP hash
+regenerated to match the final script content.
