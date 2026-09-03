@@ -1628,3 +1628,156 @@ Not yet pushed — awaiting the user's go-ahead. `supabase/functions/
 summarize-journey` was deployed live (version 22) since Edge Functions
 have no separate "staged" state to preview from. `v4/vercel.json`'s CSP
 hash was regenerated to match the final script content.
+
+## 26. HUMAIN row layout for المزايا, pricing-card polish, rolling-books trim (2026-09-03)
+
+Follow-up to §25, from direct user feedback on a screenshot of the shipped
+landing page (comparing HUMAIN's real "Unified purpose" section against
+مَلفى's own rolling-books row). Three small, targeted changes:
+
+- Dropped the first two rolling-book covers (ترمي بشرر، بنات الرياض) per
+  explicit request — 24 titles remain.
+- Rebuilt `landingBentoHTML()` (المزايا) from a 3-column card grid into
+  HUMAIN's actual layout: full-width rows alternating icon side left/right,
+  divided by hairlines, each with a short overline + bold title +
+  description — translated into مَلفى's own tokens (`--khz` icon panel,
+  `--f-d`/`--f-u` type), not HUMAIN's colors or copy. `.lp-bento`/`.lp-card`
+  (the old grid/card classes) removed as dead code; `.lp-card-ic` kept
+  since رحلات متعددة's panels (§25) still use it.
+- Refined `.plan-card`/`.cmp-table` with restrained "Emil Kowalski"-style
+  polish, per explicit reference: subtle hover lift (`translateY(-3px)` +
+  layered soft shadow) using the app's own `--t2`/`--ease-out` motion
+  tokens rather than new arbitrary values, circular check badges in the
+  feature list (had to move the check icon out of `.plan-features li .ic`
+  into a dedicated `.feat-check` wrapper, since `ic()` sets width/height as
+  an *inline* style that would have overridden any CSS-only circle sizing),
+  and a bordered/hover-tinted comparison table.
+
+Verification: `bash v4/build.sh`, full test suite, live check at
+390/768/1280px (no overflow, alternating rows confirmed via
+`getBoundingClientRect()` left/right positions, not just eyeballed).
+Pushed live (commit `3d18087`).
+
+## 27. Post-login web redesign — hero, من مَلفى grid, شارك بإثراء CTA, أيام القراءة (2026-09-03)
+
+### Scope
+
+Unlike §22–26 (all pre-login/landing work), this batch is entirely about
+the **signed-in** desktop/web experience: a proper full-width hero on
+الرئيسية, a two-column «من مَلفى» grid, a highlighted «شارك بإثراء مَلفى»
+CTA, and a real calendar-month «أيام القراءة» with a prominent streak —
+using Thmanyah's editorial clarity (generous whitespace, structured
+sections, confident headlines) as a reference, translated into مَلفى's
+own lavender/literary identity, never copying Thmanyah's components.
+
+### A real visual-QA problem, and how it was solved this time
+
+Every prior batch in this project has had the same honest caveat: no real
+signup could be completed in this environment, so authenticated screens
+were verified by code review and DOM/CSS inspection of mock-populated
+elements, never a live screenshot of the real render. That was an
+acceptable trade-off for backend/logic-heavy batches, but this batch is
+*purely visual* — shipping it on code review alone would have been
+irresponsible.
+
+Fix: added a temporary, clearly-scoped mock-boot branch —
+`if(location.search.indexOf('mock=1')>-1){...}` right where
+`BOOT_READY=sb.auth.getSession()...` normally runs — that populated `ME`,
+`MY_NAME`, `MY_LIB`, `MY_JOURNEY`, `MY_READING_SESSIONS` (a realistic
+2-day streak plus one intentionally-skipped day, to exercise all four
+calendar day-states), and `MY_PLAN` (paid, to confirm the شخص/منارة
+paywall UI correctly shows *unlocked*) directly, then called
+`finishWelcome()` — bypassing the network entirely, no real Supabase
+session needed. Verified every redesigned section this way at 390/768/
+1280px, in **both dark and light mode**, then removed the entire block
+before committing (`git diff` on the boot section confirmed byte-identical
+to before). The resulting 400 console errors from the mock session's
+invalid non-UUID `user_id` (expected — background queries keyed on
+`ME.id='mock-user'` fail their `uuid` type check) were confirmed to be
+scoped only to that testing tab, not a real regression, by opening a
+fresh tab and confirming zero console errors there. Worth reusing this
+exact technique for any future purely-visual post-login batch.
+
+### 1–2. Hero and desktop layout
+
+`.phone.with-nav`'s content column widened 760px→860px (1024–1439px) and
+→960px at 1440px+ (sidebar itself grows 264px→280px at that tier) — a
+system-wide change affecting every post-login screen uniformly, which is
+the tractable way to satisfy "redesign and polish all post-login pages...
+generous whitespace" without bespoke work on every single screen.
+
+`homeHTML()`'s greeting block becomes a real hero (`.home-hero`): a subtle
+radial-glow background wash (same technique as the pre-login `.lp-hero`,
+scaled down), the headline bumped 31px→34px (38px at desktop) via a new
+`.home-hero-q` modifier stacked onto the existing `.open-q` class (kept
+`.open-q` itself unchanged since `onboardBookHTML()` also uses it and
+didn't need to grow), and — this is the structural change — the
+"اقرأ من كتابك" action promoted from a plain list row to the section's one
+filled `.btn`, i.e. an actual primary CTA instead of three visually-equal
+rows. The other two actions (اقرأ مع صديق، شارك التجربة) stay as secondary
+rows beneath it. No card border anywhere in the hero — full-bleed within
+the content column, not a boxed/side-aligned widget, per the explicit
+"not a side-aligned card" requirement.
+
+### 3–4. «من مَلفى» grid and «شارك بإثراء» CTA
+
+New `.topic-grid`/`.topic-card` (replacing the old `.erow` list rows,
+which are now fully dead — removed) renders `TOPIC_ORDER`'s topics as a
+responsive 2-column grid (1 column below 521px, matching the app's
+existing tablet-breakpoint convention), used identically in both
+`homeHTML()` and `discoverHTML()`'s «من مَلفى» sections so the same
+content never looks different in two places. Only 4 real topics exist
+(`TOPIC_PAGES`/`TOPIC_ORDER`) — rendered as 2 rows of 2, the same grid
+mechanism the brief's "2–2–2" describes; did not invent 2 fake topics
+just to hit a literal 3-row count, since honest-content-only is a
+standing rule in this project (`test_content_integrity.py`'s own filler
+check exists for exactly this reason).
+
+New `.share-cta`: a bordered, softly khz-tinted card (not a hard-color
+block) with an icon, a one-line explanation of what to contribute, and a
+filled button — visually distinct enough to invite a tap, restrained
+enough to still read as editorial rather than an ad banner.
+
+### 5. «أيام القراءة»
+
+`readingCalendarHTML()` rewritten from a rolling N-day strip (callers
+passed `27` or `83` as a day count) into a real weekday-aligned calendar
+for the *current* month — leading blank cells so الأحد always lands in
+the same column, four explicit day states (`.read`, `.today`, `.missed`,
+`.future`, plus the existing `.goal` modifier), a header row showing the
+month name + year (`AR_MONTHS[month]+' '+year`) beside a prominent streak
+block reusing `readingStreaks().current` (already computed, previously
+shown nowhere in the UI — only `.best` appeared, in the summary stats
+row). Empty state when `current===0`: "ابدأ اليوم عشان تبدأ سلسلتك"
+instead of a bare `0`. Both call sites (`communityHTML()`'s مَلفى tab,
+`readingSummaryHTML()`'s detail screen) updated to the new no-argument
+signature — a single component now, not two different views of the same
+data.
+
+### Verification
+
+1. `bash v4/build.sh` → `JS OK` after every edit.
+2. Full existing suite passes unchanged: `test_library_malfa_reorg.sh`,
+   `test_reading_session_logic.sh`, `test_content_integrity.py`,
+   `test_xss.py`, `test_edge_boundaries.py`, `test_security_headers.py`
+   (CSP hash regenerated once, at the end).
+3. Live mock-session verification (see above) at 390px, 768px, and
+   1280px, dark and light: confirmed no horizontal overflow anywhere
+   (`scrollWidth<=clientWidth`, checked directly) on الرئيسية, مَلفى،
+   مكتبتي، اكتشف، حسابي; the topic grid collapses 2→1 columns at the
+   documented breakpoint; all four calendar day-states render with
+   visually distinct treatment (confirmed via both `className` inspection
+   and screenshot); the streak number and empty state both render
+   correctly; the شخص paywall lock badge correctly stays hidden for the
+   mock paid plan (confirming the redesign didn't regress §25's paywall
+   logic); light mode's `.open-q` color rule still applies through the
+   new `.home-hero-q` modifier class.
+4. **Still not verified**: a real authenticated session end-to-end
+   (mock data stands in, as described above — this is a simulated
+   render of the real code paths, not a live account).
+
+### Repo / deploy note
+
+Not yet pushed — awaiting the user's go-ahead. No Supabase/Edge Function
+changes this batch (pure client-side layout). `v4/vercel.json`'s CSP hash
+was regenerated to match the final script content.
