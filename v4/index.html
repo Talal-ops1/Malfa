@@ -295,12 +295,24 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   align-items:center;justify-content:center;font-family:var(--f-u);font-weight:700;font-size:14px}
 .lp-step-b h3{font-family:var(--f-d);font-size:17px;font-weight:700;margin:0}
 .lp-step-b p{font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.7;margin:5px 0 0}
-.lp-bento{display:grid;grid-template-columns:1fr;gap:12px;max-width:760px;margin:0 auto}
-.lp-card{padding:22px;border:1px solid var(--rule);border-radius:var(--r2);background:var(--ground-2);text-align:start}
 .lp-card-ic{width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--khz) 16%,transparent);
   color:var(--khz-txt);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
-.lp-card h3{font-family:var(--f-d);font-size:17px;font-weight:700;margin:0;line-height:1.4}
-.lp-card p{font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.75;margin:7px 0 0}
+/* ---- المزايا — HUMAIN-style alternating rows ---- */
+.lp-rows{max-width:900px;margin:0 auto}
+.lp-row{display:flex;flex-direction:column;align-items:center;gap:22px;padding:36px 0;
+  border-top:1px solid var(--rule);text-align:center}
+.lp-row:first-child{border-top:0;padding-top:0}
+.lp-row-ic{flex:none;width:76px;height:76px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+  color:var(--khz-txt);background:linear-gradient(155deg,color-mix(in srgb,var(--khz) 26%,transparent),color-mix(in srgb,var(--khz) 6%,transparent))}
+.lp-row-b{max-width:52ch}
+.lp-row-b .lp-eyebrow{display:block;margin-bottom:8px}
+.lp-row-b h3{font-family:var(--f-d);font-size:21px;font-weight:700;margin:0;line-height:1.4}
+.lp-row-b p{font-family:var(--f-u);font-size:14.5px;color:var(--ink-2);line-height:1.8;margin:10px auto 0}
+@media (min-width:768px){
+  .lp-row{flex-direction:row;justify-content:space-between;text-align:start;gap:44px}
+  .lp-row.rev{flex-direction:row-reverse}
+  .lp-row-b{max-width:44ch}
+}
 .lp-widgets{display:grid;grid-template-columns:1fr;gap:14px;max-width:760px;margin:0 auto}
 /* ---- rolling books ---- */
 .lp-rolling{overflow:hidden}
@@ -341,28 +353,42 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 .lp-ba-col p{font-family:var(--f-d);font-size:15px;line-height:1.85;margin:0;color:var(--ink)}
 .lp-ba-arrow{display:flex;align-items:center;justify-content:center;color:var(--khz-txt)}
 .lp-plans{display:grid;grid-template-columns:1fr;gap:16px;max-width:900px;margin:0 auto}
-.plan-card{padding:26px 22px;border-radius:var(--r2);border:1px solid var(--rule);background:var(--ground-2);
-  display:flex;flex-direction:column;position:relative}
-.plan-card.recommended{border-color:var(--khz-txt);background:color-mix(in srgb,var(--khz) 10%,var(--ground-2));
-  box-shadow:0 0 0 1px var(--khz-txt)}
-.plan-badge{position:absolute;top:-13px;inset-inline-start:22px;background:var(--khz);color:#fff;font-family:var(--f-u);
-  font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px}
-.plan-name{font-family:var(--f-d);font-size:19px;font-weight:700;margin:6px 0 0}
+.plan-card{padding:28px 24px;border-radius:var(--r2);border:1px solid var(--rule);background:var(--ground-2);
+  display:flex;flex-direction:column;position:relative;
+  box-shadow:0 1px 2px rgba(0,0,0,.16);
+  transition:transform var(--t2) var(--ease-out),box-shadow var(--t2) var(--ease-out),border-color var(--t2) var(--ease-out)}
+.plan-card:hover{transform:translateY(-3px);border-color:var(--rule-2);
+  box-shadow:0 10px 28px -12px rgba(0,0,0,.34),0 2px 6px rgba(0,0,0,.14)}
+.plan-card.recommended{border-color:color-mix(in srgb,var(--khz-txt) 55%,transparent);
+  background:color-mix(in srgb,var(--khz) 9%,var(--ground-2));
+  box-shadow:0 1px 2px rgba(0,0,0,.16),0 0 0 1px color-mix(in srgb,var(--khz-txt) 30%,transparent)}
+.plan-card.recommended:hover{box-shadow:0 10px 28px -12px color-mix(in srgb,var(--khz) 45%,transparent),
+  0 0 0 1px color-mix(in srgb,var(--khz-txt) 40%,transparent)}
+.plan-badge{position:absolute;top:-13px;inset-inline-start:24px;background:var(--khz);color:#fff;font-family:var(--f-u);
+  font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px;box-shadow:0 3px 10px -2px color-mix(in srgb,var(--khz) 60%,transparent)}
+.plan-name{font-family:var(--f-d);font-size:19px;font-weight:700;margin:6px 0 0;letter-spacing:-.01em}
 .plan-tagline{font-family:var(--f-u);font-size:13px;color:var(--ink-2);margin:6px 0 0;line-height:1.6}
-.plan-price{font-family:var(--f-d);font-size:34px;font-weight:700;margin:18px 0 0;display:flex;align-items:baseline;gap:6px}
+.plan-price{font-family:var(--f-d);font-size:34px;font-weight:700;margin:20px 0 0;display:flex;align-items:baseline;gap:6px;letter-spacing:-.01em}
 .plan-price span{font-family:var(--f-u);font-size:13px;font-weight:500;color:var(--ink-3)}
 .plan-trial-tag{display:inline-flex;font-family:var(--f-u);font-size:10.5px;font-weight:600;color:var(--ink-3);
   border:1px solid var(--rule-2);border-radius:99px;padding:3px 9px;margin-top:9px}
-.plan-features{list-style:none;padding:0;margin:20px 0 0;display:flex;flex-direction:column;gap:10px}
-.plan-features li{display:flex;align-items:flex-start;gap:9px;font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.6}
-.plan-features li .ic{color:var(--khz-txt);flex:none;margin-top:1px}
-.plan-card .btn{margin-top:22px}
-.cmp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.plan-features{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-direction:column;gap:11px}
+.plan-features li{display:flex;align-items:center;gap:10px;font-family:var(--f-u);font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.feat-check{flex:none;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--khz-txt);background:color-mix(in srgb,var(--khz) 16%,transparent)}
+.plan-card .btn{margin-top:24px;transition:transform var(--press-out) var(--ease-out),background var(--press-out) ease,box-shadow var(--t2) var(--ease-out)}
+.plan-card .btn-fill:hover{box-shadow:0 6px 16px -4px color-mix(in srgb,var(--khz) 55%,transparent)}
+@media (prefers-reduced-motion:reduce){.plan-card,.plan-card .btn{transition:none}.plan-card:hover{transform:none}}
+.cmp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--rule);border-radius:var(--r2)}
 .cmp-table{width:100%;min-width:420px;border-collapse:collapse;font-family:var(--f-u)}
-.cmp-table th,.cmp-table td{padding:12px 10px;text-align:center;font-size:13.5px;border-bottom:1px solid var(--rule)}
+.cmp-table th,.cmp-table td{padding:13px 14px;text-align:center;font-size:13.5px;border-bottom:1px solid var(--rule)}
 .cmp-table th[scope="row"]{text-align:start;font-weight:500;color:var(--ink);white-space:nowrap}
-.cmp-table thead th{color:var(--ink-3);font-weight:700;font-size:12px;padding-bottom:10px}
+.cmp-table thead th{color:var(--ink-3);font-weight:700;font-size:11.5px;letter-spacing:.02em;padding-top:14px;
+  background:color-mix(in srgb,var(--ink) 3%,transparent)}
 .cmp-table thead th:not([scope="row"]):last-child{color:var(--khz-txt)}
+.cmp-table tbody tr{transition:background var(--t1) ease}
+.cmp-table tbody tr:hover{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+.cmp-table tbody tr:last-child td{border-bottom:0}
 .cmp-yes{display:inline-flex;align-items:center;gap:5px;color:var(--khz-txt);font-weight:600}
 .cmp-no{color:var(--ink-3)}
 .feat-lock{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-u);font-size:10.5px;font-weight:700;
@@ -752,7 +778,7 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
   .lp-cta-row .btn{min-width:190px}
   .lp-steps{grid-template-columns:repeat(4,1fr);max-width:1000px}
   .lp-step{flex-direction:column;text-align:center;align-items:center}
-  .lp-bento{grid-template-columns:repeat(3,1fr);max-width:1000px}
+  .lp-rows{max-width:1000px}
   .lp-widgets{grid-template-columns:repeat(3,1fr);max-width:1000px}
   .lp-ba{grid-template-columns:1fr auto 1fr;align-items:center;max-width:820px}
   .lp-plans{grid-template-columns:repeat(3,1fr);max-width:1000px;align-items:stretch}
@@ -766,7 +792,7 @@ button{font-family:var(--f-u);cursor:pointer;border:0;background:none;color:inhe
 }
 @media (min-width:1440px){
   .lp-h1{font-size:60px}
-  .lp-bento{max-width:1120px}
+  .lp-rows{max-width:1120px}
   .lp-widgets{max-width:1120px}
   .lp-plans{max-width:1120px}
   .lp-steps{max-width:1120px}
@@ -1234,7 +1260,7 @@ function activatePlan(planId,btn){
 function planCardHTML(p,mode){
   var currentId=mode==='account'?(MY_PLAN?MY_PLAN.plan_id:'free'):null;
   var isCurrent=mode==='account'&&currentId===p.id;
-  var feats=(p.features||[]).map(function(f){return '<li>'+ic('check',15)+'<span>'+esc(f)+'</span></li>';}).join('');
+  var feats=(p.features||[]).map(function(f){return '<li><span class="feat-check">'+ic('check',11)+'</span><span>'+esc(f)+'</span></li>';}).join('');
   var priceUnit=p.billing_period==='year'?' / سنويًا':p.billing_period==='month'?' / شهريًا':'';
   var isAnnual=p.billing_period==='year',isMonthly=p.billing_period==='month';
   var cta;
@@ -1494,7 +1520,7 @@ function landingHeroHTML(){
    photography, so nothing here risks reproducing artwork مَلفى has no
    license to show. Every title/author pair is real and verifiable. */
 var ROLLING_BOOKS=[
- ['ترمي بشرر','عبده خال'],['بنات الرياض','رجاء الصانع'],['العدامة','تركي الحمد'],
+ ['العدامة','تركي الحمد'],
  ['شقة الحرية','غازي القصيبي'],['فخاخ الرائحة','يوسف المحيميد'],['الفردوس اليباب','ليلى الجهني'],
  ['البحريات','أميمة الخميس'],['موت صغير','محمد حسن علوان'],['بين القصرين','نجيب محفوظ'],
  ['الأيام','طه حسين'],['رجال في الشمس','غسان كنفاني'],['التبر','إبراهيم الكوني'],
@@ -1573,21 +1599,29 @@ function landingStepsHTML(){
         +'<div class="lp-step-b"><h3>'+s[0]+'</h3><p>'+s[1]+'</p></div></div>';
     }).join('')+'</div></div>';
 }
+/* HUMAIN's own "Applications & Solutions / AI Models / ..." row treatment —
+   a short overline, bold title, short paragraph, and an icon panel that
+   alternates sides row to row, divided by a hairline — translated into
+   مَلفى's tokens (--khz icon panel, --f-d/--f-u type) rather than copied
+   wholesale (no gradient photography, no HUMAIN copy). */
 function landingBentoHTML(){
   var items=[
-    ['archive','حفظ رحلة كل كتاب في مكان واحد','كل كتاب تقرأه له رحلة واحدة: صفحاتك، محطاتك، ومنارتك — مجتمعة، مو متفرقة بين تطبيقات.'],
-    ['mic','تسجيل الأفكار كتابةً أو صوتًا','دوّن اللي علق معك بالطريقة اللي تريحك، كتابة أو تسجيل صوتي مباشر.'],
-    ['wave','تحويل الرحلة إلى «منارة» بصوت القارئ نفسه','منارتك مو ملخص للكتاب، هي انعكاس لرحلتك أنت معه، بصوتك أنت.'],
-    ['sliders','متابعة روتين القراءة والتقدم','شوف كم قرأت هالأسبوع، وين وقفت، وهل عندك هدف يومي تحققه.'],
-    ['books','الرجوع إلى ما بقي من الكتب بدل نسيانه','الكتب اللي وقفت فيها ما تضيع — ترجع لها من نفس النقطة اللي تركتها فيها.'],
-    ['link','مزامنة التجربة بين تطبيق الجوال والويب','ابدأ من جوالك وكمّل من المتصفح، رحلتك نفسها في كل مكان.']
+    ['archive','مكان واحد لكل رحلة','حفظ رحلة كل كتاب في مكان واحد','كل كتاب تقرأه له رحلة واحدة: صفحاتك، محطاتك، ومنارتك — مجتمعة، مو متفرقة بين تطبيقات.'],
+    ['mic','بصوتك أو بكلماتك','تسجيل الأفكار كتابةً أو صوتًا','دوّن اللي علق معك بالطريقة اللي تريحك، كتابة أو تسجيل صوتي مباشر.'],
+    ['wave','من كلامك، لا من الكتاب','تحويل الرحلة إلى «منارة» بصوت القارئ نفسه','منارتك مو ملخص للكتاب، هي انعكاس لرحلتك أنت معه، بصوتك أنت.'],
+    ['sliders','عادة، مو واجب','متابعة روتين القراءة والتقدم','شوف كم قرأت هالأسبوع، وين وقفت، وهل عندك هدف يومي تحققه.'],
+    ['books','ولا كتاب يضيع','الرجوع إلى ما بقي من الكتب بدل نسيانه','الكتب اللي وقفت فيها ما تضيع — ترجع لها من نفس النقطة اللي تركتها فيها.'],
+    ['link','نفس الرحلة، كل مكان','مزامنة التجربة بين تطبيق الجوال والويب','ابدأ من جوالك وكمّل من المتصفح، رحلتك نفسها في كل مكان.']
   ];
   return '<div class="lp-section" id="lp-bento">'
     +'<div class="lp-section-head"><span class="lp-eyebrow">المزايا</span>'
       +'<h2 class="lp-h2">مَلفى مصمم حول رحلتك، مو حول مكتبتك بس</h2></div>'
-    +'<div class="lp-bento">'+items.map(function(it){
-      return '<div class="lp-card"><div class="lp-card-ic">'+ic(it[0],20)+'</div>'
-        +'<h3>'+it[1]+'</h3><p>'+it[2]+'</p></div>';
+    +'<div class="lp-rows">'+items.map(function(it,i){
+      return '<div class="lp-row'+(i%2?' rev':'')+'">'
+        +'<div class="lp-row-ic">'+ic(it[0],30)+'</div>'
+        +'<div class="lp-row-b"><span class="lp-eyebrow">'+it[1]+'</span>'
+        +'<h3>'+it[2]+'</h3><p>'+it[3]+'</p></div>'
+        +'</div>';
     }).join('')+'</div></div>';
 }
 function landingBeforeAfterHTML(){
