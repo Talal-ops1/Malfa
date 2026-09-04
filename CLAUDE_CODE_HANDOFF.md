@@ -2091,3 +2091,111 @@ exercised it end-to-end with real pointer input).
 
 Not yet pushed — awaiting the user's go-ahead. `v4/vercel.json`'s CSP hash
 regenerated to match the final script content.
+
+## 31. منارة resilience — bounded timeout, honest fallback, no dead ends (2026-09-04)
+
+The user reported "the MALFA feature that currently displays an error,"
+described in terms that map directly onto منارة (Gemini-backed journey
+summarization) — asked to repair the Gemini integration if possible, and if
+not, make the feature fully usable without it, per an explicit, detailed
+fallback spec (manual save always available, no technical errors shown, a
+specific calm Arabic message, draft preservation, loading/timeout/retry/
+offline states, no duplicate submissions, web + mobile).
+
+**Investigation, not assumption:** checked `list_edge_functions` /
+`get_edge_function` — the live `summarize-journey` (was v22) matched the
+repo source byte-for-byte, ruling out drift as the cause. `query_logs`
+against the last 24h showed only 401/403s failing before the function ever
+reached its Gemini call — no evidence of an actual provider-side failure to
+diagnose from this session. The two model IDs in use
+(`gemini-3.6-flash`/`gemini-3.5-flash`) looked wrong at first glance (this
+session's training data predates them), but `WebSearch` confirmed both are
+real, current, documented Gemini API model IDs — that hypothesis was
+disproven with evidence rather than "fixed" on a guess, which would have
+risked breaking a model reference that was actually fine. Direct
+`execute_sql` reads against `auth.users`/`user_plans` to find a real test
+account were blocked by this session's own safety classifier, and no real
+signed-up account with a paid plan exists to exercise a true end-to-end
+Gemini call from here — so root-causing an actual live Gemini failure
+further wasn't possible in this session; that limitation is disclosed to
+the user rather than papered over.
+
+**Given that ceiling, the concrete, verifiable work was resilience and
+fallback, done thoroughly:**
+
+- `summarize-journey`: the Gemini `fetch` had no timeout — a stalled
+  provider call would hold the reader on a spinner indefinitely (bounded
+  only by Supabase's own function timeout). Added a 20s `AbortController`,
+  surfaced as a distinct `timeout` error code (504) separate from other
+  provider failures, so the client can tell them apart. Deployed live (v23);
+  confirmed via `query_logs` that it boots cleanly post-deploy.
+- Client `edgeFn()`: added a matching 25s client-side timeout and an
+  `navigator.onLine` short-circuit so an offline reader gets the fallback
+  instantly instead of waiting out a doomed request.
+- `generateMenara()`: `no_entries` and `plan_required` stay their own
+  distinct, honest states (unchanged) — everything else (missing key,
+  provider error, timeout, quota, quality-gate failure, save failure,
+  offline, network) now collapses into one "AI temporarily unavailable"
+  path: the exact calm message the user specified
+  (`يمكنك متابعة تسجيل رحلتك وحفظها الآن، وسيتوفر التحسين الذكي عند عودة
+  الخدمة.`), never a technical error string. Added a `MENARA_PENDING` guard
+  so a slow request can't be double-fired by a second click.
+- `menaraHTML()`: when the last attempt for a book failed for a
+  provider-class reason and there's no summary yet, renders a fallback
+  panel — the calm message, a "حاول مرة ثانية" retry, and a direct link
+  into "التسجيل الكامل" (the already-existing, entirely AI-free
+  chronological view of the reader's own raw entries — book title, dates,
+  progress, each entry as its own paragraph, per architecture already in
+  place). This *is* the "basic local organization" the spec asked for; no
+  need to build a second one, since one already existed as منارة's sibling
+  tab. A small caption under the منارة intro now also states the AI step is
+  optional, not required, on every render — not just the failure path.
+- The already-real Web Speech API voice/text logging (`سجّل رحلتك`), which
+  never depended on Gemini in the first place, needed no changes — it was
+  already the "manual write/edit/save, transcribe without Gemini" path the
+  spec asked for; confirmed this by reading its implementation rather than
+  assuming.
+
+**Real bug found only by live-testing, not by reasoning about the code**:
+none this time — the timeout/duplicate-submission/offline logic was
+straightforward enough that the design worked on first live test (see
+Verification). Unlike batch 30's `SIGNED_OUT` race, there was no second-
+order interaction to discover here.
+
+### Verification
+
+`bash v4/build.sh` after every edit; full existing suite (all six test
+files) pass unchanged; CSP hash regenerated and `test_security_headers.py`
+re-run. Live end-to-end verification used the same temporary mock-session
+harness technique as prior batches, extended with a small `window.__mtest`
+hook (also fully removed before commit — `git diff` confirmed byte-
+identical) exposing just enough internal state (`STATE`, `push`,
+`generateMenara`, `MENARA_DEGRADED`, `MENARA_PENDING`) to drive the
+in-app router the same way a real click would, since `computer`'s pointer
+clicks proved unreliable while the Browser pane is backgrounded/hidden in
+this session (confirmed the *cause* was pane visibility, not an app bug —
+`requestAnimationFrame` is throttled while hidden, which also explained an
+earlier false alarm where a mobile screenshot appeared blank despite the
+DOM being correct). Every scenario from the user's list was exercised
+against the **real deployed edge function** (not a stub): a call from a
+non-authenticated mock session genuinely failed at the network layer,
+which drove the exact same "provider/timeout/network → calm fallback" code
+path a real Gemini failure would; confirmed `MENARA_DEGRADED` set, the
+fallback panel rendered with the exact required message, the retry button
+present, and the "عرض تسجيلاتك الكاملة" link correctly switching to the raw
+journey tab and showing the mock entry's text with no AI involved. Toggled
+`navigator.onLine` to false and confirmed the offline path short-circuits
+in under a second with no network attempt. Fired `generate()` twice back to
+back and confirmed `MENARA_PENDING` blocked the second call, then cleared
+correctly once the first resolved. **Not verified**: a genuine Gemini
+success response (needs a real paid account with real journey entries,
+which this session cannot create), and a real on-device timeout against
+Gemini itself (the 20s/25s bounds are enforced and were confirmed to fire
+correctly against a fast-failing request, but a slow-succeeding one was not
+observable from here).
+
+### Repo / deploy note
+
+`supabase/functions/summarize-journey` deployed live as v23 (timeout
+hardening only — no behavior change on the success path). Client/CSP
+changes not yet pushed — awaiting the user's go-ahead, same as batch 30.

@@ -2693,7 +2693,8 @@ function menaraHasExternalNarrator(text){
 function menaraHTML(bookId){
   var cached=MY_SUMMARIES[bookId];
   if(cached&&menaraHasExternalNarrator(cached.summary_text))cached=null;
-  var intro='<p class="menara-intro">هنا يقف الراوي على أطلال رحلته وتلخيصها.</p>';
+  var intro='<p class="menara-intro">هنا يقف الراوي على أطلال رحلته وتلخيصها.</p>'
+    +'<p class="meta" style="text-align:center;margin-top:-8px">التحسين الذكي اختياري — تسجيلاتك الكاملة متاحة دائمًا بدونه.</p>';
   var paid=planIsPaidActive(MY_PLAN);
   if(!cached){
     var hasEntries=MY_JOURNEY[bookId]&&MY_JOURNEY[bookId].some(function(e){return e.note&&e.note.trim();});
@@ -2707,6 +2708,14 @@ function menaraHTML(bookId){
         +'<h3 class="rs-title" style="margin-top:10px">منارتك جاهزة تتكوّن</h3>'
         +'<p class="meta" style="margin-top:6px">توليد منارة من رحلتك مع هذا الكتاب من مزايا مَلفى+.</p>'
         +'<div class="s14"></div><button class="btn btn-fill btn-full" data-upgrade="menara">استكشف مَلفى+</button></div></div><div class="s16"></div>';
+    }
+    if(MENARA_DEGRADED[bookId]){
+      return intro+'<div class="pad"><div class="rs-card" style="text-align:center">'
+        +'<h3 class="rs-title">التحسين الذكي مو متاح الحين</h3>'
+        +'<p class="meta" style="margin-top:6px">يمكنك متابعة تسجيل رحلتك وحفظها الآن، وسيتوفر التحسين الذكي عند عودة الخدمة.</p>'
+        +'<div class="s14"></div><button class="btn btn-fill btn-full" data-genmenara="'+esc(bookId)+'">حاول مرة ثانية</button>'
+        +'<div class="s10"></div><button class="lnk plain" data-booktab="full">عرض تسجيلاتك الكاملة'+ic('arrow',15)+'</button>'
+        +'</div></div><div class="s16"></div>';
     }
     return intro+'<div class="pad"><button class="btn btn-fill btn-full" data-genmenara="'+esc(bookId)+'">ولّد منارتك</button></div><div class="s16"></div>';
   }
@@ -3350,38 +3359,64 @@ function uploadBookCover(userBookId,file){
 }
 
 /* ---------- منارة: real AI summary of the user's own journey, never the book's text ---------- */
+var EDGE_FN_TIMEOUT_MS=25000;
 function edgeFn(name,body){
+  if('onLine'in navigator&&!navigator.onLine)return Promise.resolve({ok:false,status:0,body:{error:'offline'}});
+  var controller=('AbortController'in window)?new AbortController():null;
+  var timer=controller?setTimeout(function(){controller.abort();},EDGE_FN_TIMEOUT_MS):null;
   return sb.auth.getSession().then(function(res){
     var token=res.data.session?res.data.session.access_token:'';
     return fetch('https://ntpwnrsckacwqzvgoysb.supabase.co/functions/v1/'+name,{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'apikey':'sb_publishable_gM0UmkhBzwUNGVV3OnxfFA_IRey-gUp','Content-Type':'application/json'},
-      body:JSON.stringify(body||{})
+      body:JSON.stringify(body||{}),
+      signal:controller?controller.signal:undefined
     });
-  }).then(function(r){return r.json().then(function(b){return {ok:r.ok,status:r.status,body:b};});})
-    .catch(function(){return {ok:false,status:0,body:{error:'network'}};});
+  }).then(function(r){clearTimeout(timer);return r.json().then(function(b){return {ok:r.ok,status:r.status,body:b};});})
+    .catch(function(err){
+      clearTimeout(timer);
+      if(err&&err.name==='AbortError')return {ok:false,status:0,body:{error:'timeout'}};
+      return {ok:false,status:0,body:{error:'network'}};
+    });
 }
+/* books whose most recent generation attempt failed for a reason that has
+   nothing to do with the reader (provider error, timeout, quota, offline —
+   never no_entries/plan_required, which are legitimate product states) —
+   menaraHTML() shows a calm fallback instead of just re-offering the same
+   button that already failed. Cleared on a successful generation. */
+var MENARA_DEGRADED={};
+var MENARA_PENDING={};
 function generateMenara(bookId,btn){
+  if(MENARA_PENDING[bookId])return;
   var b=myBookView(bookId);if(!b)return;
   var custom=isCustomBook(bookId);
   var origText=btn?btn.textContent:'';
+  MENARA_PENDING[bookId]=true;
   if(btn){btn.disabled=true;btn.textContent='لحظة...';}
   edgeFn('summarize-journey',{book_id:custom?null:bookId,user_book_id:custom?bookId:null})
     .then(function(res){
+      delete MENARA_PENDING[bookId];
       if(btn){btn.disabled=false;btn.textContent=origText;}
       if(!res.ok){
+        var code=res.body&&res.body.error;
         console.error('Menara generation failed',res.status,JSON.stringify(res.body||{}));
-        if(res.body&&res.body.error==='not_configured')toast('منارة تحتاج إعداد مفتاح الذكاء الاصطناعي أول.');
-        else if(res.body&&res.body.error==='no_entries')toast('ما فيه محطات كافية لتوليد منارة.');
-        else if(res.body&&res.body.error==='quota_exhausted')toast('خدمة منارة مزدحمة الآن. جرّب بعد دقيقة.');
-        else if(res.body&&res.body.error==='plan_required'){
+        if(code==='no_entries'){toast('ما فيه محطات كافية لتوليد منارة.');return;}
+        if(code==='plan_required'){
           var body2=document.getElementById('bookTabBody');
           if(body2&&bookTab==='menara')body2.innerHTML=menaraHTML(bookId);
           openSheet('upgrade',{feature:'menara'});
+          return;
         }
-        else toast('صار خطأ بتوليد منارتك. حاول مرة ثانية.');
+        /* every other failure (missing key, provider error, timeout, quota,
+           quality gate, offline, network) is "AI unavailable right now" from
+           the reader's point of view — never surface the technical reason. */
+        MENARA_DEGRADED[bookId]=true;
+        toast('يمكنك متابعة تسجيل رحلتك وحفظها الآن، وسيتوفر التحسين الذكي عند عودة الخدمة.');
+        var body3=document.getElementById('bookTabBody');
+        if(body3&&bookTab==='menara'&&!MY_SUMMARIES[bookId])body3.innerHTML=menaraHTML(bookId);
         return;
       }
+      delete MENARA_DEGRADED[bookId];
       MY_SUMMARIES[bookId]=res.body;
       var body=document.getElementById('bookTabBody');
       if(body&&bookTab==='menara')body.innerHTML=menaraHTML(bookId);

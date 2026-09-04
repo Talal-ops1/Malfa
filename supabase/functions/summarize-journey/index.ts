@@ -37,31 +37,48 @@ function json(req: Request, body: unknown, status = 200) {
   });
 }
 
+const GEMINI_TIMEOUT_MS = 20000;
+
 async function callGemini(
   systemInstruction: string,
   prompt: string,
   options: { json?: boolean; maxTokens?: number; temperature?: number; model?: string } = {},
 ) {
   const model = options.model || WRITING_MODEL;
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY!,
-      },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          maxOutputTokens: options.maxTokens || 1800,
-          temperature: options.temperature ?? 0.25,
-          ...(options.json ? { responseMimeType: "application/json" } : {}),
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": GEMINI_API_KEY!,
         },
-      }),
-    },
-  );
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            maxOutputTokens: options.maxTokens || 1800,
+            temperature: options.temperature ?? 0.25,
+            ...(options.json ? { responseMimeType: "application/json" } : {}),
+          },
+        }),
+        signal: controller.signal,
+      },
+    );
+  } catch (fetchErr) {
+    if ((fetchErr as { name?: string })?.name === "AbortError") {
+      console.error("Gemini request timed out", model, GEMINI_TIMEOUT_MS);
+      throw new Error(`llm_timeout:${model}:0`);
+    }
+    console.error("Gemini request network failure", model, String(fetchErr));
+    throw new Error(`llm_error:${model}:0`);
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     const message = (await res.text()).slice(0, 300);
@@ -345,7 +362,11 @@ Deno.serve(async (req: Request) => {
     return json(req, { ...saved, source_map: sourceMap });
   } catch (error) {
     const message = String(error);
-    const providerFailure = message.match(/llm_error:([a-z0-9.-]+):(\d{3})/i);
+    const timeoutFailure = message.match(/llm_timeout:([a-z0-9.-]+):/i);
+    if (timeoutFailure) {
+      return json(req, { error: "timeout", model: timeoutFailure[1] }, 504);
+    }
+    const providerFailure = message.match(/llm_error:([a-z0-9.-]+):(\d+)/i);
     if (providerFailure?.[2] === "429") {
       return json(req, { error: "quota_exhausted", model: providerFailure[1] }, 429);
     }
