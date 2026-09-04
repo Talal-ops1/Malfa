@@ -3115,6 +3115,9 @@ var VIEWS={home:homeHTML,library:libraryHTML,community:communityHTML,discover:di
   welcome:welcomeHTML,auth:authHTML,onboardBook:onboardBookHTML,landing:landingHTML,plans:plansHTML,
   readingSession:readingSessionHTML,readingSummary:readingSummaryHTML,collection:collectionHTML};
 var PUSHED={book:1,bookJourney:1,done:1,friend:1,welcome:1,auth:1,onboardBook:1,topic:1,readingSession:1,readingSummary:1,collection:1,landing:1,plans:1};
+/* views reachable with no signed-in session; everything else is a post-login
+   route and must redirect to landing if ME is null (see restoreRoute). */
+var PUBLIC_VIEWS={welcome:1,auth:1,landing:1};
 
 var app=document.getElementById('app'),tabbar=document.getElementById('tabbar'),
     sheet=document.getElementById('sheet'),backdrop=document.getElementById('backdrop'),
@@ -3141,8 +3144,11 @@ function rememberScroll(){
 function pushRoute(view){rememberScroll();NAV_DEPTH++;history.pushState(navSnapshot(view,0),'',routeHash(view));}
 function replaceRoute(view){history.replaceState(navSnapshot(view,0),'',routeHash(view));}
 function restoreRoute(s,mode){
-  if(!s||!s.malfa)return;NAV_DEPTH=s.depth||0;STATE.tab=s.tab||'home';STATE.book=s.book||null;STATE.topic=s.topic||null;
-  STATE.genreFilter=s.genreFilter||'';STATE.collection=s.collection||null;bookTab=s.bookTab||'full';renderTabs();var el=mount(s.view||STATE.tab,mode||'pop');
+  if(!s||!s.malfa)return;
+  var view=s.view||s.tab||'home';
+  if(!ME&&!PUBLIC_VIEWS[view]){replaceRoute('landing');mount('landing','fade');return;}
+  NAV_DEPTH=s.depth||0;STATE.tab=s.tab||'home';STATE.book=s.book||null;STATE.topic=s.topic||null;
+  STATE.genreFilter=s.genreFilter||'';STATE.collection=s.collection||null;bookTab=s.bookTab||'full';renderTabs();var el=mount(view,mode||'pop');
   requestAnimationFrame(function(){el.scrollTop=s.scroll||0;});
 }
 
@@ -3630,7 +3636,10 @@ function openSheet(mode,ctx){
       if(dc.value.trim()!=='حذف')return;db.disabled=true;db.textContent='جاري الحذف...';de.textContent='';
       edgeFn('delete-account',{confirmation:'حذف'}).then(function(res){
         if(!res.ok){db.disabled=false;db.textContent='حذف حسابي نهائيًا';de.textContent='ما اكتمل الحذف. حاول مرة ثانية.';return;}
-        closeSheet();ME=null;MY_NAME='';MY_HANDLE='';sb.auth.signOut({scope:'local'}).then(function(){authMode='login';replaceRoute('auth');mount('auth','fade');toast('انحذف حسابك وبياناته.');});
+        closeSheet();
+        LOGOUT_IN_PROGRESS=true;
+        function done(){clearSessionState();authMode='login';replaceRoute('landing');mount('landing','fade');toast('انحذف حسابك وبياناته.');LOGOUT_IN_PROGRESS=false;}
+        sb.auth.signOut({scope:'local'}).then(done,done);
       });
     });
     return;
@@ -4086,6 +4095,11 @@ if(document.fonts&&document.fonts.ready){
 /* ---------- opening: welcome is always shown, then auth state decides the destination ---------- */
 var bootTimer=null;
 var BOOT_READY=null,BOOT_DONE=false,RECOVERY_MODE=false;
+/* signOut() fires its own SIGNED_OUT auth-state-change event, which races
+   the .then() of the signOut() call itself — set while an explicit
+   sign-out/delete is already clearing state so the SIGNED_OUT listener
+   below doesn't redundantly re-run the same clear+redirect and double-mount. */
+var LOGOUT_IN_PROGRESS=false;
 function finishWelcome(){
   if(BOOT_DONE)return;BOOT_DONE=true;
   if(bootTimer){clearTimeout(bootTimer);bootTimer=null;}
@@ -4099,16 +4113,29 @@ function finishWelcome(){
     }else{replaceRoute('landing');mount('landing','fade');}
   });
 }
+/* clears every session-scoped global and local UI state — shared by
+   sign-out, account deletion, and an externally-invalidated session
+   (SIGNED_OUT from onAuthStateChange), so the three stay in lockstep. */
+function clearSessionState(){
+  ME=null;MY_NAME='';MY_HANDLE='';MY_CREATED_AT=null;MY_DISCOVERABLE=false;
+  MY_LIB={reading:[],next:[],finished:[],dropped:[]};MY_PROGRESS={};MY_JOURNEY={};
+  MY_COLLECTIONS=[];MY_USER_BOOKS={};MY_SUMMARIES={};
+  MY_PLAN=null;MY_READING_SESSIONS=[];
+  READING_PREF={daily_goal_minutes:20,reminder_enabled:false,reminder_time:null,selected_book_id:null,selected_user_book_id:null,weekly_days_goal:null};
+  READING_ACTIVE=null;clearInterval(READING_TICK);READING_TICK=null;READING_NOTICE=false;READING_SAVE_QUEUE=[];
+  MY_INVITES_RECEIVED=[];MY_INVITES_SENT=[];MY_SHARED_PROGRESS={};
+  STATE={tab:'home',book:null,topic:null,stack:[],page:1,genreFilter:''};
+  NAV_DEPTH=0;
+}
 function handleLogout(){
   var uid=ME&&ME.id;
-  function finish(){
-    sb.auth.signOut().then(function(){
-      ME=null;MY_NAME='';MY_HANDLE='';MY_CREATED_AT=null;
-      MY_LIB={reading:[],next:[],finished:[],dropped:[]};MY_PROGRESS={};MY_JOURNEY={};MY_COLLECTIONS=[];MY_READING_SESSIONS=[];READING_ACTIVE=null;clearInterval(READING_TICK);
-      STATE={tab:'home',book:null,topic:null,stack:[],page:1,genreFilter:''};
-      authMode='login';
-      replaceRoute('auth');mount('auth','fade');
-    });
+  LOGOUT_IN_PROGRESS=true;
+  function finish(){sb.auth.signOut().then(finishClear,finishClear);}
+  function finishClear(){
+    clearSessionState();
+    authMode='login';
+    replaceRoute('landing');mount('landing','fade');
+    LOGOUT_IN_PROGRESS=false;
   }
   if(uid)logAuthEvent(uid,'sign_out').then(finish,finish);else finish();
 }
@@ -4124,6 +4151,16 @@ sb.auth.onAuthStateChange(function(event){
   if(event==='PASSWORD_RECOVERY'){
     RECOVERY_MODE=true;authMode='reset';
     if(BOOT_DONE){replaceRoute('auth');mount('auth','fade');}
+  }else if(event==='SIGNED_OUT'){
+    /* covers session loss that didn't go through handleLogout — an
+       expired/invalidated token, or sign-out from another tab. signOut()
+       itself fires this event, so LOGOUT_IN_PROGRESS guards against
+       double-handling the same sign-out that handleLogout()/account
+       deletion already have in flight. */
+    if(BOOT_DONE&&ME&&!LOGOUT_IN_PROGRESS){
+      clearSessionState();authMode='login';
+      replaceRoute('landing');mount('landing','fade');
+    }
   }
 });
 BOOT_READY=sb.auth.getSession().then(function(res){

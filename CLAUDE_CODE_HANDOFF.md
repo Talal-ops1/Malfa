@@ -2001,3 +2001,93 @@ Not yet pushed — awaiting the user's go-ahead. One new migration
 already applied live against the Supabase project (DB changes there don't
 have a separate "staged" state to hold back). `v4/vercel.json`'s CSP hash
 regenerated to match the final script content.
+
+## 30. Logout flow — full session clear, route-guard, no back-button re-entry (2026-09-04)
+
+The reported symptom ("after logout the app stays on authenticated UI")
+traced to three independent, compounding bugs in `v4/index.html`, all fixed
+in one pass:
+
+**`sb.auth.signOut()` had no `.catch()`** inside `handleLogout()` — a
+rejected promise (network failure, already-invalid session) meant the
+entire state-clear-and-redirect body never ran, so the button could appear
+to do nothing. Fixed by routing both the success and failure branch through
+the same `finishClear()`.
+
+**`restoreRoute()` had no auth guard** — the actual mechanism behind "press
+Back → user must remain outside the authenticated area." `replaceRoute()`
+only overwrites the *current* history entry, not earlier ones pushed during
+the session, so the native Back button could `popstate` into an old
+authenticated entry (`#library`, `#home`) and `restoreRoute()` would mount
+it with zero regard for `ME`. Fixed with a `PUBLIC_VIEWS` allow-list
+(`welcome`, `auth`, `landing` — `plans` confirmed reachable only from
+inside the authenticated app, not a public pricing page, so it's protected
+too) checked at the top of `restoreRoute()`: any protected view with no
+`ME` redirects to `landing` instead of mounting. This is also what
+satisfies "protect every post-login route... automatically redirect."
+
+**Inconsistent redirect target** — `handleLogout()` sent the user to
+`'auth'` (the login form), while `finishWelcome()`'s own signed-out
+cold-boot path already used `'landing'` (the marketing homepage). The
+user's "always start on the Welcome page" language matches `landing`, so
+logout, account deletion, and the new `SIGNED_OUT` handler below were all
+made consistent with it.
+
+Two related gaps closed in the same pass: `sb.auth.onAuthStateChange` only
+handled `PASSWORD_RECOVERY`, so a session invalidated externally (expired
+token, signed out in another tab) left the app sitting on protected UI with
+no session — added a `SIGNED_OUT` branch. The account-deletion handler
+(`SHEET_MODE==='deleteaccount'`) had the same wrong-redirect-target and
+partial-state-reset issues as `handleLogout()` — brought in line with the
+same fix.
+
+All three paths (`handleLogout`, account deletion, the new `SIGNED_OUT`
+listener) now share one `clearSessionState()` helper so the reset list —
+every session-scoped global (`ME`, `MY_NAME`, `MY_HANDLE`,
+`MY_CREATED_AT`, `MY_DISCOVERABLE`, `MY_LIB`, `MY_PROGRESS`, `MY_JOURNEY`,
+`MY_COLLECTIONS`, `MY_USER_BOOKS`, `MY_SUMMARIES`, `MY_PLAN`,
+`MY_READING_SESSIONS`, `READING_PREF`, `READING_ACTIVE`/`READING_TICK`,
+`MY_INVITES_RECEIVED`/`SENT`, `MY_SHARED_PROGRESS`, `STATE`, `NAV_DEPTH`)
+— can't drift out of sync between them. `PLANS`/`PLANS_LOADED` are
+deliberately left alone: per their own comment they're the shared
+pre-/post-login plans catalog, not user data.
+
+**A bug found only by live-testing the exact required repro**: wiring
+`SIGNED_OUT` created a race, since `sb.auth.signOut()` fires that event as
+a side effect of the call itself, independent of the call's own `.then()`.
+On every real logout both `handleLogout()`'s completion handler and the new
+`SIGNED_OUT` listener fired, double-mounting `landing` and leaking a stuck
+`.screen` element in the DOM (visible as two `landing` nodes, tab bar not
+actually hidden). Fixed with a `LOGOUT_IN_PROGRESS` flag set for the
+duration of an explicit sign-out/delete, which the `SIGNED_OUT` listener
+checks before acting — this is why the fix mattered enough to write up:
+without live-testing the specific "logout then immediately observe DOM
+state" sequence, this only would have shown up as an intermittent visual
+glitch in production.
+
+### Verification
+
+`bash v4/build.sh` after every edit; full existing suite
+(`test_library_malfa_reorg.sh`, `test_reading_session_logic.sh`,
+`test_content_integrity.py`, `test_xss.py`, `test_edge_boundaries.py`,
+`test_security_headers.py` after CSP hash regen) all pass unchanged. Live
+verification via the same temporary mock-session boot harness technique as
+prior batches (fully removed before commit — `git diff` on the boot section
+confirmed byte-identical to before, aside from the intended `BOOT_READY`
+listener changes), exercising the literal required flow: mock-login →
+authenticated home → navigate to مكتبتي (library) tab → navigate to حسابي
+(account) tab, building real history depth → logout → confirm `landing`
+mounted, tab bar hidden (`opacity:0`), single `.screen` node (post
+double-mount fix) → native browser Back → confirmed the user stays on
+`landing`, not re-mounted into any authenticated screen, across multiple
+Back presses. Checked at both desktop width and a 375×812 mobile viewport
+(the `computer` tool's click was unreliable at the mobile preset in this
+session — worked around by dispatching the same `data-tab`/`data-logout`
+click events directly and inspecting resulting DOM state, since the
+app logic itself is viewport-independent and the desktop pass already
+exercised it end-to-end with real pointer input).
+
+### Repo / deploy note
+
+Not yet pushed — awaiting the user's go-ahead. `v4/vercel.json`'s CSP hash
+regenerated to match the final script content.
