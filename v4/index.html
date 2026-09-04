@@ -3168,6 +3168,15 @@ function renderTabs(){
   }).join('');
 }
 function mount(name,mode){
+  /* single chokepoint every screen change passes through (goTab, push,
+     restoreRoute, finishWelcome, back()'s NAV_DEPTH===0 fallback) — so
+     gating here, not only in restoreRoute's popstate path, is what makes
+     this "every protected route", including paths that never go through
+     restoreRoute at all. */
+  if(!ME&&!PUBLIC_VIEWS[name]){
+    if(name!=='landing')replaceRoute('landing');
+    name='landing';mode=mode||'fade';
+  }
   var old=app.querySelector('.screen.on');
   var el=document.createElement('section');
   el.className='screen'+(mode?' ent-'+mode:' instant');
@@ -3210,10 +3219,33 @@ function push(n){STATE.stack.push(current?current.dataset.name:STATE.tab);pushRo
 function back(){if(NAV_DEPTH>0)history.back();else{STATE.tab='home';renderTabs();replaceRoute('home');mount('home','pop');}}
 function toast(m){toastMsg.textContent=m;toastEl.classList.add('on');
   clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('on');},1900);}
+/* Revalidates against the real Supabase session rather than trusting the
+   in-memory ME flag, which could in principle be stale (e.g. a token
+   invalidated server-side between page loads). Runs AFTER the synchronous
+   mount()/restoreRoute guard already rendered something with zero flash —
+   this is a correction pass, not the first line of defense, so it never
+   blocks on network before the screen appears. */
+function revalidateSession(){
+  sb.auth.getSession().then(function(res){
+    var session=res.data&&res.data.session;
+    if(!session&&ME){
+      clearSessionState();authMode='login';
+      replaceRoute('landing');mount('landing','fade');
+    }
+  });
+}
 window.addEventListener('popstate',function(e){
   if(SHEET_MODE&&sheet.classList.contains('on')){if(!SHEET_CTX.onboard)closeSheet();}
-  if(e.state&&e.state.malfa){restoreRoute(e.state,'pop');return;}
+  if(e.state&&e.state.malfa){restoreRoute(e.state,'pop');revalidateSession();return;}
   history.go(1);
+});
+/* event.persisted===true means the browser restored this whole document
+   from the back-forward cache instead of re-running boot — e.g. a native
+   back gesture out of and straight back into the app. No app JS reran, so
+   ME could be reflecting a session that's since been signed out elsewhere;
+   revalidate immediately rather than trust whatever is on screen. */
+window.addEventListener('pageshow',function(e){
+  if(e.persisted)revalidateSession();
 });
 
 /* ---------- motion primitives ---------- */
@@ -4152,6 +4184,16 @@ function finishWelcome(){
    sign-out, account deletion, and an externally-invalidated session
    (SIGNED_OUT from onAuthStateChange), so the three stay in lockstep. */
 function clearSessionState(){
+  /* per-user localStorage rows (readingStorageKey/readingQueueKey are
+     namespaced by ME.id) must not outlive the session they belong to —
+     capture the id before nulling ME below, since both key functions
+     read ME to build their key. */
+  try{
+    if(ME&&ME.id){
+      localStorage.removeItem('malfa_reading_active_'+ME.id);
+      localStorage.removeItem('malfa_reading_queue_'+ME.id);
+    }
+  }catch(e){}
   ME=null;MY_NAME='';MY_HANDLE='';MY_CREATED_AT=null;MY_DISCOVERABLE=false;
   MY_LIB={reading:[],next:[],finished:[],dropped:[]};MY_PROGRESS={};MY_JOURNEY={};
   MY_COLLECTIONS=[];MY_USER_BOOKS={};MY_SUMMARIES={};

@@ -2199,3 +2199,129 @@ observable from here).
 `supabase/functions/summarize-journey` deployed live as v23 (timeout
 hardening only — no behavior change on the success path). Client/CSP
 changes not yet pushed — awaiting the user's go-ahead, same as batch 30.
+
+## 32. Logout still reachable via Back — because batch 30 was never deployed
+
+The user reported the exact batch-30 repro still failing live: logout →
+Back → back inside the app. Before touching any code, checked whether the
+live site actually had the batch-30 fix at all: `git log` showed both prior
+commits (§30, §31) sitting on `main`, un-pushed to `origin` (`git log
+origin/main..HEAD` listed them). Fetched `https://malfaapp.vercel.app`
+directly and grepped its shipped script for `PUBLIC_VIEWS`/
+`clearSessionState`/`LOGOUT_IN_PROGRESS` — none present. **The live app the
+user tested was still running the pre-batch-30 code** — Vercel auto-deploys
+from `origin/main` on push, and nothing had been pushed. This is reported
+plainly rather than silently pushing and moving on, since it means the
+batch-30 work itself was never actually validated against production by
+either of us until now.
+
+That alone would explain the report, but the user's message this time was
+also a stricter, more specific spec than "fix logout" — asking for the
+guard to live at the architecture level ("guard every protected route", not
+just the popstate path), for session revalidation on navigation (not only a
+one-time check at logout), and for persisted stores to be cleared, not only
+in-memory state. Re-auditing batch 30 against that bar surfaced a real gap
+worth closing before pushing, not just re-shipping the same code:
+
+**The batch-30 guard only lived inside `restoreRoute()`**, which is reached
+by the browser-Back `popstate` path — but not by `back()`'s own
+`NAV_DEPTH===0` fallback (`mount('home','pop')` called directly, no
+`restoreRoute` involved), nor by any hypothetical stale timer/callback that
+calls `push()`/`goTab()` after logout. In practice the app's own UI can't
+trigger those while signed out (the tab bar is hidden on every public
+screen), but "guard every protected route" as stated is an architectural
+property, not a per-caller patch — so the check moved to `mount()` itself,
+[`v4/index.html:3170`](v4/index.html:3170), the single function every one
+of those paths already funnels through. `restoreRoute()`'s own check stays
+too (cheap, and avoids writing stale protected-route values into `STATE`
+before the redirect) — belt and suspenders is the right call for an
+authorization gate, not redundancy to trim.
+
+**Session revalidation on navigation**, taken literally rather than as a
+synonym for "check `ME`": added `revalidateSession()`, called after every
+`popstate` and on `pageshow` when `event.persisted` is true (the browser
+restored the whole document from the back-forward cache instead of
+re-running boot — the mechanism behind "native back gesture out and
+straight back in" restoring stale UI with zero JS re-execution). It calls
+the real `sb.auth.getSession()` and force-logs-out if the client's cached
+`ME` disagrees with the server's answer. It runs *after* the synchronous
+guard already rendered something, so it's a correction pass, not a blocking
+check before paint — keeps "no flash of protected content" true without
+making every back-navigation wait on a network round trip first.
+
+**Persisted stores**: found `readingStorageKey()`/`readingQueueKey()`
+(`v4/index.html:2188`) — an in-progress reading session and its save queue,
+namespaced by `ME.id`, written to `localStorage`. Namespacing means one
+user's key never collides with another's, but nothing removed a user's own
+key on logout, so it sat in `localStorage` indefinitely after signing out —
+a real instance of "cached data expos[able]" on a shared device via
+devtools, even if not visible in the UI. `clearSessionState()` now removes
+both keys for the signing-out user before nulling `ME` (has to capture the
+id first, since both key functions read `ME` to build the key). The theme
+preference (`localStorage`, device-level, not account data) is deliberately
+left alone, per its own existing comment and this project's established
+convention.
+
+`sb.auth.signOut()` itself (unchanged) already handles full token
+invalidation and clearing Supabase's own persisted session — that's
+supabase-js's own documented contract, not something this app's code
+re-implements, so no new work was needed there; verified this is actually
+what's happening rather than assumed, by confirming `clearSessionState()`
+runs on both the success and failure branch of that call (batch 30) and
+that nothing in this codebase persists a duplicate copy of the session
+token itself.
+
+### Verification — reproduced the exact failure first, then confirmed the fix
+
+Per the user's explicit instruction, did not report this fixed without
+reproducing it. Same temporary mock-session harness technique as prior
+batches (removed before commit, `git diff` confirmed clean): logged in,
+navigated home → مكتبتي → حسابي (three real history entries), logged out,
+then ran the full required matrix in the actual Browser pane (real
+`navigate back`/`forward`, not simulated):
+- **Back** and **multiple Back presses**: every press stayed on `landing`;
+  never re-rendered a protected screen.
+- **Forward** (after backing up through the whole stack): also stayed on
+  `landing` at every step — and inspecting `history.state` showed the
+  guard had rewritten each protected entry's *stored* state to `landing`
+  in place as it was traversed, so the sanitization compounds rather than
+  needing to be re-applied identically every time.
+- **Refresh while signed out**: a genuine fresh page load (no session at
+  all) correctly lands on `landing` after the welcome hold, no flash.
+- **Paste a protected URL directly** (`#library`, signed out): tested in a
+  brand-new tab to guarantee a real full document load rather than an
+  in-page hash change (a same-tab `navigate` to a hash-only URL turned out
+  to be a same-document navigation with no reload and no `hashchange`
+  listener in this app — caught this as a test-methodology mistake myself,
+  redid it correctly). Fresh load correctly resolved to `landing` with the
+  hash rewritten to `#landing`.
+- **Close and reopen**: no real signed-in Supabase session exists in this
+  sandbox to close/reopen (no real signup available here, a standing
+  constraint carried from every prior batch), so this was verified as the
+  equivalent of the refresh case above (a from-scratch load with no
+  persisted session behaves identically to "reopened after logout" if
+  `signOut()` did its job) plus a direct test of the new bfcache path:
+  dispatched a synthetic `pageshow` event with `persisted:true` against a
+  session that was signed in client-side but had no real server session
+  backing it, and confirmed `revalidateSession()` correctly force-logged it
+  out to `landing`. **Not fully verified**: the exact case of a real
+  persisted Supabase session token in `localStorage` being invalidated by a
+  real `signOut()` call and staying invalidated across a real app restart —
+  blocked on the same "no real signup in this environment" limitation as
+  every prior batch, disclosed rather than glossed over.
+- **Mobile (375×812 viewport)**: repeated the login → navigate → logout →
+  Back sequence; identical result to desktop.
+
+`bash v4/build.sh` after every edit; full six-file test suite unchanged;
+CSP hash regenerated, `test_security_headers.py` re-run.
+
+### Repo / deploy note
+
+**Not pushed yet, and this time that matters more than usual**: batches 30
+and 31 were already sitting un-pushed when this report came in, which is
+the actual reason the user's live test still failed. Pushing (and thus
+deploying, since Vercel is Git-connected) needs the user's explicit
+go-ahead per this session's standing rule for anything that reaches a
+shared/live system — asking now, and flagging clearly that until that push
+happens, the live site will keep failing this exact repro regardless of
+what's fixed locally.
